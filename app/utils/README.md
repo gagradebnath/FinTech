@@ -4,7 +4,8 @@ This folder contains utility modules for the FinGuard application. These modules
 
 ## Files
 
-- `auth.py`: (Planned) Authentication and access control helpers for user sessions, permissions, etc.
+- `auth.py`: Authentication and access control helpers for user sessions, permissions, etc.
+- `register.py`: Registration helpers for unique checks, user creation, and role lookup.
 - `blockchain.py`: (Planned) Blockchain logic for transaction storage and verification.
 - `notifications.py`: (Planned) Notification utilities, such as fraud alerts or user notifications.
 - `__init__.py`: Marks this folder as a Python package.

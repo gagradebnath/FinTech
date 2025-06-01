@@ -19,8 +19,24 @@ This folder contains all Flask route blueprints for the FinGuard application. Ea
 2. Define a Flask `Blueprint` and your routes in that file.
 3. Import and register your blueprint in `__init__.py`.
 
+### Example: Adding a Route
+```python
+# In app/routes/hello.py
+from flask import Blueprint
+hello_bp = Blueprint('hello', __name__)
+
+@hello_bp.route('/hello')
+def hello():
+    return 'Hello, world!'
+
+# In app/routes/__init__.py
+from .hello import hello_bp
+
+def register_blueprints(app):
+    app.register_blueprint(hello_bp)
+```
+
 ## Notes
 - Keep each route file focused on a single feature or module for maintainability.
 - Use helper functions from `app/utils/` as needed.
-
-For more details, see the main `README.md` in the project root or the `app/README.md` file.
+- For more details, see the main `README.md` in the project root or the `app/README.md` file.

@@ -13,8 +13,15 @@ This folder contains all static files for the FinGuard web application. These fi
 - Place any new JavaScript files in the `js/` subfolder.
 - Reference these files in your HTML templates using Flask's `url_for('static', filename='...')`.
 
+### Example: Linking Static Files in a Template
+
+```html
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+```
+
 ## Notes
+
 - Do not put sensitive information in static files; they are publicly accessible.
 - For images, fonts, or other assets, create additional subfolders as needed (e.g., `img/`, `fonts/`).
-
-For more information, see the main `README.md` in the project root.
+- For more information, see the main `README.md` in the project root.

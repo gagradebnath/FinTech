@@ -19,8 +19,15 @@ This folder contains all Jinja2 HTML templates for the FinGuard web application.
 - Use Jinja2 templating syntax (`{{ ... }}` and `{% ... %}`) to insert dynamic content from Flask.
 - Reference static assets (CSS/JS) using `{{ url_for('static', filename='...') }}`.
 
+### Example: Extending the Base Template
+```html
+{% extends 'base.html' %}
+{% block content %}
+<h1>My New Page</h1>
+{% endblock %}
+```
+
 ## Notes
 - Keep templates modular and reusable by using blocks and includes.
 - For UI changes, edit the relevant template and reload the page in your browser.
-
-For more information, see the main `README.md` in the project root.
+- For more information, see the main `README.md` in the project root.

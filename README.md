@@ -33,7 +33,7 @@ FinGuard is a personal finance management web application built with Flask and S
 
 ## Project Structure
 
-```
+```text
 app/
   __init__.py
   config.py
@@ -67,24 +67,26 @@ app/
     auth.py
     blockchain.py
     notifications.py
+    register.py
 DatabaseSchema.sql
 seed_sqlite.py
 requirements.txt
 run.py
+README.md
 ```
 
 ## Setup & Usage
 
 1. **Install dependencies:**
-   ```sh
+   ```cmd
    pip install -r requirements.txt
    ```
 2. **Initialize the database:**
-   ```sh
+   ```cmd
    python seed_sqlite.py
    ```
 3. **Run the app:**
-   ```sh
+   ```cmd
    python run.py
    ```
 4. **Access the app:**
@@ -120,7 +122,8 @@ run.py
 - **chat.get_chat**: Placeholder for AI chat endpoints.
 
 ### Utilities
-- **auth.py**: (Planned) Authentication and access control helpers.
+- **auth.py**: Authentication and access control helpers (e.g., user lookup, password check).
+- **register.py**: Registration helpers (unique checks, user creation, role lookup).
 - **blockchain.py**: (Planned) Blockchain logic for transaction storage.
 - **notifications.py**: (Planned) Notification utilities (e.g., fraud alerts).
 
@@ -151,11 +154,6 @@ run.py
 - **Windows users:**
   - Use `python run.py` in `cmd.exe` to start the server.
 
-## Notes
-- Some advanced features (AI chat, fraud reporting, blockchain logging) are scaffolded for future development.
-- Passwords are stored in plain text for demo purposes—**do not use in production**.
-- For any issues or contributions, please open an issue or pull request.
-
----
+## License
 
 © 2025 Ghagra Salem Debnath. All rights reserved.

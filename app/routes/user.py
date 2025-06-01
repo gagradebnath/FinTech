@@ -6,6 +6,8 @@ from datetime import date
 import random
 import string
 import json
+from app.utils.auth import get_user_by_login_id, check_password
+from app.utils.register import is_email_unique, is_phone_unique, get_role_id, create_user_and_contact
 
 user_bp = Blueprint('user', __name__)
 
@@ -21,25 +23,14 @@ def login():
         login_id = request.form.get('login_id')
         password = request.form.get('password')
         remember_me = request.form.get('remember_me')
-        conn = current_app.get_db_connection()
-        # Try to find user by user_id (case-insensitive), email, or phone
-        user = conn.execute('''
-            SELECT u.* FROM users u
-            LEFT JOIN contact_info c ON u.id = c.user_id
-            WHERE (LOWER(u.id) = ? OR LOWER(c.email) = ? OR c.phone = ?)''', (login_id.lower(), login_id.lower(), login_id)).fetchone()
+        user = get_user_by_login_id(login_id)
         if user:
-            # Check password
-            pw_row = conn.execute('SELECT password FROM user_passwords WHERE user_id = ?', (user['id'],)).fetchone()
-            if pw_row and pw_row[0] == password:
-                # Set session user_id for correct user context
+            if check_password(user['id'], password):
                 session['user_id'] = user['id']
-                conn.close()
                 return redirect(url_for('user.dashboard'))
             else:
-                conn.close()
                 return render_template('login.html', error='Invalid password', success=success)
         else:
-            conn.close()
             return render_template('login.html', error='User not found', success=success)
     return render_template('login.html', success=success)
 
@@ -66,47 +57,16 @@ def register():
             age = date.today().year - birth_year
         except Exception:
             age = None
-        # Find role_id (case-insensitive match)
-        conn = sqlite3.connect('fin_guard.db')
-        cur = conn.cursor()
-        cur.execute('SELECT id FROM roles WHERE LOWER(name) = ?', (role.lower(),))
-        role_row = cur.fetchone()
-        if not role_row:
-            conn.close()
+        role_id = get_role_id(role)
+        if not role_id:
             return render_template('register.html', error='Role not found')
-        role_id = role_row[0]
-        # Check for unique email and phone
-        cur.execute('SELECT 1 FROM contact_info WHERE LOWER(email) = ?', (email.lower(),))
-        if cur.fetchone():
-            conn.close()
+        if not is_email_unique(email):
             return render_template('register.html', error='Email address already in use')
-        cur.execute('SELECT 1 FROM contact_info WHERE phone = ?', (phone,))
-        if cur.fetchone():
-            conn.close()
+        if not is_phone_unique(phone):
             return render_template('register.html', error='Phone number already in use')
-        # Generate unique 8-char user_id (case-insensitive)
-        while True:
-            user_id = generate_user_id()
-            cur.execute('SELECT 1 FROM users WHERE LOWER(id) = ?', (user_id.lower(),))
-            if not cur.fetchone():
-                break
-        try:
-            cur.execute('INSERT INTO users (id, first_name, last_name, dob, age, gender, marital_status, blood_group, balance, joining_date, role_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                (user_id, first_name, last_name, dob, age, gender, marital_status, blood_group, 0, date.today().isoformat(), role_id))
-            # Insert contact info
-            contact_id = str(uuid.uuid4())
-            cur.execute('INSERT INTO contact_info (id, user_id, email, phone, address_id) VALUES (?, ?, ?, ?, ?)',
-                (contact_id, user_id, email, phone, None))
-            # Store password in a simple way (not secure, for demo only)
-            cur.execute('CREATE TABLE IF NOT EXISTS user_passwords (user_id TEXT PRIMARY KEY, password TEXT)')
-            cur.execute('INSERT INTO user_passwords (user_id, password) VALUES (?, ?)', (user_id, password))
-            conn.commit()
-        except Exception as e:
-            conn.rollback()
-            conn.close()
-            return render_template('register.html', error='Registration failed: ' + str(e))
-        conn.close()
-        # Redirect to login page after successful registration, with success message
+        user_id, err = create_user_and_contact(role_id, first_name, last_name, dob, age, gender, marital_status, blood_group, email, phone, password)
+        if err:
+            return render_template('register.html', error='Registration failed: ' + err)
         params = urlencode({'success': 'Registration successful! Please log in.'})
         return redirect(url_for('user.login') + '?' + params)
     return render_template('register.html')
