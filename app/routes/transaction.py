@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, current_app, session, redirect, url_for
 import uuid
 from .user import get_current_user
+from app.utils.transaction_utils import get_user_by_id, send_money
 
 transaction_bp = Blueprint('transaction', __name__)
 
@@ -9,7 +10,7 @@ def get_transaction():
     return {'message': 'Transaction endpoint'}
 
 @transaction_bp.route('/send-money', methods=['GET', 'POST'])
-def send_money():
+def send_money_route():
     user = get_current_user()
     if not user:
         return redirect(url_for('user.login'))
@@ -20,33 +21,10 @@ def send_money():
         amount = request.form.get('amount')
         note = request.form.get('note')
         payment_method = request.form.get('payment_method')
-        conn = current_app.get_db_connection()
-        try:
-            # Validate recipient
-            recipient = conn.execute('SELECT * FROM users WHERE id = ?', (recipient_id,)).fetchone()
-            if not recipient:
-                error = 'Recipient not found.'
-            elif recipient['id'] == user['id']:
-                error = 'Cannot send money to yourself.'
-            else:
-                # Check balance
-                amount_val = float(amount)
-                if user['balance'] < amount_val:
-                    error = 'Insufficient balance.'
-                else:
-                    # Update balances
-                    conn.execute('UPDATE users SET balance = balance - ? WHERE id = ?', (amount_val, user['id']))
-                    conn.execute('UPDATE users SET balance = balance + ? WHERE id = ?', (amount_val, recipient['id']))
-                    # Insert transaction
-                    conn.execute('''INSERT INTO transactions (id, amount, payment_method, timestamp, sender_id, receiver_id, note, type, location) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?)''',
-                        (str(uuid.uuid4()), amount_val, payment_method, user['id'], recipient['id'], note, 'transfer', None))
-                    conn.commit()
-                    success = f'Successfully sent {amount} to {recipient["first_name"]}.'
-                    # Refresh user balance
-                    user = conn.execute('SELECT * FROM users WHERE id = ?', (user['id'],)).fetchone()
-        except Exception as e:
-            conn.rollback()
-            error = 'Failed to send money: ' + str(e)
-        finally:
-            conn.close()
+        ok, msg, updated_user = send_money(user['id'], recipient_id, amount, note, payment_method)
+        if ok:
+            success = msg
+            user = updated_user
+        else:
+            error = msg
     return render_template('send_money.html', error=error, success=success)

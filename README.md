@@ -38,6 +38,7 @@ app/
   __init__.py
   config.py
   models.py (placeholder)
+  README.md
   routes/
     __init__.py
     user.py
@@ -47,13 +48,17 @@ app/
     transaction.py
     fraud.py
     chat.py
+    README.md
+    __pycache__/
   static/
+    README.md
     css/
       style.css
     js/
       main.js
       budget.js
   templates/
+    README.md
     base.html
     index.html
     login.html
@@ -64,14 +69,24 @@ app/
     plan_budget.html
     send_money.html
   utils/
+    __init__.py
     auth.py
     blockchain.py
+    budget_utils.py
+    dashboard.py
+    expense_habit.py
     notifications.py
+    profile.py
+    README.md
     register.py
+    transaction_utils.py
+    user_utils.py
+    __pycache__/
 DatabaseSchema.sql
-seed_sqlite.py
+fin_guard.db
 requirements.txt
 run.py
+seed_sqlite.py
 README.md
 ```
 
@@ -121,11 +136,17 @@ README.md
 - **fraud.get_fraud**: Placeholder for fraud reporting endpoints.
 - **chat.get_chat**: Placeholder for AI chat endpoints.
 
-### Utilities
+### Utilities (in `app/utils/`)
 - **auth.py**: Authentication and access control helpers (e.g., user lookup, password check).
 - **register.py**: Registration helpers (unique checks, user creation, role lookup).
+- **user_utils.py**: User session and fetch helpers.
+- **dashboard.py**: Dashboard queries (budgets, recent expenses).
+- **expense_habit.py**: Expense habit fetch and update.
+- **profile.py**: User profile fetch and update.
+- **budget_utils.py**: Budget CRUD and expense category/item helpers.
+- **transaction_utils.py**: Transaction logic (send money, user fetch).
 - **blockchain.py**: (Planned) Blockchain logic for transaction storage.
-- **notifications.py**: (Planned) Notification utilities (e.g., fraud alerts).
+- **notifications.py**: (Planned) Notification utilities (fraud alerts, etc.).
 
 ## How to Change and Debug
 
