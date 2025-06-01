@@ -36,19 +36,28 @@
         </div>
         <div class="col-md-6">
             <div class="card mb-4">
-                <div class="card-header">Recent Expenses</div>
+                <div class="card-header">Recent Transactions</div>
                 <div class="card-body">
-                    {% if expenses %}
-                        <ul class="list-group">
-                        {% for exp in expenses %}
+                    {% if transactions %}
+                        <ul class="list-group">{% for tx in transactions %}
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ exp.note if exp.note else 'Expense' }} ({{ exp.location if exp.location else '' }})
-                                <span class="badge bg-danger">{{ exp.amount }}</span>
-                            </li>
-                        {% endfor %}
+                                <div>
+                                    <span class="fw-bold">{{ tx.type|capitalize }}</span>
+                                    {% if tx.sender_id == user.id %}
+                                        <span class="text-danger">Sent</span>
+                                        {% if tx.receiver_id %} to <span class="fw-bold">{{ tx.receiver_id }}</span>{% endif %}
+                                    {% elif tx.receiver_id == user.id %}
+                                        <span class="text-success">Received</span>
+                                        {% if tx.sender_id %} from <span class="fw-bold">{{ tx.sender_id }}</span>{% endif %}
+                                    {% endif %}
+                                    {% if tx.note %}<span class="text-muted">- {{ tx.note }}</span>{% endif %}
+                                    {% if tx.location %}<span class="text-muted"> ({{ tx.location }})</span>{% endif %}
+                                </div>
+                                <span class="badge bg-primary">{{ tx.amount }}</span>
+                            </li>{% endfor %}
                         </ul>
                     {% else %}
-                        <p>No expenses found.</p>
+                        <p>No transactions found.</p>
                     {% endif %}
                 </div>
             </div>

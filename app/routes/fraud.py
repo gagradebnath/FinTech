@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from app.utils.permissions_utils import has_permission
+from app.utils.fraud_utils import lookup_user_by_identifier, add_fraud_report
 
 fraud_bp = Blueprint('fraud', __name__)
 
@@ -20,23 +21,13 @@ def report_fraud():
         if not identifier or not reason:
             error = 'All fields are required.'
         else:
-            try:
-                conn = current_app.get_db_connection()
-                # Look up user by id, email, or phone
-                user = conn.execute('''
-                    SELECT u.id FROM users u
-                    LEFT JOIN contact_info c ON u.id = c.user_id
-                    WHERE LOWER(u.id) = ? OR LOWER(c.email) = ? OR c.phone = ?
-                ''', (identifier.lower(), identifier.lower(), identifier)).fetchone()
-                if not user:
-                    error = 'No user found with that ID, email, or phone.'
-                else:
-                    import uuid
-                    conn.execute('INSERT INTO fraud_list (id, user_id, reported_user_id, reason) VALUES (?, ?, ?, ?)',
-                                 (str(uuid.uuid4()), user_id, user['id'], reason))
-                    conn.commit()
+            user = lookup_user_by_identifier(identifier)
+            if not user:
+                error = 'No user found with that ID, email, or phone.'
+            else:
+                ok, err = add_fraud_report(user_id, user['id'], reason)
+                if ok:
                     success = 'Fraud report submitted.'
-                conn.close()
-            except Exception as e:
-                error = 'Failed to submit report: ' + str(e)
+                else:
+                    error = 'Failed to submit report: ' + str(err)
     return render_template('report_fraud.html', error=error, success=success)

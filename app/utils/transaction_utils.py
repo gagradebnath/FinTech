@@ -61,3 +61,49 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
         return False, 'Failed to send money: ' + str(e), None
     finally:
         conn.close()
+
+def lookup_user_by_identifier(identifier):
+    conn = current_app.get_db_connection()
+    user = conn.execute('''
+        SELECT u.id FROM users u
+        LEFT JOIN contact_info c ON u.id = c.user_id
+        WHERE LOWER(u.id) = ? OR LOWER(c.email) = ? OR c.phone = ?
+    ''', (identifier.lower(), identifier.lower(), identifier)).fetchone()
+    conn.close()
+    return user
+
+def is_user_flagged_fraud(user_id):
+    conn = current_app.get_db_connection()
+    fraud = conn.execute('SELECT 1 FROM fraud_list WHERE reported_user_id = ?', (user_id,)).fetchone()
+    conn.close()
+    return bool(fraud)
+
+def agent_add_money(agent_id, user_id, amount):
+    conn = current_app.get_db_connection()
+    try:
+        conn.execute('UPDATE users SET balance = balance - ? WHERE id = ?', (amount, agent_id))
+        conn.execute('UPDATE users SET balance = balance + ? WHERE id = ?', (amount, user_id))
+        conn.execute('''INSERT INTO transactions (id, amount, payment_method, timestamp, sender_id, receiver_id, note, type, location) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?)''',
+            (str(uuid.uuid4()), amount, 'agent_add', agent_id, user_id, f'Agent {agent_id} added money', 'add_money', None))
+        conn.commit()
+        return (f"Added {amount} to user (ID: {user_id})", None)
+    except Exception as e:
+        conn.rollback()
+        return (None, f"Failed to add money: {str(e)}")
+    finally:
+        conn.close()
+
+def agent_cash_out(agent_id, user_id, amount):
+    conn = current_app.get_db_connection()
+    try:
+        conn.execute('UPDATE users SET balance = balance - ? WHERE id = ?', (amount, user_id))
+        conn.execute('UPDATE users SET balance = balance + ? WHERE id = ?', (amount, agent_id))
+        conn.execute('''INSERT INTO transactions (id, amount, payment_method, timestamp, sender_id, receiver_id, note, type, location) VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?)''',
+            (str(uuid.uuid4()), amount, 'agent_cashout', user_id, agent_id, f'Agent {agent_id} cashed out', 'cash_out', None))
+        conn.commit()
+        return (f"Cashed out {amount} from user (ID: {user_id})", None)
+    except Exception as e:
+        conn.rollback()
+        return (None, f"Failed to cash out: {str(e)}")
+    finally:
+        conn.close()

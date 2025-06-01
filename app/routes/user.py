@@ -8,8 +8,8 @@ import string
 import json
 from app.utils.auth import get_user_by_login_id, check_password
 from app.utils.register import is_email_unique, is_phone_unique, get_role_id, create_user_and_contact
-from app.utils.user_utils import get_current_user
-from app.utils.dashboard import get_user_budgets, get_recent_expenses
+from app.utils.user_utils import get_current_user, get_role_name_by_id
+from app.utils.dashboard import get_user_budgets, get_recent_transactions
 from app.utils.expense_habit import get_expense_habit, upsert_expense_habit
 from app.utils.profile import get_user_and_contact, update_user_and_contact
 from app.utils.permissions_utils import has_permission
@@ -32,12 +32,10 @@ def login():
         if user:
             if check_password(user['id'], password):
                 # Fetch user's actual role name
-                conn = current_app.get_db_connection()
-                role_row = conn.execute('SELECT name FROM roles WHERE id = ?', (user['role_id'],)).fetchone()
-                conn.close()
-                if not role_row:
+                user_role = get_role_name_by_id(user['role_id'])
+                if not user_role:
                     return render_template('login.html', error='User role not found', success=success)
-                user_role = role_row['name'].lower()
+                user_role = user_role.lower()
                 selected_role = role.lower() if role else ''
                 if user_role != selected_role:
                     return render_template('login.html', error='Selected role does not match your account role.', success=success)
@@ -101,10 +99,10 @@ def dashboard():
     if not user:
         return redirect(url_for('user.login'))
     if not has_permission(user['id'], 'view_dashboard'):
-        return render_template('dashboard.html', user=user, budgets=[], expenses=[], error='Permission denied.')
+        return render_template('dashboard.html', user=user, budgets=[], transactions=[], error='Permission denied.')
     budgets = get_user_budgets(user['id'])
-    expenses = get_recent_expenses(user['id'])
-    return render_template('dashboard.html', user=user, budgets=budgets, expenses=expenses)
+    transactions = get_recent_transactions(user['id'])
+    return render_template('dashboard.html', user=user, budgets=budgets, transactions=transactions)
 
 @user_bp.route('/expense-habit', methods=['GET', 'POST'])
 def expense_habit():
