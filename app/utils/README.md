@@ -85,85 +85,86 @@ success, err = insert_full_budget(user['id'], budget_name, currency, income, exp
 ### Admin Utilities (`admin_utils.py`)
 ```python
 from app.utils.admin_utils import (
-    get_role_name_by_id,  # Get the name of a role given its ID
-    get_agents,           # Get all users with the 'agent' role
-    get_all_users,        # Get all users in the system
-    get_all_transactions, # Get all transactions, with sender/receiver names
-    get_all_frauds,       # Get all fraud reports, with reporter and reported user info
-    get_admin_logs,       # Get all admin log entries
-    update_user_balance,  # Add/subtract balance for a user (admin action)
-    insert_transaction_admin, # Insert a transaction performed by an admin
-    insert_admin_log,     # Log an admin operation (for auditing)
-    insert_fraud_list,    # Add a user to the fraud list
-    delete_fraud_list,    # Remove a user from the fraud list
-    update_user_role,     # Change a user's role
-    get_role_id_by_name   # Get a role's ID from its name
+    get_role_name_by_id,  # (role_id: str) -> str | None: Get the name of a role given its ID
+    get_agents,           # () -> list[Row]: Get all users with the 'agent' role
+    get_all_users,        # () -> list[Row]: Get all users in the system
+    get_all_transactions, # (limit: int = 100) -> list[Row]: Get all transactions, with sender/receiver names
+    get_all_frauds,       # (limit: int = 100) -> list[Row]: Get all fraud reports, with reporter and reported user info
+    get_admin_logs,       # (limit: int = 100) -> list[Row]: Get all admin log entries
+    update_user_balance,  # (user_id: str, amount: float) -> None: Add/subtract balance for a user (admin action)
+    insert_transaction_admin, # (tx_id: str, amount: float, sender_id: str, receiver_id: str, note: str, tx_type: str) -> None: Insert a transaction performed by an admin
+    insert_admin_log,     # (log_id: str, admin_id: str, ip_address: str, details: str) -> None: Log an admin operation (for auditing)
+    insert_fraud_list,    # (fraud_id: str, user_id: str, reported_user_id: str, reason: str) -> None: Add a user to the fraud list
+    delete_fraud_list,    # (reported_user_id: str) -> None: Remove a user from the fraud list
+    update_user_role,     # (user_id: str, new_role_id: str) -> None: Change a user's role
+    get_role_id_by_name   # (role_name: str) -> str | None: Get a role's ID from its name
 )
-role = get_role_name_by_id(role_id)  # e.g. 'admin', 'agent', 'user'
-agents = get_agents()  # List of agent users
-users = get_all_users()  # List of all users
-transactions = get_all_transactions()  # List of all transactions
-frauds = get_all_frauds()  # List of all fraud reports
-logs = get_admin_logs()  # List of admin log entries
-update_user_balance(user_id, 100)  # Add 100 to user's balance
-insert_transaction_admin(tx_id, 100, sender_id, receiver_id, 'note', 'admin_add_money')  # Log admin transaction
-insert_admin_log(log_id, admin_id, ip, 'details')  # Log admin action
-delete_fraud_list(reported_user_id)  # Remove user from fraud list
-update_user_role(user_id, new_role_id)  # Change user's role
-role_id = get_role_id_by_name('admin')  # Get role ID for 'admin'
+role = get_role_name_by_id(role_id)  # Returns role name as string or None
+agents = get_agents()  # Returns list of agent users (sqlite3.Row)
+users = get_all_users()  # Returns list of all users (sqlite3.Row)
+transactions = get_all_transactions()  # Returns list of all transactions (sqlite3.Row)
+frauds = get_all_frauds()  # Returns list of all fraud reports (sqlite3.Row)
+logs = get_admin_logs()  # Returns list of admin log entries (sqlite3.Row)
+update_user_balance(user_id, 100)  # No return value
+insert_transaction_admin(tx_id, 100, sender_id, receiver_id, 'note', 'admin_add_money')  # No return value
+insert_admin_log(log_id, admin_id, ip, 'details')  # No return value
+insert_fraud_list(fraud_id, user_id, reported_user_id, 'reason')  # No return value
+delete_fraud_list(reported_user_id)  # No return value
+update_user_role(user_id, new_role_id)  # No return value
+role_id = get_role_id_by_name('admin')  # Returns role ID as string or None
 ```
 
 ### Transaction Utilities (`transaction_utils.py`)
 ```python
 from app.utils.transaction_utils import (
-    send_money,                # Transfer money between users (with validation)
-    get_user_by_id,            # Fetch a user by their ID
-    agent_add_money,           # Agent adds money to a user (debits agent, credits user)
-    agent_cash_out,            # Agent cashes out from a user (debits user, credits agent)
-    lookup_user_by_identifier, # Find user by ID, email, or phone
-    is_user_flagged_fraud      # Check if a user is on the fraud list
+    send_money,                # (sender_id: str, recipient_id: str, amount: float, payment_method: str, note: str, location: str, tx_type: str) -> tuple[bool, str, Row | None]: Transfer money between users (with validation)
+    get_user_by_id,            # (user_id: str) -> Row | None: Fetch a user by their ID
+    agent_add_money,           # (agent_id: str, user_id: str, amount: float) -> tuple[str | None, str | None]: Agent adds money to a user (debits agent, credits user)
+    agent_cash_out,            # (agent_id: str, user_id: str, amount: float) -> tuple[str | None, str | None]: Agent cashes out from a user (debits user, credits agent)
+    lookup_user_by_identifier, # (identifier: str) -> Row | None: Find user by ID, email, or phone
+    is_user_flagged_fraud      # (user_id: str) -> bool: Check if a user is on the fraud list
 )
-user = get_user_by_id(user_id)  # Get user record by ID
-ok, msg, updated_user = send_money(sender_id, recipient_id, amount, payment_method, note, location, tx_type)  # Send money
-msg, err = agent_add_money(agent_id, user_id, amount)  # Agent adds money to user
-msg, err = agent_cash_out(agent_id, user_id, amount)   # Agent cashes out from user
-user = lookup_user_by_identifier(identifier)  # Find user by ID/email/phone
-is_fraud = is_user_flagged_fraud(user_id)     # True if user is flagged for fraud
+user = get_user_by_id(user_id)  # Returns user record (sqlite3.Row) or None
+ok, msg, updated_user = send_money(sender_id, recipient_id, amount, payment_method, note, location, tx_type)  # ok: bool, msg: str, updated_user: Row or None
+msg, err = agent_add_money(agent_id, user_id, amount)  # msg: str or None, err: str or None
+msg, err = agent_cash_out(agent_id, user_id, amount)   # msg: str or None, err: str or None
+user = lookup_user_by_identifier(identifier)  # Returns user (sqlite3.Row) or None
+is_fraud = is_user_flagged_fraud(user_id)     # Returns True if user is flagged for fraud
 ```
 
 ### Permissions Utilities (`permissions_utils.py`)
 ```python
 from app.utils.permissions_utils import (
-    get_all_roles,            # Get all roles in the system
-    get_all_permissions,      # Get all permissions in the system
-    get_permissions_for_role, # Get all permissions assigned to a role
-    add_permission_to_role,   # Assign a permission to a role
-    remove_permission_from_role, # Remove a permission from a role
-    has_permission            # Check if a user has a specific permission
+    get_all_roles,            # () -> list[Row]: Get all roles in the system
+    get_all_permissions,      # () -> list[Row]: Get all permissions in the system
+    get_permissions_for_role, # (role_id: str) -> list[Row]: Get all permissions assigned to a role
+    add_permission_to_role,   # (role_id: str, permission_id: str) -> None: Assign a permission to a role
+    remove_permission_from_role, # (role_id: str, permission_id: str) -> None: Remove a permission from a role
+    has_permission            # (user_id: str, permission_name: str) -> bool: Check if a user has a specific permission
 )
-roles = get_all_roles()  # List of all roles
-total_perms = get_all_permissions()  # List of all permissions
-role_perms = get_permissions_for_role(role_id)  # Permissions for a role
-add_permission_to_role(role_id, perm_id)  # Assign permission to role
-remove_permission_from_role(role_id, perm_id)  # Remove permission from role
+roles = get_all_roles()  # Returns list of all roles (sqlite3.Row)
+perms = get_all_permissions()  # Returns list of all permissions (sqlite3.Row)
+role_perms = get_permissions_for_role(role_id)  # Returns list of permissions for a role (sqlite3.Row)
+add_permission_to_role(role_id, perm_id)  # No return value
+remove_permission_from_role(role_id, perm_id)  # No return value
 if has_permission(user_id, 'send_money'):
-    # User is allowed to send money
+    # Returns True if user has permission
     ...
 ```
 
 ### Fraud Utilities (`fraud_utils.py`)
 ```python
 from app.utils.fraud_utils import lookup_user_by_identifier, add_fraud_report
-user = lookup_user_by_identifier(identifier)  # Find user by ID/email/phone
-success, err = add_fraud_report(reporter_id, reported_user_id, reason)  # Report a user for fraud
+user = lookup_user_by_identifier(identifier)  # (identifier: str) -> Row | None: Find user by ID/email/phone
+success, err = add_fraud_report(reporter_id, reported_user_id, reason)  # (reporter_id: str, reported_user_id: str, reason: str) -> tuple[bool, str | None]: Report a user for fraud
 ```
 
 ### Dashboard Utilities (`dashboard.py`)
 ```python
 from app.utils.dashboard import get_user_budgets, get_recent_expenses, get_recent_transactions
-budgets = get_user_budgets(user['id'])  # List of user's budgets
-expenses = get_recent_expenses(user['id'])  # List of user's recent expenses
-transactions = get_recent_transactions(user['id'])  # List of user's recent transactions
+budgets = get_user_budgets(user['id'])  # (user_id: str) -> list[Row]: List of user's budgets
+expenses = get_recent_expenses(user['id'])  # (user_id: str, limit: int = 5) -> list[Row]: List of user's recent expenses
+transactions = get_recent_transactions(user['id'])  # (user_id: str, limit: int = 5) -> list[Row]: List of user's recent transactions
 ```
 
 ## Best Practices
