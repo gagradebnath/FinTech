@@ -11,8 +11,79 @@
             <label for="amount" class="form-label">Amount</label>
             <input type="number" class="form-control" id="amount" name="amount" min="0.01" step="0.01" required>
         </div>
+        <div class="mb-3">
+            <label for="payment_method" class="form-label">Payment Method</label>
+            <select class="form-select" id="payment_method" name="payment_method" required>
+                <option value="">Select Method</option>
+                <option value="cash">Cash</option>
+                <option value="bank">Bank</option>
+                <option value="mobile">Mobile</option>
+                <option value="card">Card</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="note" class="form-label">Note</label>
+            <input type="text" class="form-control" id="note" name="note" maxlength="255" placeholder="Optional note">
+        </div>
+        <div class="mb-3">
+            <label for="location" class="form-label">Location</label>
+            <input type="text" class="form-control" id="location" name="location" maxlength="255" placeholder="Optional location">
+        </div>
         <button type="submit" class="btn btn-primary">Send</button>
         <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary ms-2">Back to Dashboard</a>
     </form>
 </div>
+
+<!-- Error popup -->
+{% if error %}
+<div class="modal fade" id="sendMoneyErrorModal" tabindex="-1" aria-labelledby="sendMoneyErrorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="sendMoneyErrorModalLabel">Transaction Failed</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {{ error }}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var errorModal = new bootstrap.Modal(document.getElementById('sendMoneyErrorModal'));
+    errorModal.show();
+  });
+</script>
+{% endif %}
+
+<!-- Success popup -->
+{% if success %}
+<div class="modal fade" id="sendMoneySuccessModal" tabindex="-1" aria-labelledby="sendMoneySuccessModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="sendMoneySuccessModalLabel">Transaction Successful</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {{ success }}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var successModal = new bootstrap.Modal(document.getElementById('sendMoneySuccessModal'));
+    successModal.show();
+  });
+</script>
+{% endif %}
 {% endblock %}

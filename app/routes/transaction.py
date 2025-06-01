@@ -19,8 +19,9 @@ def send_money_route():
     if request.method == 'POST':
         recipient_identifier = request.form.get('recipient_identifier')
         amount = request.form.get('amount')
-        note = request.form.get('note')
         payment_method = request.form.get('payment_method')
+        note = request.form.get('note')
+        location = request.form.get('location')
         conn = current_app.get_db_connection()
         recipient = conn.execute('''
             SELECT u.id FROM users u
@@ -37,7 +38,8 @@ def send_money_route():
             if fraud:
                 error = 'Cannot send money: recipient is flagged for fraud.'
             else:
-                ok, msg, updated_user = send_money(user['id'], recipient['id'], amount, note, payment_method)
+                ok, msg, updated_user = send_money(
+                    user['id'], recipient['id'], amount, payment_method, note, location, 'transfer')
                 if ok:
                     success = msg
                     user = updated_user

@@ -30,8 +30,23 @@ def login():
         user = get_user_by_login_id(login_id)
         if user:
             if check_password(user['id'], password):
+                # Fetch user's actual role name
+                conn = current_app.get_db_connection()
+                role_row = conn.execute('SELECT name FROM roles WHERE id = ?', (user['role_id'],)).fetchone()
+                conn.close()
+                if not role_row:
+                    return render_template('login.html', error='User role not found', success=success)
+                user_role = role_row['name'].lower()
+                selected_role = role.lower() if role else ''
+                if user_role != selected_role:
+                    return render_template('login.html', error='Selected role does not match your account role.', success=success)
                 session['user_id'] = user['id']
-                return redirect(url_for('user.dashboard'))
+                if user_role == 'agent':
+                    return redirect(url_for('agent.agent_dashboard'))
+                elif user_role == 'admin':
+                    return redirect(url_for('admin.admin_dashboard'))
+                else:
+                    return redirect(url_for('user.dashboard'))
             else:
                 return render_template('login.html', error='Invalid password', success=success)
         else:

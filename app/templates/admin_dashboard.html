@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+    <h2>Admin Dashboard</h2>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Welcome, {{ user.first_name }} {{ user.last_name }} (Admin)!</h5>
+            <p class="card-text">User ID: <strong>{{ user.id }}</strong></p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">Budgets</div>
+                <div class="card-body">
+                    {% if budgets %}
+                        <ul class="list-group">
+                        {% for budget in budgets %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ budget.name if budget.name else 'N/A' }} ({{ budget.currency if budget.currency else '' }})
+                                <span class="badge bg-primary">{{ budget.amount }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No budgets found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">Recent Expenses</div>
+                <div class="card-body">
+                    {% if expenses %}
+                        <ul class="list-group">
+                        {% for exp in expenses %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ exp.note if exp.note else 'Expense' }} ({{ exp.location if exp.location else '' }})
+                                <span class="badge bg-danger">{{ exp.amount }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No expenses found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mt-4 mb-4">
+        <div class="card-header">Add Money to Agent Account</div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="agent_id" class="form-label">Select Agent</label>
+                    <select class="form-select" id="agent_id" name="agent_id" required>
+                        <option value="">Choose...</option>
+                        {% for agent in agents %}
+                        <option value="{{ agent.id }}">{{ agent.first_name }} {{ agent.last_name }} (ID: {{ agent.id }}, Balance: {{ agent.balance }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="amount" class="form-label">Amount</label>
+                    <input type="number" class="form-control" id="amount" name="amount" min="0.01" step="0.01" required>
+                </div>
+                <button type="submit" class="btn btn-success">Add Money</button>
+            </form>
+            {% if add_money_success %}
+            <div class="alert alert-success mt-3">{{ add_money_success }}</div>
+            {% endif %}
+            {% if add_money_error %}
+            <div class="alert alert-danger mt-3">{{ add_money_error }}</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header">Fraud List Management</div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+                <div class="col-md-4">
+                    <label for="fraud_user_id" class="form-label">User ID</label>
+                    <input type="text" class="form-control" id="fraud_user_id" name="fraud_user_id" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="fraud_reason" class="form-label">Reason (for add)</label>
+                    <input type="text" class="form-control" id="fraud_reason" name="fraud_reason">
+                </div>
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button type="submit" name="fraud_action" value="add" class="btn btn-danger">Add to Fraud List</button>
+                    <button type="submit" name="fraud_action" value="remove" class="btn btn-warning">Remove from Fraud List</button>
+                </div>
+            </form>
+            {% if fraud_action_success %}
+            <div class="alert alert-success mt-3">{{ fraud_action_success }}</div>
+            {% endif %}
+            {% if fraud_action_error %}
+            <div class="alert alert-danger mt-3">{{ fraud_action_error }}</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header">All Transactions</div>
+        <div class="card-body table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Sender</th>
+                        <th>Receiver</th>
+                        <th>Note</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in transactions %}
+                    <tr>
+                        <td>{{ t.id }}</td>
+                        <td>{{ t.amount }}</td>
+                        <td>{{ t.type }}</td>
+                        <td>{{ t.sender_first }} {{ t.sender_last }} ({{ t.sender_id }})</td>
+                        <td>{{ t.receiver_first }} {{ t.receiver_last }} ({{ t.receiver_id }})</td>
+                        <td>{{ t.note }}</td>
+                        <td>{{ t.timestamp }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header">Fraud Reports</div>
+        <div class="card-body table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Reporter</th>
+                        <th>Reported User</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in frauds %}
+                    <tr>
+                        <td>{{ f.id }}</td>
+                        <td>{{ f.reporter_first }} {{ f.reporter_last }} ({{ f.user_id }})</td>
+                        <td>{{ f.reported_first }} {{ f.reported_last }} ({{ f.reported_user_id }})</td>
+                        <td>{{ f.reason }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header">Admin Logs</div>
+        <div class="card-body table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Admin</th>
+                        <th>IP Address</th>
+                        <th>Timestamp</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in admin_logs %}
+                    <tr>
+                        <td>{{ log.id }}</td>
+                        <td>{{ log.admin_first }} {{ log.admin_last }} ({{ log.admin_id }})</td>
+                        <td>{{ log.ip_address }}</td>
+                        <td>{{ log.timestamp }}</td>
+                        <td>{{ log.details }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header">Change User Role</div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+                <div class="col-md-5">
+                    <label for="role_user_id" class="form-label">Select User</label>
+                    <select class="form-select" id="role_user_id" name="role_user_id" required>
+                        <option value="">Choose...</option>
+                        {% for u in users %}
+                        <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }} (ID: {{ u.id }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label for="new_role" class="form-label">New Role</label>
+                    <select class="form-select" id="new_role" name="new_role" required>
+                        <option value="">Choose...</option>
+                        <option value="user">User</option>
+                        <option value="agent">Agent</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" name="role_action" value="change" class="btn btn-primary w-100">Change Role</button>
+                </div>
+            </form>
+            {% if role_action_success %}
+            <div class="alert alert-success mt-3">{{ role_action_success }}</div>
+            {% endif %}
+            {% if role_action_error %}
+            <div class="alert alert-danger mt-3">{{ role_action_error }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

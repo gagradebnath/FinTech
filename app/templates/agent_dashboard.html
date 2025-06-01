@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+    <h2>Agent Dashboard</h2>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Welcome, {{ user.first_name }} {{ user.last_name }} (Agent)!</h5>
+            <p class="card-text">User ID: <strong>{{ user.id }}</strong></p>
+            <p class="card-text">Balance: <strong>{{ user.balance }}</strong></p>
+            <a href="{{ url_for('user.profile') }}" class="btn btn-outline-primary btn-sm">View Profile</a>
+            <a href="{{ url_for('user.expense_habit') }}" class="btn btn-outline-secondary btn-sm ms-2">Expense Habit</a>
+            <a href="{{ url_for('budget.plan_budget') }}" class="btn btn-outline-success btn-sm ms-2">Plan Budget</a>
+            <a href="{{ url_for('transaction.send_money_route') }}" class="btn btn-outline-warning btn-sm ms-2">Send Money</a>
+            <a href="{{ url_for('fraud.report_fraud') }}" class="btn btn-outline-danger btn-sm ms-2">Report Fraud</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">Budgets</div>
+                <div class="card-body">
+                    {% if budgets %}
+                        <ul class="list-group">
+                        {% for budget in budgets %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ budget.name if budget.name else 'N/A' }} ({{ budget.currency if budget.currency else '' }})
+                                <span class="badge bg-primary">{{ budget.amount }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No budgets found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">Recent Expenses</div>
+                <div class="card-body">
+                    {% if expenses %}
+                        <ul class="list-group">
+                        {% for exp in expenses %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ exp.note if exp.note else 'Expense' }} ({{ exp.location if exp.location else '' }})
+                                <span class="badge bg-danger">{{ exp.amount }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No expenses found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mt-4">
+        <div class="card-header">Add Money or Cash Out for User Account</div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="target_identifier" class="form-label">User (User ID, Email, or Phone)</label>
+                    <input type="text" class="form-control" id="target_identifier" name="target_identifier" required>
+                </div>
+                <div class="mb-3">
+                    <label for="amount" class="form-label">Amount</label>
+                    <input type="number" class="form-control" id="amount" name="amount" min="0.01" step="0.01" required>
+                </div>
+                <div class="mb-3">
+                    <label for="operation" class="form-label">Operation</label>
+                    <select class="form-select" id="operation" name="operation" required>
+                        <option value="add">Add Money</option>
+                        <option value="cashout">Cash Out</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success">Submit</button>
+            </form>
+            {% if add_money_success %}
+            <div class="alert alert-success mt-3">{{ add_money_success }}</div>
+            {% endif %}
+            {% if add_money_error %}
+            <div class="alert alert-danger mt-3">{{ add_money_error }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
