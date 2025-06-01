@@ -137,6 +137,11 @@ CREATE TABLE "user_expense_habit" (
   "financial_goal" varchar
 );
 
+CREATE TABLE "user_passwords" (
+  "user_id" varchar PRIMARY KEY,
+  "password" varchar
+);
+
 ALTER TABLE "users" ADD FOREIGN KEY ("role_id") REFERENCES "roles" ("id");
 
 ALTER TABLE "role_permissions" ADD FOREIGN KEY ("role_id") REFERENCES "roles" ("id");
