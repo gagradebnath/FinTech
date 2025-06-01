@@ -17,14 +17,31 @@ def send_money_route():
     error = None
     success = None
     if request.method == 'POST':
-        recipient_id = request.form.get('recipient_id')
+        recipient_identifier = request.form.get('recipient_identifier')
         amount = request.form.get('amount')
         note = request.form.get('note')
         payment_method = request.form.get('payment_method')
-        ok, msg, updated_user = send_money(user['id'], recipient_id, amount, note, payment_method)
-        if ok:
-            success = msg
-            user = updated_user
+        conn = current_app.get_db_connection()
+        recipient = conn.execute('''
+            SELECT u.id FROM users u
+            LEFT JOIN contact_info c ON u.id = c.user_id
+            WHERE LOWER(u.id) = ? OR LOWER(c.email) = ? OR c.phone = ?
+        ''', (recipient_identifier.lower(), recipient_identifier.lower(), recipient_identifier)).fetchone()
+        if not recipient:
+            error = 'Recipient not found.'
+        elif recipient['id'] == user['id']:
+            error = 'Cannot send money to yourself.'
         else:
-            error = msg
+            # Check if recipient is in fraud_list
+            fraud = conn.execute('SELECT 1 FROM fraud_list WHERE reported_user_id = ?', (recipient['id'],)).fetchone()
+            if fraud:
+                error = 'Cannot send money: recipient is flagged for fraud.'
+            else:
+                ok, msg, updated_user = send_money(user['id'], recipient['id'], amount, note, payment_method)
+                if ok:
+                    success = msg
+                    user = updated_user
+                else:
+                    error = msg
+        conn.close()
     return render_template('send_money.html', error=error, success=success)
