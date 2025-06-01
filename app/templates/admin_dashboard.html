@@ -217,5 +217,69 @@
             {% endif %}
         </div>
     </div>
+    <div class="card mb-4">
+        <div class="card-header">Role Permissions Management</div>
+        <div class="card-body">
+            <form method="POST" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="perm_role_id" class="form-label">Role</label>
+                    <select class="form-select" id="perm_role_id" name="perm_role_id" required>
+                        <option value="">Choose...</option>
+                        {% for role in roles %}
+                        <option value="{{ role.id }}">{{ role.name|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="perm_permission_id" class="form-label">Permission</label>
+                    <select class="form-select" id="perm_permission_id" name="perm_permission_id" required>
+                        <option value="">Choose...</option>
+                        {% for perm in permissions %}
+                        <option value="{{ perm.id }}">{{ perm.name }} - {{ perm.description }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" name="perm_action" value="add" class="btn btn-success w-100">Add</button>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" name="perm_action" value="remove" class="btn btn-danger w-100">Remove</button>
+                </div>
+            </form>
+            {% if perm_action_success %}
+            <div class="alert alert-success mt-3">{{ perm_action_success }}</div>
+            {% endif %}
+            {% if perm_action_error %}
+            <div class="alert alert-danger mt-3">{{ perm_action_error }}</div>
+            {% endif %}
+            <hr>
+            <h5>Current Role Permissions</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Permissions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for role in roles %}
+                        <tr>
+                            <td>{{ role.name|capitalize }}</td>
+                            <td>
+                                {% set perms = role_permissions_map[role.id] %}
+                                {% for perm in permissions if perm.id in perms %}
+                                    <span class="badge bg-primary">{{ perm.name }}</span>
+                                {% else %}
+                                    <span class="text-muted">No permissions assigned</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

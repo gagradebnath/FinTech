@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, flash
 from app.utils.user_utils import get_current_user
 from app.utils.dashboard import get_user_budgets, get_recent_expenses
+from app.utils.permissions_utils import has_permission
 import uuid
 
 agent_bp = Blueprint('agent', __name__)
@@ -12,6 +13,8 @@ def get_agent():
 @agent_bp.route('/agent/dashboard', methods=['GET', 'POST'])
 def agent_dashboard():
     user = get_current_user()
+    if not has_permission(user['id'], 'view_dashboard'):
+        return render_template('agent_dashboard.html', user=user, budgets=[], expenses=[], add_money_success=None, add_money_error='Permission denied.')
     budgets = get_user_budgets(user['id'])
     expenses = get_recent_expenses(user['id'])
     add_money_success = None
@@ -38,7 +41,9 @@ def agent_dashboard():
                     amount_val = float(amount)
                     agent_bal = conn.execute('SELECT balance FROM users WHERE id = ?', (user['id'],)).fetchone()['balance']
                     if operation == 'add':
-                        if agent_bal < amount_val:
+                        if not has_permission(user['id'], 'add_money'):
+                            add_money_error = 'Permission denied.'
+                        elif agent_bal < amount_val:
                             add_money_error = 'Insufficient agent balance.'
                         else:
                             # Debit agent, credit user
@@ -49,7 +54,9 @@ def agent_dashboard():
                             conn.commit()
                             add_money_success = f"Added {amount} to {target['first_name']} {target['last_name']} (ID: {target['id']})"
                     elif operation == 'cashout':
-                        if target['balance'] < amount_val:
+                        if not has_permission(user['id'], 'cash_out'):
+                            add_money_error = 'Permission denied.'
+                        elif target['balance'] < amount_val:
                             add_money_error = 'Insufficient user balance for cash out.'
                         else:
                             # Debit user, credit agent

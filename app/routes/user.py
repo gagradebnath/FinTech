@@ -12,6 +12,7 @@ from app.utils.user_utils import get_current_user
 from app.utils.dashboard import get_user_budgets, get_recent_expenses
 from app.utils.expense_habit import get_expense_habit, upsert_expense_habit
 from app.utils.profile import get_user_and_contact, update_user_and_contact
+from app.utils.permissions_utils import has_permission
 
 user_bp = Blueprint('user', __name__)
 
@@ -99,6 +100,8 @@ def dashboard():
     user = get_current_user()
     if not user:
         return redirect(url_for('user.login'))
+    if not has_permission(user['id'], 'view_dashboard'):
+        return render_template('dashboard.html', user=user, budgets=[], expenses=[], error='Permission denied.')
     budgets = get_user_budgets(user['id'])
     expenses = get_recent_expenses(user['id'])
     return render_template('dashboard.html', user=user, budgets=budgets, expenses=expenses)
@@ -108,6 +111,8 @@ def expense_habit():
     user = get_current_user()
     if not user:
         return redirect(url_for('user.login'))
+    if not has_permission(user['id'], 'edit_expense_habit'):
+        return render_template('expense_habit.html', habit=None, error='Permission denied.')
     habit = get_expense_habit(user['id'])
     if request.method == 'POST':
         data = {
@@ -138,6 +143,8 @@ def profile():
     user_id = session.get('user_id')
     user, contact = get_user_and_contact(user_id) if user_id else (None, None)
     if request.method == 'POST' and user:
+        if not has_permission(user['id'], 'edit_profile'):
+            return render_template('profile.html', user=user, contact=contact, error='Permission denied.')
         user_data = {
             'first_name': request.form.get('first_name'),
             'last_name': request.form.get('last_name'),

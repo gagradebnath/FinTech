@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, current_app, session, red
 import uuid
 from .user import get_current_user
 from app.utils.transaction_utils import get_user_by_id, send_money
+from app.utils.permissions_utils import has_permission
 
 transaction_bp = Blueprint('transaction', __name__)
 
@@ -16,6 +17,8 @@ def send_money_route():
         return redirect(url_for('user.login'))
     error = None
     success = None
+    if not has_permission(user['id'], 'send_money'):
+        return render_template('send_money.html', error='Permission denied.', success=None)
     if request.method == 'POST':
         recipient_identifier = request.form.get('recipient_identifier')
         amount = request.form.get('amount')

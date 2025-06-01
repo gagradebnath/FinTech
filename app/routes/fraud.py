@@ -1,4 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+from app.utils.permissions_utils import has_permission
+
 fraud_bp = Blueprint('fraud', __name__)
 
 @fraud_bp.route('/fraud', methods=['GET'])
@@ -10,6 +12,8 @@ def report_fraud():
     user_id = session.get('user_id')
     error = None
     success = None
+    if user_id and not has_permission(user_id, 'report_fraud'):
+        return render_template('report_fraud.html', error='Permission denied.', success=None)
     if request.method == 'POST':
         identifier = request.form.get('reported_user_identifier')
         reason = request.form.get('reason')
