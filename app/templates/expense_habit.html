@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+    <h2>User Expense Habit</h2>
+    <form method="POST">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="monthly_income" class="form-label">Monthly Income</label>
+                <input type="text" class="form-control" id="monthly_income" name="monthly_income" value="{{ habit.monthly_income if habit else '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Earning Member</label><br>
+                <input type="checkbox" id="earning_member" name="earning_member" {% if habit and habit.earning_member %}checked{% endif %}>
+                <label for="earning_member">Yes</label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="dependents" class="form-label">Dependents</label>
+                <input type="number" class="form-control" id="dependents" name="dependents" value="{{ habit.dependents if habit else '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="living_situation" class="form-label">Living Situation</label>
+                <input type="text" class="form-control" id="living_situation" name="living_situation" value="{{ habit.living_situation if habit else '' }}">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="rent" class="form-label">Rent</label>
+                <input type="number" step="0.01" class="form-control" id="rent" name="rent" value="{{ habit.rent if habit else '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="transport_mode" class="form-label">Transport Mode</label>
+                <input type="text" class="form-control" id="transport_mode" name="transport_mode" value="{{ habit.transport_mode if habit else '' }}">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="transport_cost" class="form-label">Transport Cost</label>
+                <input type="number" step="0.01" class="form-control" id="transport_cost" name="transport_cost" value="{{ habit.transport_cost if habit else '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="eating_out_frequency" class="form-label">Eating Out Frequency</label>
+                <input type="text" class="form-control" id="eating_out_frequency" name="eating_out_frequency" value="{{ habit.eating_out_frequency if habit else '' }}">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="grocery_cost" class="form-label">Grocery Cost</label>
+                <input type="number" step="0.01" class="form-control" id="grocery_cost" name="grocery_cost" value="{{ habit.grocery_cost if habit else '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="utilities_cost" class="form-label">Utilities Cost</label>
+                <input type="number" step="0.01" class="form-control" id="utilities_cost" name="utilities_cost" value="{{ habit.utilities_cost if habit else '' }}">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="mobile_internet_cost" class="form-label">Mobile/Internet Cost</label>
+                <input type="number" step="0.01" class="form-control" id="mobile_internet_cost" name="mobile_internet_cost" value="{{ habit.mobile_internet_cost if habit else '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="subscriptions" class="form-label">Subscriptions</label>
+                <input type="text" class="form-control" id="subscriptions" name="subscriptions" value="{{ habit.subscriptions if habit else '' }}">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="savings" class="form-label">Savings</label>
+                <input type="text" class="form-control" id="savings" name="savings" value="{{ habit.savings if habit else '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="investments" class="form-label">Investments</label>
+                <input type="text" class="form-control" id="investments" name="investments" value="{{ habit.investments if habit else '' }}">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Loans</label><br>
+                <input type="checkbox" id="loans" name="loans" {% if habit and habit.loans %}checked{% endif %}>
+                <label for="loans">Yes</label>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="loan_payment" class="form-label">Loan Payment</label>
+                <input type="number" step="0.01" class="form-control" id="loan_payment" name="loan_payment" value="{{ habit.loan_payment if habit else '' }}">
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="financial_goal" class="form-label">Financial Goal</label>
+            <input type="text" class="form-control" id="financial_goal" name="financial_goal" value="{{ habit.financial_goal if habit else '' }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary ms-2">Back to Dashboard</a>
+    </form>
+</div>
+{% endblock %}

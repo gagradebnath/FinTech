@@ -2,9 +2,56 @@
 {% block content %}
 <div class="container py-4">
     <h2>Dashboard</h2>
-    <p>Welcome to your dashboard!</p>
-    <div class="alert alert-info mt-4">
-        This is a placeholder dashboard. Add your finance summary, recent transactions, and more here.
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Welcome, {{ user.first_name }} {{ user.last_name }}!</h5>
+            <p class="card-text">User ID: <strong>{{ user.id }}</strong></p>
+            <p class="card-text">Balance: <strong>{{ user.balance }}</strong></p>
+            <a href="{{ url_for('user.profile') }}" class="btn btn-outline-primary btn-sm">View Profile</a>
+            <a href="{{ url_for('user.expense_habit') }}" class="btn btn-outline-secondary btn-sm ms-2">Expense Habit</a>
+            <a href="{{ url_for('user.plan_budget') }}" class="btn btn-outline-success btn-sm ms-2">Plan Budget</a>
+            <a href="{{ url_for('user.send_money') }}" class="btn btn-outline-warning btn-sm ms-2">Send Money</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">Budgets</div>
+                <div class="card-body">
+                    {% if budgets %}
+                        <ul class="list-group">
+                        {% for budget in budgets %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ budget.name if budget.name else 'N/A' }} ({{ budget.currency if budget.currency else '' }})
+                                <span class="badge bg-primary">{{ budget.amount }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No budgets found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">Recent Expenses</div>
+                <div class="card-body">
+                    {% if expenses %}
+                        <ul class="list-group">
+                        {% for exp in expenses %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ exp.note if exp.note else 'Expense' }} ({{ exp.location if exp.location else '' }})
+                                <span class="badge bg-danger">{{ exp.amount }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>No expenses found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

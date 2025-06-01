@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+    <h2>Send Money</h2>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="recipient_id" class="form-label">Recipient User ID</label>
+            <input type="text" class="form-control" id="recipient_id" name="recipient_id" required>
+        </div>
+        <div class="mb-3">
+            <label for="amount" class="form-label">Amount</label>
+            <input type="number" class="form-control" id="amount" name="amount" min="0.01" step="0.01" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Send</button>
+        <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary ms-2">Back to Dashboard</a>
+    </form>
+</div>
+{% endblock %}
