@@ -107,6 +107,18 @@ README.md
 4. **Access the app:**
    Open your browser to [http://localhost:5000](http://localhost:5000)
 
+## Demo Accounts (For Quick Testing)
+
+After running the seed script, you can log in with the following demo users:
+
+| Role   | User ID | Password |
+|--------|---------|----------|
+| Admin  | admin   | admin    |
+| Agent  | agent   | agent    |
+| User   | user    | user     |
+
+All demo accounts start with a balance of 10,000. You can use these credentials to test all admin, agent, and user flows immediately after setup.
+
 ## Database
 - SQLite database (`fin_guard.db`)
 - Schema defined in `DatabaseSchema.sql`

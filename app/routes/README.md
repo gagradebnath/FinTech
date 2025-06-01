@@ -1,105 +1,136 @@
 # FinGuard App Routes
 
-This folder contains all Flask route blueprints for the FinGuard application. Each file corresponds to a specific feature or module of the app.
+This folder contains all Flask route blueprints for the FinGuard application. Each file corresponds to a specific feature or module of the app. Use these routes to handle HTTP requests and render templates or return JSON responses.
 
-## Route Files
+## Route Files and Main Functions
 
-- `user.py`: User registration, login, dashboard, profile, and expense habit endpoints.
-- `admin.py`: (Scaffold) Admin-specific endpoints.
-- `agent.py`: (Scaffold) Agent-specific endpoints.
-- `budget.py`: Budget planning and saving endpoints.
-- `transaction.py`: Money transfer and transaction endpoints.
-- `fraud.py`: (Scaffold) Fraud reporting endpoints.
-- `chat.py`: (Scaffold) AI chat endpoints.
-- `__init__.py`: Registers all blueprints with the Flask app.
+### `user.py`
+User registration, login, dashboard, profile, and expense habit endpoints.
+- `@user_bp.route('/login', methods=['GET', 'POST'])`
+  - User login page and logic.
+  - Params: login_id, password, role (form fields)
+  - Returns: Renders login page or redirects to dashboard.
+  - Example:
+    ```python
+    @user_bp.route('/login', methods=['GET', 'POST'])
+    def login():
+        ...
+    ```
+- `@user_bp.route('/register', methods=['GET', 'POST'])`
+  - User registration page and logic.
+  - Params: first_name, last_name, dob, etc. (form fields)
+  - Returns: Renders registration page or redirects to login.
+- `@user_bp.route('/dashboard', methods=['GET'])`
+  - User dashboard with budgets and recent transactions.
+  - Returns: Renders dashboard template.
+- `@user_bp.route('/profile', methods=['GET', 'POST'])`
+  - View and update user profile.
+  - Returns: Renders profile page.
+- `@user_bp.route('/expense-habit', methods=['GET', 'POST'])`
+  - View and update expense habit info.
+  - Returns: Renders expense habit page.
 
-## How to Add a New Route
+### `admin.py`
+Admin dashboard and management endpoints.
+- `@admin_bp.route('/admin/dashboard', methods=['GET', 'POST'])`
+  - Admin dashboard: manage agents, users, fraud, roles, permissions, logs.
+  - Returns: Renders admin dashboard template.
+  - Example:
+    ```python
+    @admin_bp.route('/admin/dashboard', methods=['GET', 'POST'])
+    def admin_dashboard():
+        ...
+    ```
 
-1. Create a new `.py` file in this folder for your feature.
-2. Define a Flask `Blueprint` and your routes in that file.
-3. Import and register your blueprint in `__init__.py`.
+### `agent.py`
+Agent dashboard and money management endpoints.
+- `@agent_bp.route('/agent/dashboard', methods=['GET', 'POST'])`
+  - Agent dashboard: add money to users, cash out, view transactions.
+  - Returns: Renders agent dashboard template.
+  - Example:
+    ```python
+    @agent_bp.route('/agent/dashboard', methods=['GET', 'POST'])
+    def agent_dashboard():
+        ...
+    ```
 
-### Example: Adding a Route
-```python
-# In app/routes/hello.py
-from flask import Blueprint
-hello_bp = Blueprint('hello', __name__)
+### `budget.py`
+Budget planning and saving endpoints.
+- `@budget_bp.route('/plan-budget', methods=['GET', 'POST'])`
+  - Budget planning page and logic.
+  - Returns: Renders plan_budget template.
+- `@budget_bp.route('/save_budget', methods=['POST'])`
+  - Save a full budget via AJAX/JSON.
+  - Params: budgetName, currency, income, expenses (JSON)
+  - Returns: JSON response with success/error.
 
-@hello_bp.route('/hello')
-def hello():
-    return 'Hello, world!'
+### `transaction.py`
+Money transfer and transaction endpoints.
+- `@transaction_bp.route('/send-money', methods=['GET', 'POST'])`
+  - Send money to another user.
+  - Params: recipient_identifier, amount, payment_method, note, location (form fields)
+  - Returns: Renders send_money template with result.
+  - Example:
+    ```python
+    @transaction_bp.route('/send-money', methods=['GET', 'POST'])
+    def send_money_route():
+        ...
+    ```
 
-# In app/routes/__init__.py
-from .hello import hello_bp
+### `fraud.py`
+Fraud reporting endpoints.
+- `@fraud_bp.route('/report-fraud', methods=['GET', 'POST'])`
+  - Report a user for fraud.
+  - Params: reported_user_identifier, reason (form fields)
+  - Returns: Renders report_fraud template with result.
 
-def register_blueprints(app):
-    app.register_blueprint(hello_bp)
-```
+### `chat.py`
+AI chat endpoints (scaffold).
+- `@chat_bp.route('/chat', methods=['GET'])`
+  - Returns: JSON message for chat endpoint.
 
-## Example: Using Utility Functions in Routes
+### `__init__.py`
+Blueprint registration.
+- `register_blueprints(app)`
+  - Registers all blueprints with the Flask app.
+  - Usage:
+    ```python
+    from .user import user_bp
+    from .admin import admin_bp
+    ...
+    def register_blueprints(app):
+        app.register_blueprint(user_bp)
+        app.register_blueprint(admin_bp)
+        ...
+    ```
 
-### User Login (user.py)
+---
+
+## Example Usage: Calling Utility Functions in Routes
+
+Most routes use utility functions from `app/utils/` for business logic and database access. For example:
+
 ```python
 from app.utils.auth import get_user_by_login_id, check_password
+from app.utils.dashboard import get_user_budgets, get_recent_expenses
+from app.utils.transaction_utils import send_money
 
 @user_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        login_id = request.form.get('login_id')
-        password = request.form.get('password')
-        user = get_user_by_login_id(login_id)
-        if user and check_password(user['id'], password):
-            session['user_id'] = user['id']
-            return redirect(url_for('user.dashboard'))
-    return render_template('login.html')
-```
-
-### Dashboard with Utility Queries (user.py)
-```python
-from app.utils.dashboard import get_user_budgets, get_recent_expenses
+    ...
 
 @user_bp.route('/dashboard')
 def dashboard():
     user = get_current_user()
     budgets = get_user_budgets(user['id'])
     expenses = get_recent_expenses(user['id'])
-    return render_template('dashboard.html', user=user, budgets=budgets, expenses=expenses)
-```
-
-### Budget Planning (budget.py)
-```python
-from app.utils.budget_utils import get_user_budget, save_or_update_budget
-
-@budget_bp.route('/plan-budget', methods=['GET', 'POST'])
-def plan_budget():
-    user = get_current_user()
-    budget = get_user_budget(user['id'])
-    if request.method == 'POST':
-        name = request.form.get('name')
-        currency = request.form.get('currency')
-        income_source = request.form.get('income_source')
-        amount = request.form.get('amount')
-        budget = save_or_update_budget(user['id'], name, currency, income_source, amount)
-    return render_template('plan_budget.html', budget=budget)
-```
-
-### Sending Money (transaction.py)
-```python
-from app.utils.transaction_utils import send_money
+    ...
 
 @transaction_bp.route('/send-money', methods=['GET', 'POST'])
 def send_money_route():
-    user = get_current_user()
-    if request.method == 'POST':
-        recipient_id = request.form.get('recipient_id')
-        amount = request.form.get('amount')
-        note = request.form.get('note')
-        payment_method = request.form.get('payment_method')
-        ok, msg, updated_user = send_money(user['id'], recipient_id, amount, note, payment_method)
-    return render_template('send_money.html')
+    ...
+    ok, msg, updated_user = send_money(user['id'], recipient['id'], amount, payment_method, note, location, 'transfer')
+    ...
 ```
 
-## Notes
-- Keep each route file focused on a single feature or module for maintainability.
-- Use helper functions from `app/utils/` for all database and business logic.
-- For more details, see the main `README.md` in the project root or the `app/README.md` file.
+This README lists all route files and their main endpoints, with parameters, return values, and usage. Use this as a reference for backend development in FinGuard.
