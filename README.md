@@ -35,53 +35,53 @@ FinGuard is a personal finance management web application built with Flask and S
 
 ```text
 app/
-  __init__.py
-  config.py
-  models.py (placeholder)
-  README.md
-  routes/
     __init__.py
-    user.py
-    admin.py
-    agent.py
-    budget.py
-    transaction.py
-    fraud.py
-    chat.py
+    config.py
+    models.py (placeholder)
     README.md
-    __pycache__/
-  static/
-    README.md
-    css/
-      style.css
-    js/
-      main.js
-      budget.js
-  templates/
-    README.md
-    base.html
-    index.html
-    login.html
-    register.html
-    dashboard.html
-    profile.html
-    expense_habit.html
-    plan_budget.html
-    send_money.html
-  utils/
-    __init__.py
-    auth.py
-    blockchain.py
-    budget_utils.py
-    dashboard.py
-    expense_habit.py
-    notifications.py
-    profile.py
-    README.md
-    register.py
-    transaction_utils.py
-    user_utils.py
-    __pycache__/
+    routes/
+            __init__.py
+            user.py
+            admin.py
+            agent.py
+            budget.py
+            transaction.py
+            fraud.py
+            chat.py
+            README.md
+            __pycache__/
+    static/
+            README.md
+            css/
+            style.css
+            js/
+            main.js
+            budget.js
+    templates/
+            README.md
+            base.html
+            index.html
+            login.html
+            register.html
+            dashboard.html
+            profile.html
+            expense_habit.html
+            plan_budget.html
+            send_money.html
+    utils/
+            __init__.py
+            auth.py
+            blockchain.py
+            budget_utils.py
+            dashboard.py
+            expense_habit.py
+            notifications.py
+            profile.py
+            README.md
+            register.py
+            transaction_utils.py
+            user_utils.py
+            __pycache__/
 DatabaseSchema.sql
 fin_guard.db
 requirements.txt
