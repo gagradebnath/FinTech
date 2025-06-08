@@ -39,6 +39,38 @@ def insert_dummy_data(cursor):
     cursor.execute('INSERT OR REPLACE INTO user_passwords (user_id, password) VALUES (?, ?)', ('agent', 'agent'))
     cursor.execute('INSERT OR REPLACE INTO user_passwords (user_id, password) VALUES (?, ?)', ('user', 'user'))
 
+    # Insert permissions
+    permissions = [
+        ('perm_manage_users', 'Manage users'),
+        ('perm_manage_agents', 'Manage agents'),
+        ('perm_manage_fraud', 'Manage fraud list'),
+        ('perm_manage_permissions', 'Manage role permissions'),
+        ('perm_add_money', 'Add money'),
+        ('perm_cash_out', 'Cash out'),
+        ('perm_send_money', 'Send money'),
+        ('perm_view_dashboard', 'View dashboard'),
+        ('perm_report_fraud', 'Report fraud'),
+        ('perm_edit_profile', 'Edit profile'),
+    ]
+    permission_ids = {}
+    for perm_name, perm_desc in permissions:
+        perm_id = str(uuid.uuid4())
+        permission_ids[perm_name] = perm_id
+        cursor.execute("INSERT INTO permissions (id, name, description) VALUES (?, ?, ?)", (perm_id, perm_name, perm_desc))
+
+    # Assign permissions to roles
+    def assign_perms(role_id, perm_names):
+        for perm_name in perm_names:
+            rp_id = str(uuid.uuid4())
+            cursor.execute("INSERT INTO role_permissions (id, role_id, permission_id) VALUES (?, ?, ?)", (rp_id, role_id, permission_ids[perm_name]))
+
+    # Admin: all permissions
+    assign_perms(admin_role_id, [p[0] for p in permissions])
+    # Agent: add_money, cash_out, view_dashboard, edit_profile
+    assign_perms(agent_role_id, ['perm_add_money', 'perm_cash_out', 'perm_view_dashboard', 'perm_edit_profile'])
+    # User: send_money, view_dashboard, report_fraud, edit_profile
+    assign_perms(user_role_id, ['perm_send_money', 'perm_view_dashboard', 'perm_report_fraud', 'perm_edit_profile'])
+
     print('Dummy data inserted!')
     print('--- LOGIN DETAILS ---')
     print('Admin:   id=admin   password=admin')
