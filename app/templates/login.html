@@ -49,8 +49,10 @@
   </div>
 </div>
 <script>
-  var errorModal = new bootstrap.Modal(document.getElementById('loginErrorModal'));
-  errorModal.show();
+  document.addEventListener('DOMContentLoaded', function() {
+    var errorModal = new bootstrap.Modal(document.getElementById('loginErrorModal'));
+    errorModal.show();
+  });
 </script>
 {% endif %}
 
