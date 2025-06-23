@@ -1,14 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="login-bg" style="padding: 2vw;">
+<div class="login-bg">
   <div class="login-split">
     <div class="login-split-left">
       <div class="login-big-title">
         <span class="teal">LET'S CONNECT</span><br>
-        <span class="gray">WITH OUR FINGUARD<br>ECOSYSTEM</span>
+        <span class="gray">WITH OUR FINGUARD ECOSYSTEM</span>
       </div>
       <div class="login-desc">Seamlessly manage your finances and banking with FinGuard's secure, modern platform.</div>
-      <div class="login-reflect">FGUARD</div>
     </div>
     <div class="login-split-right">
       <div class="login-card">
@@ -96,4 +95,5 @@
 {% endblock %}
 {% block extra_scripts %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+<script src="{{ url_for('static', filename='js/finance-bg.js') }}"></script>
 {% endblock %}
