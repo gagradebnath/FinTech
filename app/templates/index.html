@@ -1,11 +1,45 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="centered-content">
-    <h1 class="mb-4">Welcome to FinGuard</h1>
-    <p class="mb-4">Your personal finance management app.</p>
-    <div class="d-flex gap-3">
-        <a href="/login" class="btn btn-primary btn-lg">Login</a>
-        <a href="/register" class="btn btn-success btn-lg">Register</a>
+<div class="finsmart-hero">
+    <div class="finsmart-bg-shape"></div>
+    <div class="finsmart-hero-content">
+        <div class="finsmart-hero-left">
+            <div class="finsmart-welcome">WELCOME</div>
+            <h1 class="finsmart-title">FinGuard: Personal Finance &<br>Internet Banking</h1>
+            <div class="finsmart-desc">Empowering you to manage your money, track expenses, and bank online—securely and efficiently.<br>Take control of your financial journey with FinGuard.</div>
+            <div class="finsmart-cta-row">
+                <a href="#" class="finsmart-learn-link">Learn more <span class="finsmart-underline"></span></a>
+                <a href="#" class="finsmart-arrow-btn"><span class="finsmart-arrow">→</span></a>
+            </div>
+            <div class="finsmart-auth-btns mt-4">
+                <a href="/login" class="btn finsmart-btn-login">Login</a>
+                <a href="/register" class="btn finsmart-btn-signup">Sign Up</a>
+            </div>
+        </div>
+        <div class="finsmart-hero-right">
+            <img src="{{ url_for('static', filename='assets/image-removebg-preview (1).png') }}" alt="FinGuard Card" class="finsmart-card-img">
+            <div class="finsmart-card-img-shadow"></div>
+        </div>
+    </div>
+    <div class="finsmart-what-row">
+        <div class="finsmart-what-title">What does FinGuard provide?</div>
+        <div class="finsmart-what-icons">
+            <div class="finsmart-what-item">
+                <div class="finsmart-what-icon star">★</div>
+                <div class="finsmart-what-label"><b>Financial Security</b><br><span>Your data and funds are always protected</span></div>
+            </div>
+            <div class="finsmart-what-item">
+                <div class="finsmart-what-icon lock">🔒</div>
+                <div class="finsmart-what-label"><b>Smart Management</b><br><span>Track spending, set budgets, and reach your goals</span></div>
+            </div>
+            <div class="finsmart-what-item">
+                <div class="finsmart-what-icon approach">🔗</div>
+                <div class="finsmart-what-label"><b>Seamless Banking</b><br><span>Easy online banking and money transfers</span></div>
+            </div>
+        </div>
     </div>
 </div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/landing.js') }}"></script>
 {% endblock %}

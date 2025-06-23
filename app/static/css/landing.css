@@ -1,0 +1,291 @@
+/* FinSmart landing page styles */
+body.landing-dark {
+    background: radial-gradient(ellipse at top left, #1e3c47 0%, #101820 100%);
+    color: #fff;
+    min-height: 100vh;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+.finsmart-hero {
+    position: relative;
+    min-height: 100vh;
+    padding: 0;
+    background: none;
+    overflow: hidden;
+}
+.finsmart-bg-shape {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 70% 30%, #3ed6c2 0%, #101820 70%);
+    opacity: 0.18;
+    z-index: 0;
+}
+.finsmart-hero-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 5vw 7vw 0 7vw;
+    position: relative;
+    z-index: 2;
+}
+.finsmart-hero-left {
+    flex: 1 1 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 320px;
+    max-width: 540px;
+    margin-top: 3vw;
+}
+.finsmart-welcome {
+    color: #3ed6c2;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 0.7rem;
+    font-size: 1.1rem;
+}
+.finsmart-title {
+    font-size: 2.7rem;
+    font-weight: 700;
+    margin-bottom: 1.1rem;
+    color: #fff;
+    line-height: 1.15;
+}
+.finsmart-desc {
+    color: #cfd8dc;
+    font-size: 1.1rem;
+    margin-bottom: 2.2rem;
+}
+.finsmart-cta-row {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+.finsmart-learn-link {
+    color: #3ed6c2;
+    font-weight: 500;
+    text-decoration: none;
+    position: relative;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+}
+.finsmart-learn-link:hover {
+    color: #fff;
+}
+.finsmart-underline {
+    display: block;
+    border-bottom: 2px solid #3ed6c2;
+    width: 60px;
+    margin-top: -6px;
+    margin-left: 0;
+}
+.finsmart-arrow-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    color: #101820;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 2rem;
+    box-shadow: 0 2px 16px #3ed6c255;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+}
+.finsmart-arrow-btn:hover {
+    background: #3ed6c2;
+    color: #fff;
+}
+.finsmart-arrow {
+    font-size: 2rem;
+    font-weight: 600;
+}
+.finsmart-hero-right {
+    flex: 1 1 50%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    min-width: 320px;
+    margin-top: 2vw;
+    position: relative;
+}
+.finsmart-card {
+    position: relative;
+    background: linear-gradient(135deg, #3ed6c2 60%, #b2fefa 100%);
+    color: #101820;
+    border-radius: 22px;
+    box-shadow: 0 8px 48px #3ed6c299;
+    min-width: 320px;
+    max-width: 370px;
+    width: 100%;
+    padding: 2.2rem 2.2rem 1.7rem 2.2rem;
+    margin-right: 2vw;
+    margin-bottom: 2vw;
+    z-index: 2;
+    overflow: visible;
+}
+.finsmart-card-img {
+    max-width: 700px;
+    width: 100%;
+    border-radius: 22px;
+    /* box-shadow: 0 8px 48px #3ed6c299; */
+    /* margin-right: 2vw; */
+    margin-left: 2vw;
+    margin-bottom: 2vw;
+    margin-top: 3vw;
+    background: transparent;
+    display: block;
+    position: relative;
+    z-index: 2;
+}
+.finsmart-card-img-shadow {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%) translateY(40%);
+    width: 70%;
+    height: 38px;
+    background: radial-gradient(ellipse at center, rgba(30,60,71,0.18) 0%, rgba(30,60,71,0.08) 60%, rgba(30,60,71,0) 100%);
+    filter: blur(2px);
+    z-index: 1;
+    pointer-events: none;
+}
+.finsmart-card-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+}
+.finsmart-card-number {
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    margin-bottom: 1.2rem;
+}
+.finsmart-card-balance-label {
+    font-size: 1rem;
+    color: #0e3c47;
+    opacity: 0.7;
+    margin-bottom: 0.2rem;
+}
+.finsmart-card-balance {
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 8px #3ed6c2cc;
+}
+.finsmart-card-dot {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    width: 22px;
+    height: 22px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 6px #3ed6c2cc;
+}
+.finsmart-what-row {
+    margin-top: 4vw;
+    padding: 0 7vw 3vw 7vw;
+    position: relative;
+    z-index: 2;
+}
+.finsmart-what-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2.2rem;
+    text-align: center;
+}
+.finsmart-what-icons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+}
+.finsmart-what-item {
+    background: #182c34;
+    border-radius: 16px;
+    padding: 1.5rem 1.7rem;
+    min-width: 220px;
+    max-width: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 2px 16px #3ed6c255;
+}
+.finsmart-what-icon {
+    font-size: 2.2rem;
+    margin-bottom: 1rem;
+    color: #3ed6c2;
+}
+.finsmart-what-label {
+    color: #fff;
+    font-size: 1.1rem;
+    text-align: center;
+}
+.finsmart-what-label span {
+    color: #b2fefa;
+    font-size: 0.98rem;
+    font-weight: 400;
+}
+.finsmart-auth-btns {
+    display: flex;
+    gap: 1.2rem;
+    margin-top: 1.5rem;
+}
+.finsmart-btn-login {
+    background: #fff;
+    color: #101820;
+    border-radius: 20px;
+    font-weight: 600;
+    padding: 0.6rem 2.2rem;
+    font-size: 1.1rem;
+    border: none;
+    box-shadow: 0 2px 12px #3ed6c255;
+    transition: background 0.2s, color 0.2s;
+}
+.finsmart-btn-login:hover {
+    background: #3ed6c2;
+    color: #fff;
+}
+.finsmart-btn-signup {
+    background: #3ed6c2;
+    color: #fff;
+    border-radius: 20px;
+    font-weight: 600;
+    padding: 0.6rem 2.2rem;
+    font-size: 1.1rem;
+    border: none;
+    box-shadow: 0 2px 12px #3ed6c255;
+    transition: background 0.2s, color 0.2s;
+}
+.finsmart-btn-signup:hover {
+    background: #fff;
+    color: #101820;
+}
+@media (max-width: 900px) {
+    .finsmart-hero-content {
+        flex-direction: column;
+        padding: 7vw 3vw 0 3vw;
+    }
+    .finsmart-hero-right {
+        justify-content: center;
+        margin: 0;
+    }
+    .finsmart-card {
+        margin: 2vw auto 0 auto;
+    }
+    .finsmart-card-img {
+        margin: 2vw auto 0 auto;
+        display: block;
+    }
+    .finsmart-card-img-shadow {
+        width: 80%;
+        height: 24px;
+        transform: translateX(-50%) translateY(30%);
+    }
+    .finsmart-what-row {
+        padding: 0 3vw 3vw 3vw;
+    }
+}
