@@ -1,82 +1,99 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
-    <h2 class="mb-4 text-center">Login</h2>
-    <form method="POST" action="/login">
-      <div class="mb-3">
-        <label for="role" class="form-label">Select Role</label>
-        <select class="form-select" id="role" name="role" required>
-          <option value="">Choose...</option>
-          <option value="user">User</option>
-          <option value="agent">Agent</option>
-          <option value="admin">Admin</option>
-        </select>
+<div class="login-bg" style="padding: 2vw;">
+  <div class="login-split">
+    <div class="login-split-left">
+      <div class="login-big-title">
+        <span class="teal">LET'S CONNECT</span><br>
+        <span class="gray">WITH OUR FINGUARD<br>ECOSYSTEM</span>
       </div>
-      <div class="mb-3">
-        <label for="login_id" class="form-label">User ID / Email / Phone</label>
-        <input type="text" class="form-control" id="login_id" name="login_id" required>
-      </div>
-      <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="password" required>
-      </div>
-      <div class="mb-3 form-check">
-        <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
-        <label class="form-check-label" for="remember_me">Remember me</label>
-      </div>
-      <button type="submit" class="btn btn-primary w-100">Login</button>
-    </form>
-  </div>
-</div>
-
-<!-- Login failed popup -->
-{% if error %}
-<div class="modal fade" id="loginErrorModal" tabindex="-1" aria-labelledby="loginErrorModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title" id="loginErrorModalLabel">Login Failed</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        {{ error }}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      <div class="login-desc">Seamlessly manage your finances and banking with FinGuard's secure, modern platform.</div>
+      <div class="login-reflect">FGUARD</div>
+    </div>
+    <div class="login-split-right">
+      <div class="login-card">
+        <div class="login-title">Welcome Back</div>
+        <div class="login-subtitle">Sign in to your account to access your personal finance dashboard.</div>
+        <form method="POST" action="/login">
+          <div class="mb-3">
+            <label for="role" class="login-label">Select Role</label>
+            <select class="form-select" id="role" name="role" required>
+              <option value="">Choose...</option>
+              <option value="user">User</option>
+              <option value="agent">Agent</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="login_id" class="login-label">Email or Phone</label>
+            <input type="text" class="form-control" id="login_id" name="login_id" required placeholder="Enter your email or phone">
+          </div>
+          <div class="mb-3">
+            <label for="password" class="login-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required placeholder="Enter your password">
+            <a href="#" class="forgot-link">Forgot Password?</a>
+          </div>
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+            <label class="form-check-label" for="remember_me">Remember me</label>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Sign In Now</button>
+        </form>
+        <div class="login-bottom-text">
+          Don't have access yet?
+          <a href="/register" class="login-link">Sign Up</a>
+        </div>
+        {% if error %}
+        <div class="modal fade" id="loginErrorModal" tabindex="-1" aria-labelledby="loginErrorModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="loginErrorModalLabel">Login Failed</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                {{ error }}
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            var errorModal = new bootstrap.Modal(document.getElementById('loginErrorModal'));
+            errorModal.show();
+          });
+        </script>
+        {% endif %}
+        {% if success %}
+        <div class="modal fade" id="registerSuccessModal" tabindex="-1" aria-labelledby="registerSuccessModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="registerSuccessModalLabel">Registration Successful</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                {{ success }}
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+          var successModal = new bootstrap.Modal(document.getElementById('registerSuccessModal'));
+          successModal.show();
+        </script>
+        {% endif %}
       </div>
     </div>
   </div>
 </div>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var errorModal = new bootstrap.Modal(document.getElementById('loginErrorModal'));
-    errorModal.show();
-  });
-</script>
-{% endif %}
-
-<!-- Registration success popup -->
-{% if success %}
-<div class="modal fade" id="registerSuccessModal" tabindex="-1" aria-labelledby="registerSuccessModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title" id="registerSuccessModalLabel">Registration Successful</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        {{ success }}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
-<script>
-  var successModal = new bootstrap.Modal(document.getElementById('registerSuccessModal'));
-  successModal.show();
-</script>
-{% endif %}
+{% endblock %}
+{% block extra_scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 {% endblock %}

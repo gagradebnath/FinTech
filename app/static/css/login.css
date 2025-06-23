@@ -1,0 +1,188 @@
+/* Login page modern dark style inspired by Anywhere app */
+.login-bg {
+    min-height: 100vh;
+    background: #181b1e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.login-split {
+    display: flex;
+    width: 100vw;
+    max-width: 1200px;
+    min-height: 80vh;
+    background: none;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 8px 48px #10182099;
+    position: relative;
+}
+.login-split-left {
+    flex: 1 1 50%;
+    background: linear-gradient(120deg, #232733 70%, #1e3c47 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding: 4vw 3vw 3vw 4vw;
+    position: relative;
+}
+.login-split-left .login-big-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 2.2rem;
+    color: #3ed6c2;
+    letter-spacing: 1px;
+}
+.login-split-left .login-big-title .gray {
+    color: #bfc3cc;
+    font-weight: 600;
+}
+.login-split-left .login-desc {
+    color: #bfc3cc;
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
+}
+.login-split-left .login-reflect {
+    font-size: 3.5rem;
+    color: #232733;
+    opacity: 0.25;
+    letter-spacing: 0.1em;
+    transform: scaleY(-1);
+    margin-top: 2.5rem;
+    font-weight: 900;
+}
+.login-split-left .teal {
+    color: #3ed6c2;
+}
+.login-split-right {
+    flex: 1 1 50%;
+    background: linear-gradient(120deg, #181b1e 80%, #232733 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 3vw 2vw;
+    position: relative;
+}
+.login-card {
+    background: rgba(24,27,30,0.92);
+    border-radius: 22px;
+    box-shadow: 0 4px 32px #3ed6c255;
+    padding: 2.5rem 2.2rem 2rem 2.2rem;
+    max-width: 420px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    border: 1.5px solid #232733;
+}
+.login-card .login-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.7rem;
+    text-align: center;
+}
+.login-card .login-subtitle {
+    color: #bfc3cc;
+    font-size: 1.05rem;
+    margin-bottom: 2.2rem;
+    text-align: center;
+}
+.login-card .login-label {
+    color: #bfc3cc;
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+}
+.login-card .form-control, .login-card .form-select {
+    background: transparent;
+    border: 1.5px solid #353a4a;
+    color: #fff;
+    border-radius: 12px;
+    font-size: 1.08rem;
+    padding: 0.8rem 1.1rem;
+    margin-bottom: 1.2rem;
+    box-shadow: none;
+    transition: border 0.2s;
+}
+.login-card .form-control:focus, .login-card .form-select:focus {
+    border: 1.5px solid #3ed6c2;
+    background: #232733;
+    color: #fff;
+    box-shadow: 0 0 0 2px #3ed6c233;
+}
+.login-card .form-check-label {
+    color: #bfc3cc;
+    font-size: 0.98rem;
+}
+.login-card .btn-primary {
+    background: linear-gradient(90deg, #3ed6c2 60%, #1e90ff 100%);
+    border: none;
+    border-radius: 22px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 0.7rem 0;
+    margin-top: 0.5rem;
+    box-shadow: 0 2px 16px #3ed6c233;
+    transition: background 0.2s;
+}
+.login-card .btn-primary:hover {
+    background: linear-gradient(90deg, #1e90ff 60%, #3ed6c2 100%);
+}
+.login-card .login-link {
+    color: #3ed6c2;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 0.3em;
+}
+.login-card .login-link:hover {
+    text-decoration: underline;
+}
+.login-card .forgot-link {
+    color: #3ed6c2;
+    text-decoration: none;
+    font-size: 0.98rem;
+    float: right;
+    margin-top: -1.8rem;
+    margin-bottom: 1.2rem;
+}
+.login-card .forgot-link:hover {
+    text-decoration: underline;
+}
+.login-card .login-divider {
+    border-top: 1px dashed #353a4a;
+    margin: 2.2rem 0 1.5rem 0;
+}
+.login-card .login-logo {
+    position: absolute;
+    top: 2.2rem;
+    right: 2.2rem;
+    width: 48px;
+    height: 48px;
+    opacity: 0.7;
+}
+.login-card .login-bottom-text {
+    color: #bfc3cc;
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 1rem;
+}
+@media (max-width: 900px) {
+    .login-split {
+        flex-direction: column;
+        min-width: 100vw;
+        min-height: 100vh;
+        border-radius: 0;
+    }
+    .login-split-left, .login-split-right {
+        min-width: 100vw;
+        min-height: 40vh;
+        padding: 7vw 4vw;
+    }
+    .login-card {
+        max-width: 98vw;
+        padding: 2.2rem 0.7rem 1.7rem 0.7rem;
+    }
+}
