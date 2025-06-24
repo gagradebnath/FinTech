@@ -6,13 +6,25 @@
     --danger-color: #dc3545;
     --warning-color: #ffc107;
     --info-color: #17a2b8;
-    --dark-color: #121212;
-    --dark-secondary: #1a1a2e;
-    --dark-tertiary: #232733;
+    
+    /* Gradient colors from main content */
+    --gradient-color-1: #121212;
+    --gradient-color-2: #163e3e;
+    --gradient-color-3: #0d1f12;
+    --gradient-color-4: #15151f;
+    --gradient-color-5: #340434dd;
+    
+    /* Base theme colors derived from gradient */
+    --dark-color: var(--gradient-color-1);
+    --dark-secondary: #121b1b;  /* Mix of dark and teal */
+    --dark-tertiary: #121b15;   /* Mix of dark and forest green */
+    --dark-accent: #1e102c;     /* Mix of dark and purple */
+    
     --light-color: #f8f9fa;
     --text-primary: #ffffff;
     --text-secondary: #b0b0b0;
-    --border-color: rgba(255, 255, 255, 0.1);
+    --border-color: rgba(255, 255, 255, 0.05);
+    
     --sidebar-width: 240px;
     --sidebar-collapsed-width: 70px;
     --header-height: 70px;
@@ -34,7 +46,7 @@ body {
 
 .sidebar {
     width: var(--sidebar-width);
-    background: var(--dark-secondary);
+    background: linear-gradient(180deg, var(--gradient-color-1), var(--gradient-color-2), var(--dark-accent));
     color: var(--text-primary);
     position: fixed;
     height: 100vh;
@@ -42,7 +54,7 @@ body {
     transition: all 0.3s;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar-header {
@@ -107,23 +119,25 @@ body {
 
 .top-navbar {
     height: var(--header-height);
-    background-color: var(--dark-secondary);
+    background: linear-gradient(90deg, var(--gradient-color-2), var(--gradient-color-4), var(--dark-accent));
     padding: 0 20px;
     display: flex;
     align-items: center;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
 .search-bar {
-    background-color: rgba(255, 255, 255, 0.05);
+    background: linear-gradient(90deg, rgba(13, 31, 18, 0.5), rgba(21, 21, 31, 0.5));
     border-radius: 30px;
     padding: 5px 15px;
     flex-grow: 1;
     max-width: 400px;
     margin: 0 30px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .search-bar .input-group {
@@ -151,7 +165,8 @@ body {
     height: 40px;
     border-radius: 50%;
     overflow: hidden;
-    border: 2px solid #f0f0f0;
+    border: 2px solid var(--gradient-color-2);
+    box-shadow: 0 0 10px rgba(22, 62, 62, 0.5);
 }
 
 .user-avatar img {
@@ -216,12 +231,14 @@ body {
 .card {
     border: none;
     border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
     margin-bottom: 20px;
     transition: all 0.3s ease;
     overflow: hidden;
-    background-color: var(--dark-secondary);
+    background: linear-gradient(135deg, var(--gradient-color-1), var(--dark-secondary), var(--dark-tertiary));
     color: var(--text-primary);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
 }
 
 .card:hover {
@@ -243,18 +260,21 @@ body {
 /* Stats Card */
 .stats-card {
     display: flex;
-    background: linear-gradient(45deg, #0066ff, #3385ff);
+    background: linear-gradient(45deg, var(--gradient-color-2), var(--primary-color));
     color: white;
     padding: 20px;
     border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(22, 62, 62, 0.3);
 }
 
 .stats-card-debit {
-    background: linear-gradient(45deg, #fc3a52, #fe5e71);
+    background: linear-gradient(45deg, var(--gradient-color-1), var(--danger-color));
+    box-shadow: 0 8px 20px rgba(52, 4, 52, 0.3);
 }
 
 .stats-card-credit {
-    background: linear-gradient(45deg, #05c46b, #0be881);
+    background: linear-gradient(45deg, var(--gradient-color-3), var(--success-color));
+    box-shadow: 0 8px 20px rgba(13, 31, 18, 0.3);
 }
 
 .stats-icon {
@@ -280,7 +300,142 @@ body {
     opacity: 0.8;
 }
 
-/* Transaction List */
+/* Transaction List - Modern Dark Style */
+.transaction-table {
+    width: 100%;
+    background: linear-gradient(145deg, var(--gradient-color-1), var(--dark-secondary), var(--dark-tertiary));
+    border-radius: 12px;
+    overflow: hidden;
+    border-collapse: separate;
+    border-spacing: 0;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.transaction-table th {
+    text-align: left;
+    padding: 16px 20px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.transaction-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    vertical-align: middle;
+}
+
+.transaction-table tr:last-child td {
+    border-bottom: none;
+}
+
+.transaction-table tr:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.transaction-account {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.transaction-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--dark-color), var(--dark-accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.transaction-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.transaction-vendor {
+    font-weight: 600;
+    margin-bottom: 2px;
+    font-size: 0.9rem;
+}
+
+.transaction-category {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.transaction-amount {
+    font-weight: 600;
+    font-size: 0.95rem;
+    position: relative;
+    padding-left: 20px;
+}
+
+.transaction-amount.amount-positive {
+    color: var(--success-color);
+}
+
+.transaction-amount.amount-negative {
+    color: var(--danger-color);
+}
+
+.transaction-amount::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    border-style: solid;
+}
+
+.transaction-amount.amount-negative::before {
+    border-width: 6px 4px 0 4px;
+    border-color: var(--danger-color) transparent transparent transparent;
+}
+
+.transaction-amount.amount-positive::before {
+    border-width: 0 4px 6px 4px;
+    border-color: transparent transparent var(--success-color) transparent;
+}
+
+/* Transaction status badges */
+.transaction-status {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.transaction-status.success {
+    background-color: rgba(40, 167, 69, 0.15);
+    color: var(--success-color);
+}
+
+.transaction-status.pending {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: var(--warning-color);
+}
+
+.transaction-status.canceled {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: var(--danger-color);
+}
+
+.transaction-time {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+/* Legacy transaction list styles for compatibility */
 .transaction-item {
     display: flex;
     align-items: center;
@@ -290,18 +445,6 @@ body {
 
 .transaction-item:last-child {
     border-bottom: none;
-}
-
-.transaction-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.05);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 15px;
-    font-size: 20px;
 }
 
 .transaction-info {
@@ -316,18 +459,6 @@ body {
 .transaction-date {
     font-size: 12px;
     color: var(--text-secondary);
-}
-
-.transaction-amount {
-    font-weight: 600;
-}
-
-.amount-positive {
-    color: var(--success-color);
-}
-
-.amount-negative {
-    color: var(--danger-color);
 }
 
 /* Expense Chart */

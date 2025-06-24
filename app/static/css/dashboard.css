@@ -155,3 +155,60 @@
     background-color: rgba(255, 193, 7, 0.1);
     color: var(--warning-color);
 }
+
+/* Recent Transactions Section */
+.recent-transactions {
+    margin-top: 30px;
+}
+
+.recent-transactions .card-body {
+    padding: 0;
+}
+
+.recent-transactions .table-responsive {
+    padding: 0;
+    margin: 0;
+}
+
+.transactions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.transactions-header .dropdown {
+    min-width: 120px;
+}
+
+.transactions-header .btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+/* Transaction table overrides for dashboard */
+.dashboard-transaction-table {
+    margin-bottom: 0;
+}
+
+.dashboard-transaction-table th {
+    white-space: nowrap;
+}
+
+/* View all transactions link */
+.view-all-link {
+    display: block;
+    text-align: center;
+    padding: 12px;
+    background-color: rgba(255, 255, 255, 0.02);
+    color: var(--primary-color);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-top: 1px solid var(--border-color);
+}
+
+.view-all-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--primary-color);
+}

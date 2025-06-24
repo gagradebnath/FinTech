@@ -1,38 +1,139 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container py-4">
-    <h2>Send Money</h2>
-    <form method="POST">
-        <div class="mb-3">
-            <label for="recipient_identifier" class="form-label">Recipient (User ID, Email, or Phone)</label>
-            <input type="text" class="form-control" id="recipient_identifier" name="recipient_identifier" placeholder="Enter User ID, Email, or Phone" required>
+    <div class="row">
+        <div class="col-lg-5">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="m-0">Send Money</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="recipient_identifier" class="form-label">Recipient (User ID, Email, or Phone)</label>
+                            <input type="text" class="form-control" id="recipient_identifier" name="recipient_identifier" placeholder="Enter User ID, Email, or Phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="amount" name="amount" min="0.01" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">Payment Method</label>
+                            <select class="form-select" id="payment_method" name="payment_method" required>
+                                <option value="">Select Method</option>
+                                <option value="cash">Cash</option>
+                                <option value="bank">Bank Transfer</option>
+                                <option value="mobile">Mobile Wallet</option>
+                                <option value="card">Credit/Debit Card</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="note" class="form-label">Note</label>
+                            <input type="text" class="form-control" id="note" name="note" maxlength="255" placeholder="What's this payment for?">
+                        </div>
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" maxlength="255" placeholder="Optional location">
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">Send Money</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-secondary mb-4">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
-        <div class="mb-3">
-            <label for="amount" class="form-label">Amount</label>
-            <input type="number" class="form-control" id="amount" name="amount" min="0.01" step="0.01" required>
+        
+        <div class="col-lg-7">
+            <div class="modern-transaction-section">
+                <div class="transactions-header">
+                    <h3>Recent Transactions</h3>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            This Week
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Today</a></li>
+                            <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                            <li><a class="dropdown-item" href="#">This Week</a></li>
+                            <li><a class="dropdown-item" href="#">This Month</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                {% if transactions %}
+                <div class="table-responsive">
+                    <table class="transaction-table">
+                        <thead>
+                            <tr>
+                                <th>Account</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in transactions %}
+                            <tr>
+                                <td>
+                                    <div class="transaction-account">
+                                        <div class="transaction-icon">
+                                            {% if tx.type|lower == 'payment' %}
+                                            <i class="bi bi-credit-card text-primary"></i>
+                                            {% elif tx.type|lower == 'transfer' %}
+                                            <i class="bi bi-arrow-left-right text-success"></i>
+                                            {% elif tx.type|lower == 'withdrawal' %}
+                                            <i class="bi bi-cash text-danger"></i>
+                                            {% else %}
+                                            <i class="bi bi-currency-exchange text-warning"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="transaction-vendor">{{ tx.type|capitalize }}</div>
+                                            <div class="transaction-category">
+                                                {% if tx.sender_id == user.id %}
+                                                    Sent{% if tx.receiver_id %} to {{ tx.receiver_id }}{% endif %}
+                                                {% elif tx.receiver_id == user.id %}
+                                                    Received{% if tx.sender_id %} from {{ tx.sender_id }}{% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="transaction-amount {{ 'amount-negative' if tx.sender_id == user.id else 'amount-positive' }}">
+                                        {{ '-' if tx.sender_id == user.id else '+' }}${{ tx.amount }}
+                                    </div>
+                                </td>
+                                <td>{{ tx.timestamp.split(' ')[0] if tx.timestamp else 'N/A' }}</td>
+                                <td>
+                                    <span class="transaction-status {{ 'success' if tx.status|lower == 'completed' else ('pending' if tx.status|lower == 'pending' else 'canceled') }}">
+                                        {{ tx.status|default('Completed')|capitalize }}
+                                    </span>
+                                </td>
+                                <td class="transaction-time">{{ tx.timestamp.split(' ')[1] if tx.timestamp and ' ' in tx.timestamp else 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="no-transactions">
+                    <i class="bi bi-credit-card"></i>
+                    <h5>No transactions yet</h5>
+                    <p>Your recent transactions will appear here</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
-        <div class="mb-3">
-            <label for="payment_method" class="form-label">Payment Method</label>
-            <select class="form-select" id="payment_method" name="payment_method" required>
-                <option value="">Select Method</option>
-                <option value="cash">Cash</option>
-                <option value="bank">Bank</option>
-                <option value="mobile">Mobile</option>
-                <option value="card">Card</option>
-                <option value="other">Other</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="note" class="form-label">Note</label>
-            <input type="text" class="form-control" id="note" name="note" maxlength="255" placeholder="Optional note">
-        </div>
-        <div class="mb-3">
-            <label for="location" class="form-label">Location</label>
-            <input type="text" class="form-control" id="location" name="location" maxlength="255" placeholder="Optional location">
-        </div>
-        <button type="submit" class="btn btn-primary">Send</button>
-        <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary ms-2">Back to Dashboard</a>
-    </form>
+    </div>
 </div>
 
 <!-- Error popup -->
