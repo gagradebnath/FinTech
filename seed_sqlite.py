@@ -163,6 +163,24 @@ def insert_dummy_transaction(cursor, amount, payment_method, timestamp, sender_i
         (transaction_id, amount, payment_method, timestamp, sender_id, receiver_id, note, type, location)
     )
 
+def create_budgets_table(cursor):
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS budgets (
+            id TEXT PRIMARY KEY,
+            user_id TEXT,
+            name TEXT,
+            currency TEXT,
+            income_source TEXT,
+            amount REAL,
+            start_date TEXT,
+            end_date TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    
+    # Insert dummy budgets for each user
+    
+
 
 def main():
     conn = sqlite3.connect(DB_PATH)

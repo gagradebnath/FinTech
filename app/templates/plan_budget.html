@@ -8,6 +8,38 @@
     {% if success %}
         <div class="alert alert-success">{{ success }}</div>
     {% endif %}
+      <!-- Pass budget data to JavaScript -->
+    {% if budget %}
+    <script>
+        window.preloadedBudget = {{ budget|tojson|safe }};
+        console.log('Preloaded budget data:', window.preloadedBudget);
+    </script>
+    {% endif %}
+    
+    <!-- Budget selection dropdown -->
+    {% if user_budgets and user_budgets|length > 0 %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Your Saved Budgets</h5>
+        </div>
+        <div class="card-body">            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <label for="saved-budgets" class="visually-hidden">Select a saved budget</label>
+                    <select class="form-select" id="saved-budgets" aria-label="Select a saved budget">
+                        <option value="">Select a saved budget</option>
+                        {% for budget_item in user_budgets %}
+                        <option value="{{ budget_item.id }}">{{ budget_item.name }} ({{ budget_item.currency }} {{ budget_item.amount }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-primary w-100" id="load-budget">Load Selected Budget</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
     <form id="budget-form" class="card p-4" method="post">
         <div class="mb-3">
             <label for="budget-name" class="form-label">Budget Name</label>

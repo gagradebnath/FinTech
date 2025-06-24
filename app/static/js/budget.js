@@ -1,17 +1,110 @@
 // Budget page dynamic JS
-// ...reference code from user prompt, adapted for relative Flask URLs and session-based auth...
 
-// Add income source
-document.getElementById('add-income').addEventListener('click', () => {
+// Load saved budget when clicking the load button
+document.addEventListener('DOMContentLoaded', function() {
+    const loadBudgetBtn = document.getElementById('load-budget');
+    if (loadBudgetBtn) {
+        loadBudgetBtn.addEventListener('click', async function() {
+            const budgetId = document.getElementById('saved-budgets').value;
+            if (!budgetId) {
+                alert('Please select a budget to load');
+                return;
+            }
+            
+            try {
+                // Fetch the budget details from the server
+                const response = await fetch(`/get_budget/${budgetId}`);
+                const data = await response.json();
+                
+                if (data.success && data.budget) {
+                    // Populate the form with the fetched budget data
+                    populateFormWithBudgetData(data.budget);
+                    // Update URL without reloading the page
+                    history.pushState(null, '', `/plan-budget?budget_id=${budgetId}`);
+                } else {
+                    throw new Error(data.message || 'Failed to load budget');
+                }
+            } catch (error) {
+                console.error('Error loading budget:', error);
+                alert('Error: Could not load the selected budget. Please try again.');
+            }
+        });
+    }
+    
+    // Check if we have pre-loaded budget data to populate the form
+    const preloadedBudgetData = window.preloadedBudget;
+    if (preloadedBudgetData) {
+        populateFormWithBudgetData(preloadedBudgetData);
+    }
+});
+
+// Function to populate the form with loaded budget data
+function populateFormWithBudgetData(budgetData) {
+    // Set budget name and currency
+    document.getElementById('budget-name').value = budgetData.name || '';
+    document.getElementById('currency').value = budgetData.currency || '';
+    
+    // Clear existing income items (except the first one)
+    const incomeList = document.getElementById('income-list');
+    while (incomeList.children.length > 1) {
+        incomeList.removeChild(incomeList.lastChild);
+    }
+    
+    // Parse income sources
+    let incomeSources = [];
+    if (budgetData.income_source) {
+        try {
+            // Try to parse as JSON first
+            incomeSources = JSON.parse(budgetData.income_source);
+        } catch (e) {
+            // If not JSON, split by comma
+            incomeSources = budgetData.income_source.split(',').map(src => ({
+                source: src.trim(),
+                amount: budgetData.amount / (budgetData.income_source.split(',').length)
+            }));
+        }
+    }
+    
+    // Populate first income item
+    if (incomeSources.length > 0 && incomeList.children.length > 0) {
+        const firstIncomeItem = incomeList.children[0];
+        const sourceInput = firstIncomeItem.querySelector('input[type="text"]');
+        const amountInput = firstIncomeItem.querySelector('input[type="number"]');
+        
+        if (sourceInput && amountInput) {
+            sourceInput.value = incomeSources[0].source || '';
+            amountInput.value = incomeSources[0].amount || budgetData.amount || '';
+        }
+        
+        // Add additional income sources
+        for (let i = 1; i < incomeSources.length; i++) {
+            addIncomeItem(incomeSources[i].source, incomeSources[i].amount);
+        }
+    }
+    
+    // Clear existing expense categories
+    const expenseList = document.getElementById('expense-list');
+    expenseList.innerHTML = '';
+    
+    // Add expense categories and items
+    if (budgetData.categories) {
+        Object.values(budgetData.categories).forEach(category => {
+            addExpenseCategory(category.name, category.items);
+        });
+    }
+}
+
+// Helper function to add income item with data
+function addIncomeItem(source, amount) {
     const incomeList = document.getElementById('income-list');
     const div = document.createElement('div');
     div.classList.add('row', 'g-2', 'income-item', 'mb-2');
     div.innerHTML = `
         <div class="col-md-6">
-            <input type="text" class="form-control" placeholder="Income Source" required>
+            <input type="text" class="form-control" placeholder="Income Source" value="${source || ''}" required>
         </div>
         <div class="col-md-4">
-            <input type="number" class="form-control" placeholder="Amount" required>
+            <input type="number" class="form-control" placeholder="Amount" value="${amount || ''}" required>
         </div>
         <div class="col-md-2 d-grid">
             <button type="button" class="btn btn-danger remove-item">Remove</button>
@@ -19,6 +112,72 @@ document.getElementById('add-income').addEventListener('click', () => {
     `;
     incomeList.appendChild(div);
     div.querySelector('.remove-item').addEventListener('click', () => div.remove());
+}
+
+// Helper function to add expense category with data
+function addExpenseCategory(categoryName, items) {
+    const expenseList = document.getElementById('expense-list');
+    const categoryDiv = document.createElement('div');
+    categoryDiv.classList.add('expense-category', 'border', 'p-3', 'mb-3');
+    
+    const optionsHtml = expenseCategoryOptions.map(opt => 
+        `<option value="${opt}" ${opt === categoryName ? 'selected' : ''}>${opt}</option>`
+    ).join('');
+    
+    categoryDiv.innerHTML = `
+        <div class="mb-2">
+            <select class="form-select expense-category-select" required>
+                <option value="" disabled ${!categoryName ? 'selected' : ''}>Select Expense Category</option>
+                ${optionsHtml}
+            </select>
+        </div>
+        <div class="expense-items"></div>
+        <button type="button" class="btn btn-sm btn-outline-success add-expense-item">+ Add Item</button>
+        <button type="button" class="btn btn-sm btn-outline-danger remove-category">Remove Category</button>
+    `;
+    expenseList.appendChild(categoryDiv);
+    
+    // Add event listeners
+    categoryDiv.querySelector('.add-expense-item').addEventListener('click', () => {
+        addExpenseItem(categoryDiv, '', '');
+    });
+    
+    categoryDiv.querySelector('.remove-category').addEventListener('click', () => categoryDiv.remove());
+    
+    // Add items if provided
+    if (items && items.length) {
+        items.forEach(item => {
+            addExpenseItem(categoryDiv, item.name, item.amount);
+        });
+    } else {
+        // Add at least one empty item
+        addExpenseItem(categoryDiv, '', '');
+    }
+}
+
+// Helper function to add expense item with data
+function addExpenseItem(categoryDiv, name, amount) {
+    const itemsDiv = categoryDiv.querySelector('.expense-items');
+    const itemDiv = document.createElement('div');
+    itemDiv.classList.add('row', 'g-2', 'expense-item', 'mb-2');
+    itemDiv.innerHTML = `
+        <div class="col-md-6">
+            <input type="text" class="form-control" placeholder="Item Name" value="${name || ''}" required>
+        </div>
+        <div class="col-md-4">
+            <input type="number" class="form-control" placeholder="Amount" value="${amount || ''}" required>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="button" class="btn btn-danger remove-item">Remove</button>
+        </div>
+    `;
+    itemsDiv.appendChild(itemDiv);
+    itemDiv.querySelector('.remove-item').addEventListener('click', () => itemDiv.remove());
+}
+
+// Add income source
+document.getElementById('add-income').addEventListener('click', () => {
+    addIncomeItem('', '');
 });
 
 // Expense category options
@@ -45,40 +204,7 @@ const expenseCategoryOptions = [
 
 // Add expense category (dropdown version)
 document.getElementById('add-expense-category').addEventListener('click', () => {
-    const expenseList = document.getElementById('expense-list');
-    const categoryDiv = document.createElement('div');
-    categoryDiv.classList.add('expense-category', 'border', 'p-3', 'mb-3');
-    categoryDiv.innerHTML = `
-        <div class="mb-2">
-            <select class="form-select expense-category-select" required>
-                <option value="" disabled selected>Select Expense Category</option>
-                ${expenseCategoryOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-            </select>
-        </div>
-        <div class="expense-items"></div>
-        <button type="button" class="btn btn-sm btn-outline-success add-expense-item">+ Add Item</button>
-        <button type="button" class="btn btn-sm btn-outline-danger remove-category">Remove Category</button>
-    `;
-    expenseList.appendChild(categoryDiv);
-    categoryDiv.querySelector('.add-expense-item').addEventListener('click', () => {
-        const itemsDiv = categoryDiv.querySelector('.expense-items');
-        const itemDiv = document.createElement('div');
-        itemDiv.classList.add('row', 'g-2', 'expense-item', 'mb-2');
-        itemDiv.innerHTML = `
-            <div class="col-md-6">
-                <input type="text" class="form-control" placeholder="Item Name" required>
-            </div>
-            <div class="col-md-4">
-                <input type="number" class="form-control" placeholder="Amount" required>
-            </div>
-            <div class="col-md-2 d-grid">
-                <button type="button" class="btn btn-danger remove-item">Remove</button>
-            </div>
-        `;
-        itemsDiv.appendChild(itemDiv);
-        itemDiv.querySelector('.remove-item').addEventListener('click', () => itemDiv.remove());
-    });
-    categoryDiv.querySelector('.remove-category').addEventListener('click', () => categoryDiv.remove());
+    addExpenseCategory('', []);
 });
 
 // Save budget button
@@ -101,6 +227,8 @@ async function saveBudget() {
             throw new Error(data.message || 'Failed to save budget');
         }
         alert('Budget saved successfully!');
+        // Reload the page to show the updated budget list
+        window.location.reload();
     } catch (error) {
         alert('Error: Could not save budget.');
         console.error('Save Budget Error:', error);
@@ -111,16 +239,33 @@ async function saveBudget() {
 function collectFormData() {
     const budgetName = document.getElementById('budget-name').value;
     const currency = document.getElementById('currency').value;
-    const income = Array.from(document.querySelectorAll('.income-item')).map(item => ({
-        source: item.querySelector('input[type="text"]').value,
-        amount: parseFloat(item.querySelector('input[type="number"]').value)
-    }));
-    const expenses = Array.from(document.querySelectorAll('.expense-category')).map(category => ({
-        category: category.querySelector('input[type="text"]').value,
-        items: Array.from(category.querySelectorAll('.expense-item')).map(item => ({
-            name: item.querySelector('input[type="text"]').value,
-            amount: parseFloat(item.querySelector('input[type="number"]').value)
-        }))
-    }));
+    
+    const income = Array.from(document.querySelectorAll('.income-item')).map(item => {
+        const sourceInput = item.querySelector('input[type="text"]');
+        const amountInput = item.querySelector('input[type="number"]');
+        return {
+            source: sourceInput ? sourceInput.value : '',
+            amount: amountInput ? parseFloat(amountInput.value) : 0
+        };
+    }).filter(item => item.source && !isNaN(item.amount));
+      const expenses = Array.from(document.querySelectorAll('.expense-category')).map(category => {
+        const categorySelect = category.querySelector('.expense-category-select');
+        const categoryName = categorySelect ? categorySelect.value : 'Other';
+        
+        const items = Array.from(category.querySelectorAll('.expense-item')).map(item => {
+            const nameInput = item.querySelector('input[type="text"]');
+            const amountInput = item.querySelector('input[type="number"]');
+            return {
+                name: nameInput ? nameInput.value : '',
+                amount: amountInput ? parseFloat(amountInput.value) : 0
+            };
+        }).filter(item => item.name && !isNaN(item.amount));
+        
+        return {
+            category: categoryName,
+            items: items
+        };
+    }).filter(cat => cat.items.length > 0);
+    
     return { budgetName, currency, income, expenses };
 }

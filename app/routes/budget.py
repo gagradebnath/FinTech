@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, current_app, jsonify, session, redirect, url_for
 import uuid
 from .user import get_current_user
-from app.utils.budget_utils import get_user_budget, save_or_update_budget, insert_full_budget
+from app.utils.budget_utils import get_user_budget, save_or_update_budget, insert_full_budget, get_all_user_budgets, get_budget_by_id
 
 budget_bp = Blueprint('budget', __name__)
 
@@ -14,9 +14,25 @@ def plan_budget():
     user = get_current_user()
     if not user:
         return redirect(url_for('user.login'))
-    budget = get_user_budget(user['id'])
+    
+    # Get the budget ID from query parameters if provided
+    budget_id = request.args.get('budget_id')
+    
+    # Get all budgets for the dropdown
+    from app.utils.budget_utils import get_all_user_budgets, get_budget_by_id
+    user_budgets = get_all_user_budgets(user['id'])
+    
+    # If a specific budget ID is provided, load that budget
+    budget = None
+    if budget_id:
+        budget = get_budget_by_id(budget_id, user['id'])
+    else:
+        # Otherwise, get the default budget (if any)
+        budget = get_user_budget(user['id'])
+    
     error = None
     success = None
+    
     if request.method == 'POST':
         name = request.form.get('name')
         currency = request.form.get('currency')
@@ -27,7 +43,11 @@ def plan_budget():
             success = 'Budget saved successfully.'
         except Exception as e:
             error = 'Failed to save budget: ' + str(e)
-    return render_template('plan_budget.html', budget=budget, error=error, success=success)
+    
+    # Add debug information
+    print("Budget data being sent to template:", budget)
+    
+    return render_template('plan_budget.html', budget=budget, user_budgets=user_budgets, error=error, success=success)
 
 @budget_bp.route('/save_budget', methods=['POST'])
 def save_budget():
@@ -48,3 +68,26 @@ def save_budget():
         return jsonify({'success': True, 'message': 'Budget saved', 'budget': data})
     else:
         return jsonify({'success': False, 'message': err}), 500
+
+@budget_bp.route('/get_budget/<budget_id>', methods=['GET'])
+def get_budget_by_id_route(budget_id):
+    user = get_current_user()
+    if not user:
+        return jsonify({'success': False, 'message': 'Not logged in'}), 401
+    
+    budget = get_budget_by_id(budget_id, user['id'])
+    if not budget:
+        return jsonify({'success': False, 'message': 'Budget not found'}), 404
+    
+    return jsonify({'success': True, 'budget': budget})
+
+# Function to handle JSON serialization of SQLite row objects
+def serialize_budget(budget):
+    if not budget:
+        return None
+    
+    # Convert SQLite row object to regular object if needed
+    if hasattr(budget, 'toJSON') and callable(budget.toJSON):
+        return budget.toJSON()
+    
+    return budget
