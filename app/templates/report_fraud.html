@@ -1,24 +1,39 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container py-4">
-    <h2>Report Fraud</h2>
-    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
-    {% if success %}
-        <div class="alert alert-success">{{ success }}</div>
-    {% endif %}
-    <form method="POST">
-        <div class="mb-3">
-            <label for="reported_user_identifier" class="form-label">Reported User (User ID, Email, or Phone)</label>
-            <input type="text" class="form-control" id="reported_user_identifier" name="reported_user_identifier" placeholder="Enter User ID, Email, or Phone" required>
+<div class="container py-4 fraud-container">
+    <div class="card fraud-card">
+        <div class="card-header d-flex align-items-center">
+            <i class="bi bi-shield-exclamation me-2"></i>
+            <h2 class="m-0">Report Fraud</h2>
         </div>
-        <div class="mb-3">
-            <label for="reason" class="form-label">Reason</label>
-            <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+        <div class="card-body">
+            {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+            {% if success %}
+                <div class="alert alert-success">{{ success }}</div>
+            {% endif %}
+            <p class="fraud-intro">
+                If you suspect fraudulent activity, please provide the details below. Our security team will investigate the issue promptly.
+            </p>
+            <form method="POST" class="fraud-form">
+                <div class="mb-4">
+                    <label for="reported_user_identifier" class="form-label">Reported User (User ID, Email, or Phone)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person-exclamation"></i></span>
+                        <input type="text" class="form-control" id="reported_user_identifier" name="reported_user_identifier" placeholder="Enter User ID, Email, or Phone" required>
+                    </div>
+                </div>
+                <div class="mb-3 flex-grow-1">
+                    <label for="reason" class="form-label">Reason</label>
+                    <textarea class="form-control" id="reason" name="reason" rows="8" required></textarea>
+                </div>
+                <div class="fraud-form-footer">
+                    <button type="submit" class="btn btn-danger">Submit Report</button>
+                    <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary ms-2">Back to Dashboard</a>
+                </div>
+            </form>
         </div>
-        <button type="submit" class="btn btn-danger">Submit Report</button>
-        <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary ms-2">Back to Dashboard</a>
-    </form>
+    </div>
 </div>
 {% endblock %}
