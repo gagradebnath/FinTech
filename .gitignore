@@ -1,1 +1,12 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# SQLite database files
 *.db
+*.sqlite3
+
+# IDE files
+.idea/
+.vscode/
