@@ -40,6 +40,7 @@ def login():
                 if user_role != selected_role:
                     return render_template('login.html', error='Selected role does not match your account role.', success=success)
                 session['user_id'] = user['id']
+                session['user_fullname'] = f"{user['first_name']} {user['last_name']}"
                 if user_role == 'agent':
                     return redirect(url_for('agent.agent_dashboard'))
                 elif user_role == 'admin':
@@ -108,8 +109,7 @@ def dashboard():
 def expense_habit():
     user = get_current_user()
     if not user:
-        return redirect(url_for('user.login'))
-    if not has_permission(user['id'], 'edit_expense_habit'):
+        return
         return render_template('expense_habit.html', habit=None, error='Permission denied.')
     habit = get_expense_habit(user['id'])
     if request.method == 'POST':
