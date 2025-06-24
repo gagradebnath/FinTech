@@ -17,7 +17,7 @@ def send_money_route():
         return redirect(url_for('user.login'))
     error = None
     success = None
-    if not has_permission(user['id'], 'send_money'):
+    if not has_permission(user['id'], 'perm_send_money'):
         return render_template('send_money.html', error='Permission denied.', success=None)
     if request.method == 'POST':
         recipient_identifier = request.form.get('recipient_identifier')

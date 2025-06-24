@@ -14,7 +14,7 @@ def get_agent():
 @agent_bp.route('/agent/dashboard', methods=['GET', 'POST'])
 def agent_dashboard():
     user = get_current_user()
-    if not has_permission(user['id'], 'view_dashboard'):
+    if not has_permission(user['id'], 'perm_view_dashboard'):
         return render_template('agent_dashboard.html', user=user, budgets=[], transactions=[], add_money_success=None, add_money_error='Permission denied.')
     budgets = get_user_budgets(user['id'])
     transactions = get_recent_transactions(user['id'])
@@ -38,7 +38,7 @@ def agent_dashboard():
                     amount_val = float(amount)
                     agent_bal = get_user_by_id(user['id'])['balance']
                     if operation == 'add':
-                        if not has_permission(user['id'], 'add_money'):
+                        if not has_permission(user['id'], 'perm_add_money'):
                             add_money_error = 'Permission denied.'
                         elif agent_bal < amount_val:
                             add_money_error = 'Insufficient agent balance.'
@@ -46,7 +46,7 @@ def agent_dashboard():
                             # Use transaction_utils for balance update and transaction insert
                             add_money_success, add_money_error = agent_add_money(user['id'], target['id'], amount_val)
                     elif operation == 'cashout':
-                        if not has_permission(user['id'], 'cash_out'):
+                        if not has_permission(user['id'], 'perm_cash_out'):
                             add_money_error = 'Permission denied.'
                         elif target['balance'] < amount_val:
                             add_money_error = 'Insufficient user balance for cash out.'

@@ -99,7 +99,7 @@ def dashboard():
     user = get_current_user()
     if not user:
         return redirect(url_for('user.login'))
-    if not has_permission(user['id'], 'view_dashboard'):
+    if not has_permission(user['id'], 'perm_view_dashboard'):
         return render_template('dashboard.html', user=user, budgets=[], transactions=[], error='Permission denied.')
     budgets = get_user_budgets(user['id'])
     transactions = get_recent_transactions(user['id'])

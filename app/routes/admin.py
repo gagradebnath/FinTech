@@ -48,7 +48,7 @@ def admin_dashboard():
         role_permissions_map[role['id']] = [p['id'] for p in get_permissions_for_role(role['id'])]
     if request.method == 'POST':
         if 'agent_id' in request.form and 'amount' in request.form:
-            if not has_permission(user['id'], 'manage_agents'):
+            if not has_permission(user['id'], 'perm_manage_agents'):
                 add_money_error = 'Permission denied.'
             else:
                 agent_id = request.form.get('agent_id')
@@ -67,7 +67,7 @@ def admin_dashboard():
                     except Exception as e:
                         add_money_error = 'Failed to process: ' + str(e)
         elif 'fraud_action' in request.form:
-            if not has_permission(user['id'], 'manage_fraud'):
+            if not has_permission(user['id'], 'perm_manage_fraud'):
                 fraud_action_error = 'Permission denied.'
             else:
                 fraud_action = request.form.get('fraud_action')
@@ -90,7 +90,7 @@ def admin_dashboard():
                 except Exception as e:
                     fraud_action_error = 'Failed to process fraud action: ' + str(e)
         elif 'role_action' in request.form and request.form.get('role_action') == 'change':
-            if not has_permission(user['id'], 'manage_users'):
+            if not has_permission(user['id'], 'perm_manage_users'):
                 role_action_error = 'Permission denied.'
             else:
                 role_user_id = request.form.get('role_user_id')
@@ -110,7 +110,7 @@ def admin_dashboard():
                     except Exception as e:
                         role_action_error = 'Failed to change role: ' + str(e)
         elif 'perm_action' in request.form:
-            if not has_permission(user['id'], 'manage_permissions'):
+            if not has_permission(user['id'], 'perm_manage_permissions'):
                 perm_action_error = 'Permission denied.'
             else:
                 perm_action = request.form.get('perm_action')
