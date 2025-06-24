@@ -40,6 +40,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Function to populate the form with loaded budget data
 function populateFormWithBudgetData(budgetData) {
+    
+    console.log('Populating form with budget data:', budgetData);
+    
     // Set budget name and currency
     document.getElementById('budget-name').value = budgetData.name || '';
     document.getElementById('currency').value = budgetData.currency || '';
@@ -58,9 +61,13 @@ function populateFormWithBudgetData(budgetData) {
             incomeSources = JSON.parse(budgetData.income_source);
         } catch (e) {
             // If not JSON, split by comma
-            incomeSources = budgetData.income_source.split(',').map(src => ({
+            const sources = budgetData.income_source.split(',');
+            // Calculate an equal distribution of the total amount
+            const equalShare = budgetData.amount / (sources.length || 1);
+            
+            incomeSources = sources.map(src => ({
                 source: src.trim(),
-                amount: budgetData.amount / (budgetData.income_source.split(',').length)
+                amount: equalShare
             }));
         }
     }
@@ -88,10 +95,14 @@ function populateFormWithBudgetData(budgetData) {
     
     // Add expense categories and items
     if (budgetData.categories) {
+        console.log('Adding categories:', budgetData.categories);
         Object.values(budgetData.categories).forEach(category => {
+            console.log('Adding category:', category);
             addExpenseCategory(category.name, category.items);
         });
     }
+    
+    console.log('Form population complete');
 }
 
 // Helper function to add income item with data
@@ -120,14 +131,19 @@ function addExpenseCategory(categoryName, items) {
     const categoryDiv = document.createElement('div');
     categoryDiv.classList.add('expense-category', 'border', 'p-3', 'mb-3');
     
+    // Ensure categoryName is a string and is one of the valid options
+    const validCategoryName = typeof categoryName === 'string' && 
+                              expenseCategoryOptions.includes(categoryName) ? 
+                              categoryName : '';
+    
     const optionsHtml = expenseCategoryOptions.map(opt => 
-        `<option value="${opt}" ${opt === categoryName ? 'selected' : ''}>${opt}</option>`
+        `<option value="${opt}" ${opt === validCategoryName ? 'selected' : ''}>${opt}</option>`
     ).join('');
     
     categoryDiv.innerHTML = `
         <div class="mb-2">
             <select class="form-select expense-category-select" required>
-                <option value="" disabled ${!categoryName ? 'selected' : ''}>Select Expense Category</option>
+                <option value="" disabled ${!validCategoryName ? 'selected' : ''}>Select Expense Category</option>
                 ${optionsHtml}
             </select>
         </div>
@@ -160,12 +176,19 @@ function addExpenseItem(categoryDiv, name, amount) {
     const itemsDiv = categoryDiv.querySelector('.expense-items');
     const itemDiv = document.createElement('div');
     itemDiv.classList.add('row', 'g-2', 'expense-item', 'mb-2');
+    
+    // Ensure name is a string
+    const itemName = typeof name === 'string' ? name : '';
+    // Ensure amount is a number or can be parsed as a number
+    const itemAmount = (typeof amount === 'number' || (typeof amount === 'string' && !isNaN(parseFloat(amount)))) 
+                      ? amount : '';
+                      
     itemDiv.innerHTML = `
         <div class="col-md-6">
-            <input type="text" class="form-control" placeholder="Item Name" value="${name || ''}" required>
+            <input type="text" class="form-control" placeholder="Item Name" value="${itemName}" required>
         </div>
         <div class="col-md-4">
-            <input type="number" class="form-control" placeholder="Amount" value="${amount || ''}" required>
+            <input type="number" class="form-control" placeholder="Amount" value="${itemAmount}" required>
         </div>
         <div class="col-md-2 d-grid">
             <button type="button" class="btn btn-danger remove-item">Remove</button>
@@ -244,19 +267,24 @@ function collectFormData() {
         const sourceInput = item.querySelector('input[type="text"]');
         const amountInput = item.querySelector('input[type="number"]');
         return {
-            source: sourceInput ? sourceInput.value : '',
+            source: sourceInput ? sourceInput.value.trim() : '',
             amount: amountInput ? parseFloat(amountInput.value) : 0
         };
     }).filter(item => item.source && !isNaN(item.amount));
-      const expenses = Array.from(document.querySelectorAll('.expense-category')).map(category => {
+    
+    const expenses = Array.from(document.querySelectorAll('.expense-category')).map(category => {
         const categorySelect = category.querySelector('.expense-category-select');
-        const categoryName = categorySelect ? categorySelect.value : 'Other';
+        // Ensure we have a valid category name
+        let categoryName = 'Other';
+        if (categorySelect && categorySelect.value && expenseCategoryOptions.includes(categorySelect.value)) {
+            categoryName = categorySelect.value;
+        }
         
         const items = Array.from(category.querySelectorAll('.expense-item')).map(item => {
             const nameInput = item.querySelector('input[type="text"]');
             const amountInput = item.querySelector('input[type="number"]');
             return {
-                name: nameInput ? nameInput.value : '',
+                name: nameInput ? nameInput.value.trim() : '',
                 amount: amountInput ? parseFloat(amountInput.value) : 0
             };
         }).filter(item => item.name && !isNaN(item.amount));

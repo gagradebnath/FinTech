@@ -26,9 +26,18 @@ def plan_budget():
     budget = None
     if budget_id:
         budget = get_budget_by_id(budget_id, user['id'])
+        print(f"Loaded specific budget by ID {budget_id}:", budget)
     else:
         # Otherwise, get the default budget (if any)
-        budget = get_user_budget(user['id'])
+        default_budget = get_user_budget(user['id'])
+        print("Loaded default budget:", default_budget)
+        
+        # Convert budget to dict if it's a SQLite Row object
+        if default_budget:
+            if hasattr(default_budget, 'keys'):
+                budget = dict(default_budget)
+            else:
+                budget = default_budget
     
     error = None
     success = None
@@ -39,15 +48,30 @@ def plan_budget():
         income_source = request.form.get('income_source')
         amount = request.form.get('amount')
         try:
-            budget = save_or_update_budget(user['id'], name, currency, income_source, amount)
+            saved_budget = save_or_update_budget(user['id'], name, currency, income_source, amount)
+            if saved_budget:
+                if hasattr(saved_budget, 'keys'):
+                    budget = dict(saved_budget)
+                else:
+                    budget = saved_budget
             success = 'Budget saved successfully.'
         except Exception as e:
             error = 'Failed to save budget: ' + str(e)
     
+    # Convert user_budgets to list of dicts if they are SQLite Row objects
+    serializable_user_budgets = []
+    for b in user_budgets:
+        if hasattr(b, 'keys'):
+            serializable_user_budgets.append(dict(b))
+        else:
+            serializable_user_budgets.append(b)
+    
     # Add debug information
     print("Budget data being sent to template:", budget)
+    if budget and isinstance(budget, dict) and 'categories' in budget:
+        print("Categories in budget:", budget['categories'])
     
-    return render_template('plan_budget.html', budget=budget, user_budgets=user_budgets, error=error, success=success)
+    return render_template('plan_budget.html', budget=budget, user_budgets=serializable_user_budgets, error=error, success=success)
 
 @budget_bp.route('/save_budget', methods=['POST'])
 def save_budget():
@@ -78,6 +102,21 @@ def get_budget_by_id_route(budget_id):
     budget = get_budget_by_id(budget_id, user['id'])
     if not budget:
         return jsonify({'success': False, 'message': 'Budget not found'}), 404
+    
+    # Ensure budget is serializable
+    if hasattr(budget, 'keys') and not isinstance(budget, dict):
+        budget = dict(budget)
+    
+    # Add debugging information to help diagnose any issues
+    print(f"Retrieved budget data: {budget}")
+    
+    # Ensure categories are properly structured
+    if 'categories' in budget and budget['categories']:
+        # Log category data for debugging
+        for cat_id, category in budget['categories'].items():
+            print(f"Category: {category['name']} with {len(category['items'])} items")
+            for item in category['items']:
+                print(f"  - Item: {item['name']}, Amount: {item['amount']}")
     
     return jsonify({'success': True, 'budget': budget})
 

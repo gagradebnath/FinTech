@@ -2,11 +2,18 @@
 from flask import current_app
 import uuid
 
+def sqlite_row_to_dict(row):
+    """Convert a SQLite Row object to a dictionary"""
+    if row is None:
+        return None
+    return dict(row) if hasattr(row, 'keys') else row
+
 def get_user_budget(user_id):
     conn = current_app.get_db_connection()
     budget = conn.execute('SELECT * FROM budgets WHERE user_id = ?', (user_id,)).fetchone()
     conn.close()
-    return budget
+    # Convert SQLite Row to dict if not None
+    return dict(budget) if budget else None
 
 def save_or_update_budget(user_id, name, currency, income_source, amount):
     conn = current_app.get_db_connection()
@@ -20,7 +27,8 @@ def save_or_update_budget(user_id, name, currency, income_source, amount):
     conn.commit()
     budget = conn.execute('SELECT * FROM budgets WHERE user_id = ?', (user_id,)).fetchone()
     conn.close()
-    return budget
+    # Convert SQLite Row to dict if not None
+    return dict(budget) if budget else None
 
 def insert_full_budget(user_id, budget_name, currency, income, expenses):
     conn = current_app.get_db_connection()
@@ -54,8 +62,10 @@ def get_all_user_budgets(user_id):
     conn = current_app.get_db_connection()
     budgets = conn.execute('SELECT id, name, currency, income_source, amount FROM budgets WHERE user_id = ? ORDER BY name', 
                          (user_id,)).fetchall()
+    # Convert SQLite Row objects to dicts
+    result = [dict(budget) for budget in budgets]
     conn.close()
-    return budgets
+    return result
 
 def get_budget_by_id(budget_id, user_id):
     """Get a specific budget by ID, ensuring it belongs to the specified user"""
@@ -68,6 +78,9 @@ def get_budget_by_id(budget_id, user_id):
     if not budget:
         conn.close()
         return None
+    
+    # Convert budget to a dictionary
+    budget = dict(budget) if budget else None
     
     # Get the complete budget with categories and items
     budget_details = conn.execute('''
@@ -96,6 +109,9 @@ def get_budget_by_id(budget_id, user_id):
     if not budget_details:
         return budget  # Return the basic budget if no details found
     
+    # Convert all rows to dictionaries
+    budget_details = [dict(row) for row in budget_details]
+    
     # Organize the results into a structured budget object
     result = {
         'id': budget['id'],
@@ -116,14 +132,14 @@ def get_budget_by_id(budget_id, user_id):
         if category_id not in result['categories']:
             result['categories'][category_id] = {
                 'id': category_id,
-                'name': row['category_name'],
+                'name': row['category_name'],  # This is the category name from the database
                 'items': []
             }
         
         if row['item_id'] is not None:
             result['categories'][category_id]['items'].append({
                 'id': row['item_id'],
-                'name': row['item_name'],
+                'name': row['item_name'],  # This is the item name from the database
                 'amount': row['item_amount']
             })
     
