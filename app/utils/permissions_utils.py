@@ -37,6 +37,8 @@ def remove_permission_from_role(role_id, permission_id):
     conn.close()
 
 def has_permission(user_id, permission_name):
+    if not permission_name.startswith('perm_'):
+        permission_name = 'perm_' + permission_name
     conn = current_app.get_db_connection()
     row = conn.execute('''SELECT 1 FROM users u
         JOIN roles r ON u.role_id = r.id
