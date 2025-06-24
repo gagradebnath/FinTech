@@ -1,0 +1,168 @@
+/* Transaction page specific styles */
+
+.transaction-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.transaction-card {
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.transaction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.transaction-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.transaction-body {
+    padding: 20px;
+}
+
+.transaction-form-group {
+    margin-bottom: 20px;
+}
+
+.transaction-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.transaction-input, .transaction-select, .transaction-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.transaction-input:focus, .transaction-select:focus, .transaction-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+.transaction-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.transaction-amount-wrapper {
+    position: relative;
+}
+
+.transaction-currency {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    color: #666;
+}
+
+.transaction-amount {
+    padding-left: 30px;
+}
+
+.transaction-method-option {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.transaction-method-option:hover {
+    background-color: #f8f9fa;
+}
+
+.transaction-method-option.selected {
+    border-color: var(--primary-color);
+    background-color: rgba(0, 102, 255, 0.05);
+}
+
+.transaction-method-radio {
+    margin-right: 15px;
+}
+
+.transaction-method-info {
+    flex: 1;
+}
+
+.transaction-method-name {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.transaction-method-desc {
+    font-size: 14px;
+    color: #666;
+}
+
+.transaction-submit-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.transaction-submit-btn:hover {
+    background-color: #0052cc;
+}
+
+.transaction-summary {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+}
+
+.transaction-summary-title {
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.transaction-summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.transaction-summary-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-summary-label {
+    color: #666;
+}
+
+.transaction-summary-value {
+    font-weight: 600;
+}
+
+.transaction-note {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #fff8e1;
+    border-left: 4px solid #ffc107;
+    font-size: 14px;
+}

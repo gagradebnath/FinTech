@@ -42,11 +42,10 @@ function initializeCharts() {
         new Chart(txChartEl, {
             type: 'bar',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-                datasets: [{
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],                datasets: [{
                     label: 'Transactions',
                     data: [250, 300, 750, 400, 450, 460, 470, 480, 490],
-                    backgroundColor: '#0066ff',
+                    backgroundColor: '#3ed6c2',
                     borderRadius: 5
                 }]
             },
@@ -58,18 +57,30 @@ function initializeCharts() {
                         beginAtZero: true,
                         grid: {
                             display: true,
-                            color: 'rgba(0, 0, 0, 0.05)'
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
                         }
                     },
                     x: {
                         grid: {
                             display: false
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)'
                         }
                     }
-                },
-                plugins: {
+                },                plugins: {
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+                        titleColor: '#3ed6c2',
+                        bodyColor: 'rgba(255, 255, 255, 0.8)',
+                        borderColor: 'rgba(62, 214, 194, 0.3)',
+                        borderWidth: 1
                     }
                 }
             }
@@ -84,22 +95,30 @@ function initializeCharts() {
             data: {
                 labels: ['Shopping', 'Food', 'Travel', 'Health'],
                 datasets: [{
-                    data: [30, 20, 35, 15],
-                    backgroundColor: [
+                    data: [30, 20, 35, 15],                    backgroundColor: [
                         '#ff6384',
-                        '#36a2eb',
+                        '#3ed6c2',
                         '#ffcd56',
-                        '#4bc0c0'
+                        '#8a5fff'
                     ],
                     borderWidth: 0
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
+                maintainAspectRatio: false,                plugins: {
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            color: 'rgba(255, 255, 255, 0.7)'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(26, 26, 46, 0.9)',
+                        titleColor: '#3ed6c2',
+                        bodyColor: 'rgba(255, 255, 255, 0.8)',
+                        borderColor: 'rgba(62, 214, 194, 0.3)',
+                        borderWidth: 1
                     }
                 },
                 cutout: '70%'
@@ -107,6 +126,19 @@ function initializeCharts() {
         });
     }
 }
+
+// Apply animations to elements
+function applyAnimations() {
+    document.querySelectorAll('.btn-outline-primary').forEach(btn => {
+        btn.classList.add('btn-glow');
+    });
+}
+
+// Initialize animations
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a short time for the DOM to fully render
+    setTimeout(applyAnimations, 100);
+});
 
 // Set the active sidebar link based on current URL
 function setActiveSidebarLink() {

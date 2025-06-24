@@ -1,4 +1,4 @@
-/* Custom styles for FinGuard app - Modern Dashboard */
+/* Custom styles for FinGuard app - Modern Dark Dashboard */
 :root {
     --primary-color: #0066ff;
     --secondary-color: #6c757d;
@@ -7,17 +7,22 @@
     --warning-color: #ffc107;
     --info-color: #17a2b8;
     --dark-color: #121212;
+    --dark-secondary: #1a1a2e;
+    --dark-tertiary: #232733;
     --light-color: #f8f9fa;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --border-color: rgba(255, 255, 255, 0.1);
     --sidebar-width: 240px;
     --sidebar-collapsed-width: 70px;
     --header-height: 70px;
 }
 
 body {
-    background-color: #f0f2f5;
+    background-color: var(--dark-color);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow-x: hidden;
-    color: #333;
+    color: var(--text-primary);
 }
 
 /* Sidebar Styles */
@@ -29,15 +34,15 @@ body {
 
 .sidebar {
     width: var(--sidebar-width);
-    background: #1a1a2e;
-    color: #fff;
+    background: var(--dark-secondary);
+    color: var(--text-primary);
     position: fixed;
     height: 100vh;
     z-index: 999;
     transition: all 0.3s;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-header {
@@ -68,14 +73,14 @@ body {
     padding: 12px 20px;
     display: flex;
     align-items: center;
-    color: #b0b0b0;
+    color: var(--text-secondary);
     text-decoration: none;
     transition: all 0.3s;
     border-left: 3px solid transparent;
 }
 
 .sidebar-link:hover, .sidebar-link.active {
-    color: #ffffff;
+    color: var(--text-primary);
     background-color: rgba(255, 255, 255, 0.05);
     border-left-color: var(--primary-color);
 }
@@ -95,20 +100,25 @@ body {
     min-height: 100vh;
 }
 
+.content.full-width {
+    width: 100%;
+    margin-left: 0;
+}
+
 .top-navbar {
     height: var(--header-height);
-    background-color: #ffffff;
+    background-color: var(--dark-secondary);
     padding: 0 20px;
     display: flex;
     align-items: center;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
 .search-bar {
-    background-color: #f5f5f5;
+    background-color: rgba(255, 255, 255, 0.05);
     border-radius: 30px;
     padding: 5px 15px;
     flex-grow: 1;
@@ -122,6 +132,7 @@ body {
 
 .search-bar input {
     background: transparent;
+    color: var(--text-primary);
 }
 
 .user-profile {
@@ -150,28 +161,77 @@ body {
 }
 
 .main-content {
-    padding: 20px;
-    background-color: #f0f2f5;
+    background: linear-gradient(-45deg, #121212, #163e3e, #0d1f12, #15151f,#340434dd);
+    background-size: 400% 400%;
+    animation: wave-gradient 15s ease infinite;
+    position: relative;
+}
+
+.main-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 120%, rgba(8, 24, 24, 0) 0%, rgba(13, 14, 31, 0.978) 40%, transparent 70%);
+    animation: wave-motion 8s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+@keyframes wave-gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    25% {
+        background-position: 50% 30%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    75% {
+        background-position: 50% 70%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes wave-motion {
+    0% {
+        opacity: 0.3;
+        transform: scale(1) translateY(0px);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.02) translateY(-10px);
+    }
+    100% {
+        opacity: 0.3;
+        transform: scale(1) translateY(0px);
+    }
 }
 
 /* Card Styles */
 .card {
     border: none;
     border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     margin-bottom: 20px;
     transition: all 0.3s ease;
     overflow: hidden;
+    background-color: var(--dark-secondary);
+    color: var(--text-primary);
 }
 
 .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
 .card-header {
-    background-color: #ffffff;
-    border-bottom: 1px solid #f0f0f0;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-color);
     padding: 15px 20px;
     font-weight: 600;
 }
@@ -225,7 +285,7 @@ body {
     display: flex;
     align-items: center;
     padding: 15px 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .transaction-item:last-child {
@@ -236,7 +296,7 @@ body {
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background-color: #f5f5f5;
+    background-color: rgba(255, 255, 255, 0.05);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -255,7 +315,7 @@ body {
 
 .transaction-date {
     font-size: 12px;
-    color: #6c757d;
+    color: var(--text-secondary);
 }
 
 .transaction-amount {
@@ -293,7 +353,7 @@ body {
 }
 
 .color-dot-food {
-    background-color: #36a2eb;
+    background-color: #3ed6c2;
 }
 
 .color-dot-travel {
@@ -301,7 +361,7 @@ body {
 }
 
 .color-dot-health {
-    background-color: #4bc0c0;
+    background-color: #8a5fff;
 }
 
 .credit-card {
@@ -347,6 +407,75 @@ body {
     color: #ffffff;
 }
 
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+.stats-card {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+.stats-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.stats-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.stats-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.card {
+    animation: fadeIn 0.5s ease-out forwards;
+    animation-delay: 0.4s;
+    opacity: 0;
+}
+
+.card:nth-child(even) {
+    animation-delay: 0.5s;
+}
+
+/* Glow effect for primary elements */
+.credit-card-inner {
+    box-shadow: 0 0 15px rgba(62, 214, 194, 0.2);
+}
+
+.credit-card-inner:hover {
+    box-shadow: 0 0 25px rgba(62, 214, 194, 0.3);
+}
+
+/* Glowing button effects */
+.btn-glow {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.btn-glow:after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(62, 214, 194, 0.1), transparent);
+    transform: rotate(45deg);
+    animation: glowSweep 3s infinite;
+}
+
+@keyframes glowSweep {
+    0% { transform: rotate(45deg) translateX(-100%); }
+    100% { transform: rotate(45deg) translateX(100%); }
+}
+
 /* For smaller screens */
 @media (max-width: 768px) {
     .sidebar {
@@ -380,6 +509,56 @@ body {
         margin-right: 0;
         margin-bottom: 10px;
     }
+}
+
+/* Table styles */
+.table {
+    color: var(--text-primary);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table thead th {
+    border-bottom-color: var(--border-color);
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.table tbody td {
+    border-bottom-color: var(--border-color);
+}
+
+/* Form control styles for dark theme */
+.form-control, .form-select {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(0, 102, 255, 0.25);
+}
+
+.form-control::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+/* Button overrides for dark theme */
+.btn-outline-secondary {
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+.btn-outline-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
 }
 
 /* Centered content for login/register pages */

@@ -1,0 +1,139 @@
+/* Profile page specific styles */
+
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 20px;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #666;
+    border: 3px solid #fff;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-name {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.profile-email {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.profile-stat {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px 15px;
+    text-align: center;
+    min-width: 100px;
+}
+
+.profile-stat-value {
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.profile-stat-label {
+    color: #666;
+    font-size: 12px;
+}
+
+.profile-tabs {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.profile-tab {
+    display: inline-block;
+    padding: 12px 20px;
+    margin-right: 5px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    font-weight: 600;
+}
+
+.profile-tab.active {
+    border-bottom-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.profile-section {
+    margin-bottom: 30px;
+}
+
+.profile-section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.profile-form-group {
+    margin-bottom: 20px;
+}
+
+.profile-label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.profile-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.profile-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.profile-save-btn {
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.profile-save-btn:hover {
+    background-color: #0052cc;
+}
