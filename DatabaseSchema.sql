@@ -104,14 +104,16 @@ CREATE TABLE "admin_logs" (
   "id" uuid PRIMARY KEY,
   "admin_id" uuid,
   "ip_address" varchar,
-  "timestamp" datetime
+  "timestamp" datetime,
+  "details" text
 );
 
 CREATE TABLE "budget_expense_items" (
   "id" uuid PRIMARY KEY,
   "category_id" uuid,
   "name" varchar,
-  "amount" decimal(10,2)
+  "amount" decimal(10,2),
+  "details" text
 );
 
 CREATE TABLE "user_expense_habit" (
