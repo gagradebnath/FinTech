@@ -1,6 +1,6 @@
 # FinGuard: Personal Finance Management Web App
 
-FinGuard is a personal finance management web application built with Flask and SQLite. It supports multiple user roles (admin, agent, user), robust access controls, budget planning, fraud reporting, AI chat, blockchain transaction logging, and user dashboards. The frontend uses Bootstrap for a modern, responsive UI.
+FinGuard is a comprehensive personal finance management web application built with Flask and SQLite. It features a modern dark-themed UI, supports multiple user roles (admin, agent, user), implements robust access controls, budget planning, fraud reporting, AI chat, blockchain transaction logging, and user dashboards. The frontend uses Bootstrap 5 for a responsive, modern UI.
 
 ## Features
 
@@ -11,7 +11,9 @@ FinGuard is a personal finance management web application built with Flask and S
   - Unique email and phone enforced
   - Pop-up feedback for registration/login
 - **Dashboard:**
+  - Modern dark-themed UI with animated gradient backgrounds
   - User-specific info (balance, budgets, recent expenses)
+  - Transaction reports with visual charts
   - Navigation to profile, budget, send money, and expense habit pages
 - **Profile Management:**
   - View and update personal info (name, email, phone, etc.)
@@ -19,75 +21,93 @@ FinGuard is a personal finance management web application built with Flask and S
   - Save and edit spending habits
 - **Budget Planning:**
   - Dynamic budget planner with income/expense categories
-  - Save budgets and view previous ones
+  - Save budgets and view/load previously saved budgets
+  - Detailed category and item management
 - **Send Money:**
   - Transfer funds to other users with validation
+  - View recent transactions
 - **Fraud Reporting:**
-  - Report suspicious users (feature scaffolded)
+  - Report suspicious users
 - **AI Chat:**
   - AI-powered financial assistant (feature scaffolded)
 - **Blockchain Logging:**
   - Transaction logging for transparency (feature scaffolded)
 - **Bootstrap Frontend:**
-  - Responsive, modern UI with popups and navigation
+  - Responsive, modern dark UI with animated gradients
+  - Consistent styling across all pages
+  - Popups and navigational elements
 
 ## Project Structure
 
 ```text
 app/
-    __init__.py
-    config.py
-    models.py (placeholder)
-    README.md
+    __init__.py             # App factory, DB connection, JSON encoder
+    config.py               # Flask configuration
+    models.py               # (placeholder)
+    README.md               # App module documentation
     routes/
-            __init__.py
-            user.py
-            admin.py
-            agent.py
-            budget.py
-            transaction.py
-            fraud.py
-            chat.py
-            README.md
-            __pycache__/
+        __init__.py         # Blueprint registration
+        user.py             # User authentication and dashboard routes
+        admin.py            # Admin dashboard and management routes
+        agent.py            # Agent dashboard and operations routes
+        budget.py           # Budget planning and saving routes
+        transaction.py      # Money transfer routes
+        fraud.py            # Fraud reporting routes
+        chat.py             # AI chat routes (placeholder)
+        README.md           # Routes documentation
     static/
-            README.md
-            css/
-            style.css
-            js/
-            main.js
-            budget.js
+        README.md           # Static assets documentation
+        assets/             # Images and other assets
+        css/
+            style.css       # Main stylesheet
+            landing.css     # Landing page specific styles
+            login.css       # Login page styles
+            dashboard.css   # Dashboard styles
+            budget.css      # Budget page styles
+            transaction.css # Transaction page styles
+            fraud.css       # Fraud reporting styles
+            and more...     # Other page-specific CSS files
+        js/
+            main.js         # Main JavaScript
+            budget.js       # Budget page functionality
+            finance-bg.js   # Background animations
+            landing.js      # Landing page scripts
     templates/
-            README.md
-            base.html
-            index.html
-            login.html
-            register.html
-            dashboard.html
-            profile.html
-            expense_habit.html
-            plan_budget.html
-            send_money.html
+        README.md           # Templates documentation
+        base.html           # Base layout template
+        index.html          # Landing page
+        login.html          # Login page
+        register.html       # Registration page
+        dashboard.html      # User dashboard
+        profile.html        # User profile
+        expense_habit.html  # Expense habits
+        plan_budget.html    # Budget planner
+        send_money.html     # Money transfer
+        report_fraud.html   # Fraud reporting
+        admin_dashboard.html # Admin dashboard
+        agent_dashboard.html # Agent dashboard
     utils/
-            __init__.py
-            auth.py
-            blockchain.py
-            budget_utils.py
-            dashboard.py
-            expense_habit.py
-            notifications.py
-            profile.py
-            README.md
-            register.py
-            transaction_utils.py
-            user_utils.py
-            __pycache__/
-DatabaseSchema.sql
-fin_guard.db
-requirements.txt
-run.py
-seed_sqlite.py
-README.md
+        __init__.py         # Utility initialization
+        admin_utils.py      # Admin operations
+        auth.py             # Authentication helpers
+        blockchain.py       # Blockchain logic (placeholder)
+        budget_utils.py     # Budget CRUD operations
+        dashboard.py        # Dashboard data retrieval
+        expense_habit.py    # Expense habit operations
+        fraud_utils.py      # Fraud reporting utilities
+        notifications.py    # Notification system (placeholder)
+        permissions_utils.py # Role and permission management
+        profile.py          # Profile management
+        README.md           # Utilities documentation
+        register.py         # Registration helpers
+        transaction_utils.py # Transaction logic
+        user_utils.py       # User data access
+DatabaseSchema.sql          # SQLite database schema
+fin_guard.db                # SQLite database
+requirements.txt            # Project dependencies
+run.py                      # App entry point
+seed_sqlite.py              # Database seeding script
+README.md                   # This file
 ```
 
 ## Setup & Usage
@@ -124,41 +144,38 @@ All demo accounts start with a balance of 10,000. You can use these credentials 
 - Schema defined in `DatabaseSchema.sql`
 - Seed script: `seed_sqlite.py`
 
-## Main Functions and Endpoints
+## Key Features and Functionality
 
-### User Management (`user.py`)
-- **login**: Handles user login via user ID, email, or phone. Sets session for logged-in user.
-- **register**: Handles user registration, enforces unique email/phone, and creates user/contact records.
-- **get_current_user**: Utility to fetch the current user from session.
-- **dashboard**: Displays user dashboard with balance, budgets, and recent expenses.
-- **expense_habit**: Allows users to save and edit their expense/spending habits.
-- **profile**: View and update user profile information.
-- **log_js_message**: Receives and logs messages from frontend JS to the server terminal.
+### User Management
+- Login/Registration with validation
+- Role-based access control (Admin, Agent, User)
+- Profile management
 
-### Budget Management (`budget.py`)
-- **plan_budget**: Renders the budget planning page and handles form submissions for simple budget info.
-- **save_budget**: Receives and saves detailed budget data (income, categories, items) from the dynamic planner (AJAX/JS).
+### Financial Management
+- Dashboard with transaction history and visual charts
+- Budget planning with categories and items
+- Expense habit tracking
+- Money transfers between users
 
-### Transactions (`transaction.py`)
-- **send_money**: Handles sending money between users, including validation and balance updates.
+### Admin and Agent Operations
+- Admin dashboard for user management, fraud monitoring
+- Agent dashboard for adding money, cash out operations
+- Transaction monitoring
 
-### Admin, Agent, Fraud, Chat Endpoints
-- **admin.get_admin**: Placeholder for admin-specific endpoints.
-- **agent.get_agent**: Placeholder for agent-specific endpoints.
-- **fraud.get_fraud**: Placeholder for fraud reporting endpoints.
-- **chat.get_chat**: Placeholder for AI chat endpoints.
+### UI Features
+- Modern dark theme with animated gradient backgrounds
+- Responsive design for all screen sizes
+- Consistent styling across all pages
 
-### Utilities (in `app/utils/`)
-- **auth.py**: Authentication and access control helpers (e.g., user lookup, password check).
-- **register.py**: Registration helpers (unique checks, user creation, role lookup).
-- **user_utils.py**: User session and fetch helpers.
-- **dashboard.py**: Dashboard queries (budgets, recent expenses).
-- **expense_habit.py**: Expense habit fetch and update.
-- **profile.py**: User profile fetch and update.
-- **budget_utils.py**: Budget CRUD and expense category/item helpers.
-- **transaction_utils.py**: Transaction logic (send money, user fetch).
-- **blockchain.py**: (Planned) Blockchain logic for transaction storage.
-- **notifications.py**: (Planned) Notification utilities (fraud alerts, etc.).
+## Known Issues and Troubleshooting
+
+### Flask Version Compatibility
+- If you encounter a `JSONEncoder` import error, update `app/__init__.py` to use `json.JSONEncoder` instead of `flask.json.JSONEncoder`
+- Alternatively, specify Flask version 2.2.x or earlier in requirements.txt
+
+### Database Reset
+- If you change the database schema, you'll need to re-run `seed_sqlite.py` to reset the database
+- This will erase all existing data and create fresh tables with demo accounts
 
 ## How to Change and Debug
 
