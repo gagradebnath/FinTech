@@ -1,5 +1,16 @@
 {% extends 'base.html' %}
 {% block content %}
+<style>
+    /* Make the placeholder (first option) gray, others black */
+    select.form-select option[value=""] {
+        color: #888 !important;
+    }
+
+    select.form-select option:not([value=""]) {
+        color: #000 !important;
+    }
+</style>
+
 <div class="container py-4">
     <div class="row">
         <div class="col-lg-5">
@@ -10,14 +21,17 @@
                 <div class="card-body">
                     <form method="POST">
                         <div class="mb-3">
-                            <label for="recipient_identifier" class="form-label">Recipient (User ID, Email, or Phone)</label>
-                            <input type="text" class="form-control" id="recipient_identifier" name="recipient_identifier" placeholder="Enter User ID, Email, or Phone" required>
+                            <label for="recipient_identifier" class="form-label">Recipient (User ID, Email, or
+                                Phone)</label>
+                            <input type="text" class="form-control" id="recipient_identifier"
+                                name="recipient_identifier" placeholder="Enter User ID, Email, or Phone" required>
                         </div>
                         <div class="mb-3">
                             <label for="amount" class="form-label">Amount</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="amount" name="amount" min="0.01" step="0.01" required>
+                                <input type="number" class="form-control" id="amount" name="amount" min="0.01"
+                                    step="0.01" required>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -33,11 +47,13 @@
                         </div>
                         <div class="mb-3">
                             <label for="note" class="form-label">Note</label>
-                            <input type="text" class="form-control" id="note" name="note" maxlength="255" placeholder="What's this payment for?">
+                            <input type="text" class="form-control" id="note" name="note" maxlength="255"
+                                placeholder="What's this payment for?">
                         </div>
                         <div class="mb-3">
                             <label for="location" class="form-label">Location</label>
-                            <input type="text" class="form-control" id="location" name="location" maxlength="255" placeholder="Optional location">
+                            <input type="text" class="form-control" id="location" name="location" maxlength="255"
+                                placeholder="Optional location">
                         </div>
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">Send Money</button>
@@ -49,13 +65,14 @@
                 <i class="bi bi-arrow-left"></i> Back to Dashboard
             </a>
         </div>
-        
+
         <div class="col-lg-7">
             <div class="modern-transaction-section">
                 <div class="transactions-header">
                     <h3>Recent Transactions</h3>
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown">
                             This Week
                         </button>
                         <ul class="dropdown-menu">
@@ -66,7 +83,7 @@
                         </ul>
                     </div>
                 </div>
-                
+
                 {% if transactions %}
                 <div class="table-responsive">
                     <table class="transaction-table">
@@ -99,26 +116,29 @@
                                             <div class="transaction-vendor">{{ tx.type|capitalize }}</div>
                                             <div class="transaction-category">
                                                 {% if tx.sender_id == user.id %}
-                                                    Sent{% if tx.receiver_id %} to {{ tx.receiver_id }}{% endif %}
+                                                Sent{% if tx.receiver_id %} to {{ tx.receiver_id }}{% endif %}
                                                 {% elif tx.receiver_id == user.id %}
-                                                    Received{% if tx.sender_id %} from {{ tx.sender_id }}{% endif %}
+                                                Received{% if tx.sender_id %} from {{ tx.sender_id }}{% endif %}
                                                 {% endif %}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="transaction-amount {{ 'amount-negative' if tx.sender_id == user.id else 'amount-positive' }}">
+                                    <div
+                                        class="transaction-amount {{ 'amount-negative' if tx.sender_id == user.id else 'amount-positive' }}">
                                         {{ '-' if tx.sender_id == user.id else '+' }}${{ tx.amount }}
                                     </div>
                                 </td>
                                 <td>{{ tx.timestamp.split(' ')[0] if tx.timestamp else 'N/A' }}</td>
                                 <td>
-                                    <span class="transaction-status {{ 'success' if tx.status|lower == 'completed' else ('pending' if tx.status|lower == 'pending' else 'canceled') }}">
+                                    <span
+                                        class="transaction-status {{ 'success' if tx.status|lower == 'completed' else ('pending' if tx.status|lower == 'pending' else 'canceled') }}">
                                         {{ tx.status|default('Completed')|capitalize }}
                                     </span>
                                 </td>
-                                <td class="transaction-time">{{ tx.timestamp.split(' ')[1] if tx.timestamp and ' ' in tx.timestamp else 'N/A' }}</td>
+                                <td class="transaction-time">{{ tx.timestamp.split(' ')[1] if tx.timestamp and ' ' in
+                                    tx.timestamp else 'N/A' }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -136,55 +156,73 @@
     </div>
 </div>
 
+<!-- Loading overlay -->
+<div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(255,255,255,0.7); z-index:2000; align-items:center; justify-content:center;">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <div class="mt-3 text-primary fw-bold fs-4">Processing Transaction...</div>
+</div>
+
 <!-- Error popup -->
 {% if error %}
-<div class="modal fade" id="sendMoneyErrorModal" tabindex="-1" aria-labelledby="sendMoneyErrorModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title" id="sendMoneyErrorModalLabel">Transaction Failed</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        {{ error }}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
+<div class="modal fade" id="sendMoneyErrorModal" tabindex="-1" aria-labelledby="sendMoneyErrorModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="sendMoneyErrorModalLabel">Transaction Failed</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {{ error }}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var errorModal = new bootstrap.Modal(document.getElementById('sendMoneyErrorModal'));
-    errorModal.show();
-  });
+    document.addEventListener('DOMContentLoaded', function () {
+        var errorModal = new bootstrap.Modal(document.getElementById('sendMoneyErrorModal'));
+        errorModal.show();
+    });
 </script>
 {% endif %}
 
 <!-- Success popup -->
 {% if success %}
-<div class="modal fade" id="sendMoneySuccessModal" tabindex="-1" aria-labelledby="sendMoneySuccessModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title" id="sendMoneySuccessModalLabel">Transaction Successful</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        {{ success }}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
-      </div>
+<div class="modal fade" id="sendMoneySuccessModal" tabindex="-1" aria-labelledby="sendMoneySuccessModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="sendMoneySuccessModalLabel">Transaction Successful</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var successModal = new bootstrap.Modal(document.getElementById('sendMoneySuccessModal'));
-    successModal.show();
-  });
+    document.addEventListener('DOMContentLoaded', function () {
+        var successModal = new bootstrap.Modal(document.getElementById('sendMoneySuccessModal'));
+        successModal.show();
+    });
 </script>
 {% endif %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var sendMoneyForm = document.querySelector('form');
+    var loadingOverlay = document.getElementById('loadingOverlay');
+    if (sendMoneyForm && loadingOverlay) {
+        sendMoneyForm.addEventListener('submit', function () {
+            loadingOverlay.style.display = 'flex';
+        });
+    }
+});
+</script>
 {% endblock %}
