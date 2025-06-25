@@ -1,4 +1,4 @@
-# Utility functions for dashboard queries
+
 from flask import current_app
 
 def get_user_budgets(user_id):

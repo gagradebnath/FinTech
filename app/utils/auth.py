@@ -1,7 +1,7 @@
 import sqlite3
 from flask import current_app
 
-# Authentication and access control utilities will go here
+
 
 def get_user_by_login_id(login_id):
     """Get user by user_id, email, or phone (case-insensitive)."""

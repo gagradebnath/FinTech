@@ -1,4 +1,4 @@
-# Utility functions for user expense habit
+
 from flask import current_app
 import uuid
 
