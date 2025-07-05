@@ -60,7 +60,7 @@ def admin_dashboard():
                         amount_val = float(amount)
                         update_user_balance(agent_id, amount_val)
                         tx_id = str(uuid.uuid4())
-                        insert_transaction_admin(tx_id, amount_val, user['id'], agent_id, f'Admin {user["id"]} added money to agent', 'admin_add_money')
+                        insert_transaction_admin(tx_id, amount_val, user['id'], agent_id, f'Admin {user["id"]} added money to agent', 'Deposit')
                         log_id = str(uuid.uuid4())
                         insert_admin_log(log_id, user['id'], request.remote_addr or 'localhost', f"Added {amount} to agent (ID: {agent_id})")
                         add_money_success = f"Added {amount} to agent (ID: {agent_id})"

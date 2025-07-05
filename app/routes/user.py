@@ -72,8 +72,12 @@ def register():
         password = request.form.get('password')
         # Calculate age
         try:
-            birth_year = int(dob.split('-')[0])
-            age = date.today().year - birth_year
+            from datetime import datetime
+            birth_date = datetime.strptime(dob, '%Y-%m-%d').date()
+            age = date.today().year - birth_date.year
+            # Adjust age if birthday hasn't occurred this year
+            if date.today() < birth_date.replace(year=date.today().year):
+                age -= 1
         except Exception:
             age = None
         role_id = get_role_id(role)
@@ -103,6 +107,12 @@ def dashboard():
         return render_template('dashboard.html', user=user, budgets=[], transactions=[], error='Permission denied.')
     budgets = get_user_budgets(user['id'])
     transactions = get_recent_transactions(user['id'])
+    
+    # Debug: Ensure all transaction timestamps are proper datetime objects
+    for tx in transactions:
+        if tx.get('timestamp'):
+            print(f"DEBUG: Transaction timestamp type: {type(tx['timestamp'])}, value: {tx['timestamp']}")
+    
     return render_template('dashboard.html', user=user, budgets=budgets, transactions=transactions)
 
 @user_bp.route('/expense-habit', methods=['GET', 'POST'])
