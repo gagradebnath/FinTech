@@ -34,7 +34,7 @@ def send_money_route():
             error = 'Cannot send money: recipient is flagged for fraud.'
         else:
             ok, msg, updated_user = send_money(
-                user['id'], recipient['id'], amount, payment_method, note, location, 'transfer')
+                user['id'], recipient['id'], amount, payment_method, note, location, 'Transfer')
             if ok:
                 success = msg
                 user = updated_user

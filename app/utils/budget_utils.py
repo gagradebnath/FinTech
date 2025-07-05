@@ -2,53 +2,60 @@
 from flask import current_app
 import uuid
 
-def sqlite_row_to_dict(row):
-    """Convert a SQLite Row object to a dictionary"""
-    if row is None:
-        return None
-    return dict(row) if hasattr(row, 'keys') else row
-
 def get_user_budget(user_id):
     conn = current_app.get_db_connection()
-    budget = conn.execute('SELECT * FROM budgets WHERE user_id = ?', (user_id,)).fetchone()
-    conn.close()
-    # Convert SQLite Row to dict if not None
-    return dict(budget) if budget else None
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT * FROM budgets WHERE user_id = %s', (user_id,))
+            budget = cursor.fetchone()
+        return budget
+    finally:
+        conn.close()
 
 def save_or_update_budget(user_id, name, currency, income_source, amount):
     conn = current_app.get_db_connection()
-    budget = conn.execute('SELECT * FROM budgets WHERE user_id = ?', (user_id,)).fetchone()
-    if budget:
-        conn.execute('UPDATE budgets SET name=?, currency=?, income_source=?, amount=? WHERE id=?',
-                     (name, currency, income_source, amount, budget['id']))
-    else:
-        conn.execute('INSERT INTO budgets (id, user_id, name, currency, income_source, amount) VALUES (?, ?, ?, ?, ?, ?)',
-                     (str(uuid.uuid4()), user_id, name, currency, income_source, amount))
-    conn.commit()
-    budget = conn.execute('SELECT * FROM budgets WHERE user_id = ?', (user_id,)).fetchone()
-    conn.close()
-    # Convert SQLite Row to dict if not None
-    return dict(budget) if budget else None
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT * FROM budgets WHERE user_id = %s', (user_id,))
+            budget = cursor.fetchone()
+            
+            if budget:
+                cursor.execute('UPDATE budgets SET name=%s, currency=%s, income_source=%s, amount=%s WHERE id=%s',
+                             (name, currency, income_source, amount, budget['id']))
+            else:
+                cursor.execute('INSERT INTO budgets (id, user_id, name, currency, income_source, amount) VALUES (%s, %s, %s, %s, %s, %s)',
+                             (str(uuid.uuid4()), user_id, name, currency, income_source, amount))
+            
+            conn.commit()
+            cursor.execute('SELECT * FROM budgets WHERE user_id = %s', (user_id,))
+            budget = cursor.fetchone()
+        return budget
+    finally:
+        conn.close()
 
 def insert_full_budget(user_id, budget_name, currency, income, expenses):
     conn = current_app.get_db_connection()
     try:
-        budget_id = str(uuid.uuid4())
-        total_income = sum(float(i.get('amount', 0)) for i in income)
-        conn.execute('INSERT INTO budgets (id, user_id, name, currency, income_source, amount) VALUES (?, ?, ?, ?, ?, ?)',
-                     (budget_id, user_id, budget_name, currency, ', '.join(i.get('source', '') for i in income), total_income))
-        for cat in expenses:
-            cat_id = str(uuid.uuid4())
-            cat_name = cat.get('category', 'Other')
-            cat_amount = sum(float(item.get('amount', 0)) for item in cat.get('items', []))
-            conn.execute('INSERT INTO budget_expense_categories (id, budget_id, category_name, amount) VALUES (?, ?, ?, ?)',
-                         (cat_id, budget_id, cat_name, cat_amount))
-            for item in cat.get('items', []):
-                item_id = str(uuid.uuid4())
-                item_name = item.get('name', '')
-                item_amount = float(item.get('amount', 0))
-                conn.execute('INSERT INTO budget_expense_items (id, category_id, name, amount) VALUES (?, ?, ?, ?)',
-                             (item_id, cat_id, item_name, item_amount))
+        with conn.cursor() as cursor:
+            budget_id = str(uuid.uuid4())
+            total_income = sum(float(i.get('amount', 0)) for i in income)
+            cursor.execute('INSERT INTO budgets (id, user_id, name, currency, income_source, amount) VALUES (%s, %s, %s, %s, %s, %s)',
+                         (budget_id, user_id, budget_name, currency, ', '.join(i.get('source', '') for i in income), total_income))
+            
+            for cat in expenses:
+                cat_id = str(uuid.uuid4())
+                cat_name = cat.get('category', 'Other')
+                cat_amount = sum(float(item.get('amount', 0)) for item in cat.get('items', []))
+                cursor.execute('INSERT INTO budget_expense_categories (id, budget_id, category_name, amount) VALUES (%s, %s, %s, %s)',
+                             (cat_id, budget_id, cat_name, cat_amount))
+                
+                for item in cat.get('items', []):
+                    item_id = str(uuid.uuid4())
+                    item_name = item.get('name', '')
+                    item_amount = float(item.get('amount', 0))
+                    cursor.execute('INSERT INTO budget_expense_items (id, category_id, name, amount) VALUES (%s, %s, %s, %s)',
+                                 (item_id, cat_id, item_name, item_amount))
+        
         conn.commit()
         return True, None
     except Exception as e:
@@ -60,57 +67,56 @@ def insert_full_budget(user_id, budget_name, currency, income, expenses):
 def get_all_user_budgets(user_id):
     """Get all budgets for a given user"""
     conn = current_app.get_db_connection()
-    budgets = conn.execute('SELECT id, name, currency, income_source, amount FROM budgets WHERE user_id = ? ORDER BY name', 
-                         (user_id,)).fetchall()
-    # Convert SQLite Row objects to dicts
-    result = [dict(budget) for budget in budgets]
-    conn.close()
-    return result
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT id, name, currency, income_source, amount FROM budgets WHERE user_id = %s ORDER BY name', 
+                         (user_id,))
+            budgets = cursor.fetchall()
+        return budgets
+    finally:
+        conn.close()
 
 def get_budget_by_id(budget_id, user_id):
     """Get a specific budget by ID, ensuring it belongs to the specified user"""
     conn = current_app.get_db_connection()
     
-    # First, verify that the budget belongs to the user
-    budget = conn.execute('SELECT * FROM budgets WHERE id = ? AND user_id = ?', 
-                         (budget_id, user_id)).fetchone()
-    
-    if not budget:
+    try:
+        with conn.cursor() as cursor:
+            # First, verify that the budget belongs to the user
+            cursor.execute('SELECT * FROM budgets WHERE id = %s AND user_id = %s', 
+                         (budget_id, user_id))
+            budget = cursor.fetchone()
+            
+            if not budget:
+                return None
+            
+            # Get the complete budget with categories and items
+            cursor.execute('''
+                SELECT
+                    b.id as budget_id,
+                    b.user_id as user_id,
+                    b.name as name,
+                    b.currency as currency,
+                    b.income_source as income_source,
+                    b.amount as amount,
+                    c.id as category_id,
+                    c.category_name as category_name,
+                    i.id as item_id,
+                    i.name as item_name,
+                    i.amount as item_amount
+                FROM
+                    budgets b
+                LEFT JOIN budget_expense_categories c ON b.id = c.budget_id
+                LEFT JOIN budget_expense_items i ON c.id = i.category_id
+                WHERE
+                    b.id = %s AND b.user_id = %s
+            ''', (budget_id, user_id))
+            budget_details = cursor.fetchall()
+    finally:
         conn.close()
-        return None
-    
-    # Convert budget to a dictionary
-    budget = dict(budget) if budget else None
-    
-    # Get the complete budget with categories and items
-    budget_details = conn.execute('''
-        SELECT
-            b.id as budget_id,
-            b.user_id as user_id,
-            b.name as name,
-            b.currency as currency,
-            b.income_source as income_source,
-            b.amount as amount,
-            c.id as category_id,
-            c.category_name as category_name,
-            i.id as item_id,
-            i.name as item_name,
-            i.amount as item_amount
-        FROM
-            budgets b
-        LEFT JOIN budget_expense_categories c ON b.id = c.budget_id
-        LEFT JOIN budget_expense_items i ON c.id = i.category_id
-        WHERE
-            b.id = ? AND b.user_id = ?
-    ''', (budget_id, user_id)).fetchall()
-    
-    conn.close()
     
     if not budget_details:
         return budget  # Return the basic budget if no details found
-    
-    # Convert all rows to dictionaries
-    budget_details = [dict(row) for row in budget_details]
     
     # Organize the results into a structured budget object
     result = {

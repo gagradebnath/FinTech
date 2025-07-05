@@ -130,15 +130,14 @@
                                         {{ '-' if tx.sender_id == user.id else '+' }}${{ tx.amount }}
                                     </div>
                                 </td>
-                                <td>{{ tx.timestamp.split(' ')[0] if tx.timestamp else 'N/A' }}</td>
+                                <td>{{ tx.timestamp|format_date }}</td>
                                 <td>
                                     <span
                                         class="transaction-status {{ 'success' if tx.status|lower == 'completed' else ('pending' if tx.status|lower == 'pending' else 'canceled') }}">
                                         {{ tx.status|default('Completed')|capitalize }}
                                     </span>
                                 </td>
-                                <td class="transaction-time">{{ tx.timestamp.split(' ')[1] if tx.timestamp and ' ' in
-                                    tx.timestamp else 'N/A' }}</td>
+                                <td class="transaction-time">{{ tx.timestamp|format_time }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
