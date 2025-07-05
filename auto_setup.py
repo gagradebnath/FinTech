@@ -11,7 +11,13 @@ import getpass
 def print_status(message, status="INFO"):
     """Print formatted status message"""
     symbols = {"INFO": "ℹ️", "SUCCESS": "✅", "ERROR": "❌", "WARNING": "⚠️"}
-    print(f"{symbols.get(status, 'ℹ️')} {message}")
+    formatted_message = f"{symbols.get(status, 'ℹ️')} {message}"
+    try:
+        print(formatted_message)
+    except UnicodeEncodeError:
+        # Replace Unicode characters with ASCII equivalents for Windows CMD
+        formatted_message = formatted_message.replace('✅', '[OK]').replace('❌', '[ERROR]').replace('⚠️', '[WARNING]').replace('ℹ️', '[INFO]')
+        print(formatted_message)
 
 def check_python():
     """Check if Python is installed and version is adequate"""
@@ -167,9 +173,19 @@ def setup_mysql_database():
         
         cursor = connection.cursor()
         
-        # Create database
-        print_status("Creating fin_guard database...")
-        cursor.execute("CREATE DATABASE IF NOT EXISTS fin_guard")
+        # Check if database exists and drop it for fresh installation
+        print_status("Checking for existing FinGuard database...")
+        cursor.execute("SHOW DATABASES LIKE 'fin_guard'")
+        existing_db = cursor.fetchone()
+        
+        if existing_db:
+            print_status("Existing fin_guard database found - removing for fresh installation...", "WARNING")
+            cursor.execute("DROP DATABASE fin_guard")
+            print_status("Existing database removed successfully", "SUCCESS")
+        
+        # Create fresh database
+        print_status("Creating new fin_guard database...")
+        cursor.execute("CREATE DATABASE fin_guard")
         cursor.execute("USE fin_guard")
         
         # Read and execute schema
@@ -196,7 +212,7 @@ def setup_mysql_database():
         os.environ['MYSQL_USER'] = credentials['user']
         os.environ['MYSQL_PASSWORD'] = credentials['password']
         
-        print_status("Database schema created successfully", "SUCCESS")
+        print_status("Fresh database and schema created successfully", "SUCCESS")
         return True
         
     except Exception as e:
@@ -257,10 +273,19 @@ def main():
     print("✅ Check system requirements")
     print("✅ Install MySQL (if needed)")
     print("✅ Install Python packages")
-    print("✅ Set up database with your credentials")
+    print("🔄 Create fresh database (removes existing if found)")
     print("✅ Add test data and user accounts")
     print("✅ Start the FinGuard application")
     print()
+    print("⚠️  WARNING: This will delete any existing fin_guard database!")
+    print()
+    
+    # Confirm before proceeding
+    confirm = input("Continue with fresh installation? (Y/n): ").lower()
+    if confirm.startswith('n'):
+        print("Setup cancelled by user.")
+        input("Press Enter to exit...")
+        return False
     
     # Check system requirements
     if not check_python():

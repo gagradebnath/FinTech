@@ -12,9 +12,11 @@ FinGuard is a comprehensive personal finance management web application with mod
 The setup will prompt you for MySQL credentials, then everything happens automatically:
 - ✅ Installs MySQL (if needed)
 - ✅ Installs Python packages  
-- ✅ Creates database and tables
+- 🔄 Creates fresh database (removes existing if found)
 - ✅ Adds test data and user accounts
 - ✅ Starts the application
+
+⚠️ **Note**: This will delete any existing `fin_guard` database for a clean installation.
 
 ## 💻 **Requirements**
 

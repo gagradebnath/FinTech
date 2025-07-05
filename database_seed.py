@@ -3,6 +3,17 @@ from datetime import date, datetime, timedelta
 import uuid
 import random
 import os
+import sys
+
+# Windows Unicode print handling
+def safe_print(message):
+    """Safely print Unicode messages on Windows"""
+    try:
+        print(message)
+    except UnicodeEncodeError:
+        # Replace Unicode characters with ASCII equivalents for Windows CMD
+        message = message.replace('✅', '[OK]').replace('❌', '[ERROR]').replace('⚠️', '[WARNING]').replace('ℹ️', '[INFO]')
+        print(message)
 
 # MySQL Database Configuration
 # Priority: Environment variables > mysql_config.py > defaults
@@ -21,7 +32,7 @@ def get_mysql_config():
     try:
         from mysql_config import MYSQL_CONFIG as file_config
         config.update(file_config)
-        print("✅ Loaded configuration from mysql_config.py")
+        safe_print("✅ Loaded configuration from mysql_config.py")
     except ImportError:
         pass  # File doesn't exist, use environment variables or defaults
     
@@ -68,7 +79,7 @@ def create_database():
     try:
         conn = pymysql.connect(**config)
     except Exception as e:
-        print(f"❌ Failed to connect to MySQL server: {e}")
+        safe_print(f"❌ Failed to connect to MySQL server: {e}")
         print("Please check:")
         print("- MySQL server is running")
         print("- Host and port are correct")
@@ -80,7 +91,7 @@ def create_database():
         with conn.cursor() as cursor:
             cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
         conn.commit()
-        print(f"✅ Database '{database}' created or already exists.")
+        safe_print(f"✅ Database '{database}' created or already exists.")
     finally:
         conn.close()
 
@@ -266,7 +277,7 @@ def main():
     
     # Validate required configuration
     if not MYSQL_CONFIG['password']:
-        print("❌ ERROR: MySQL password is required")
+        safe_print("❌ ERROR: MySQL password is required")
         print("Please set the MYSQL_PASSWORD environment variable")
         return
     
@@ -295,7 +306,7 @@ def main():
             conn.commit()
             print()
             print("=" * 50)
-            print("✅ Database seeding completed successfully!")
+            safe_print("✅ Database seeding completed successfully!")
             print("=" * 50)
             print("📊 Created:")
             print("  - 20 random transactions per user")
@@ -310,13 +321,13 @@ def main():
             
         except Exception as e:
             conn.rollback()
-            print(f"❌ Database operation failed: {e}")
+            safe_print(f"❌ Database operation failed: {e}")
             raise
         finally:
             conn.close()
             
     except Exception as e:
-        print(f"❌ Setup failed: {e}")
+        safe_print(f"❌ Setup failed: {e}")
         print()
         print("💡 Troubleshooting tips:")
         print("  - Ensure MySQL server is running")
