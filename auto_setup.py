@@ -89,7 +89,7 @@ def install_mysql_windows():
             return False
             
     except Exception as e:
-        print_status(f"Failed to install MySQL: {str(e)}", "ERROR")
+        print_status(f"Failed to install MySQL: {str(e)} ", "ERROR")
         print_status("Please install MySQL manually from https://dev.mysql.com/downloads/installer/", "WARNING")
         return False
 
