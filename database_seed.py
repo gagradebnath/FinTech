@@ -1,19 +1,15 @@
-import pymysql
 from datetime import date, datetime, timedelta
 import uuid
 import random
 import os
 import sys
 
-# Windows Unicode print handling
+# Safe print function for cross-platform compatibility
 def safe_print(message):
-    """Safely print Unicode messages on Windows"""
-    try:
-        print(message)
-    except UnicodeEncodeError:
-        # Replace Unicode characters with ASCII equivalents for Windows CMD
-        message = message.replace('✅', '[OK]').replace('❌', '[ERROR]').replace('⚠️', '[WARNING]').replace('ℹ️', '[INFO]')
-        print(message)
+    """Safely print messages with ASCII fallback"""
+    # Replace Unicode characters with ASCII equivalents
+    message = message.replace('✅', '[OK]').replace('❌', '[ERROR]').replace('⚠️', '[WARNING]').replace('ℹ️', '[INFO]')
+    print(message)
 
 # MySQL Database Configuration
 # Priority: Environment variables > mysql_config.py > defaults
@@ -32,7 +28,7 @@ def get_mysql_config():
     try:
         from mysql_config import MYSQL_CONFIG as file_config
         config.update(file_config)
-        safe_print("✅ Loaded configuration from mysql_config.py")
+        safe_print("[OK] Loaded configuration from mysql_config.py")
     except ImportError:
         pass  # File doesn't exist, use environment variables or defaults
     
@@ -71,6 +67,13 @@ def print_config():
 
 def create_database():
     """Create the database if it doesn't exist"""
+    # Import pymysql only when needed
+    try:
+        import pymysql
+    except ImportError:
+        safe_print("[ERROR] PyMySQL not installed. Please install it first: pip install PyMySQL")
+        return False
+        
     config = MYSQL_CONFIG.copy()
     database = config.pop('database')
     
@@ -91,7 +94,7 @@ def create_database():
         with conn.cursor() as cursor:
             cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
         conn.commit()
-        safe_print(f"✅ Database '{database}' created or already exists.")
+        safe_print(f"[OK] Database '{database}' created or already exists.")
     finally:
         conn.close()
 
@@ -189,7 +192,7 @@ def create_transactions_table(cursor):
     users = ['admin', 'agent', 'user']
     payment_methods = ['Bank Transfer', 'Credit Card', 'Debit Card', 'Mobile Wallet', 'Cash']
     transaction_types = ['Transfer', 'Deposit', 'Withdrawal', 'Payment', 'Refund']
-    locations = ['New York', 'London', 'Tokyo', 'Sydney', 'Paris', 'Berlin', 'Mumbai', 'São Paulo', 'Dubai']
+    locations = ['New York', 'London', 'Tokyo', 'Sydney', 'Paris', 'Berlin', 'Mumbai', 'Sao Paulo', 'Dubai']
     
     now = datetime.now()
     
@@ -277,8 +280,15 @@ def main():
     
     # Validate required configuration
     if not MYSQL_CONFIG['password']:
-        safe_print("❌ ERROR: MySQL password is required")
+        safe_print("[ERROR] ERROR: MySQL password is required")
         print("Please set the MYSQL_PASSWORD environment variable")
+        return
+    
+    try:
+        # Import pymysql for database operations
+        import pymysql
+    except ImportError:
+        safe_print("[ERROR] PyMySQL not installed. Please install it first: pip install PyMySQL")
         return
     
     try:
@@ -291,29 +301,29 @@ def main():
         
         try:
             with conn.cursor() as cursor:
-                print("📋 Running schema...")
+                print("[LIST] Running schema...")
                 run_schema(cursor)
                 
-                print("📊 Inserting dummy data...")
+                print("[CHART] Inserting dummy data...")
                 insert_dummy_data(cursor)
                 
-                print("💳 Creating transactions...")
+                print("[CARD] Creating transactions...")
                 create_transactions_table(cursor)
                 
-                print("📈 Creating budgets...")
+                print("[CHART] Creating budgets...")
                 create_budgets_table(cursor)
                 
             conn.commit()
             print()
             print("=" * 50)
-            safe_print("✅ Database seeding completed successfully!")
+            safe_print("[OK] Database seeding completed successfully!")
             print("=" * 50)
-            print("📊 Created:")
+            print("[CHART] Created:")
             print("  - 20 random transactions per user")
             print("  - 2 budgets per user")
             print("  - Sample user accounts (admin, agent, user)")
             print()
-            print("🔑 Default login credentials:")
+            print("[KEY] Default login credentials:")
             print("  - Admin: username=admin, password=admin")
             print("  - Agent: username=agent, password=agent")
             print("  - User:  username=user,  password=user")
@@ -321,15 +331,15 @@ def main():
             
         except Exception as e:
             conn.rollback()
-            safe_print(f"❌ Database operation failed: {e}")
+            safe_print(f"[ERROR] Database operation failed: {e}")
             raise
         finally:
             conn.close()
             
     except Exception as e:
-        safe_print(f"❌ Setup failed: {e}")
+        safe_print(f"[ERROR] Setup failed: {e}")
         print()
-        print("💡 Troubleshooting tips:")
+        print("[BULB] Troubleshooting tips:")
         print("  - Ensure MySQL server is running")
         print("  - Check your credentials are correct")
         print("  - Verify the user has database creation permissions")

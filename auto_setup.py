@@ -5,19 +5,13 @@ import urllib.request
 import zipfile
 import tempfile
 import time
-import pymysql
 import getpass
 
 def print_status(message, status="INFO"):
     """Print formatted status message"""
-    symbols = {"INFO": "ℹ️", "SUCCESS": "✅", "ERROR": "❌", "WARNING": "⚠️"}
-    formatted_message = f"{symbols.get(status, 'ℹ️')} {message}"
-    try:
-        print(formatted_message)
-    except UnicodeEncodeError:
-        # Replace Unicode characters with ASCII equivalents for Windows CMD
-        formatted_message = formatted_message.replace('✅', '[OK]').replace('❌', '[ERROR]').replace('⚠️', '[WARNING]').replace('ℹ️', '[INFO]')
-        print(formatted_message)
+    symbols = {"INFO": "[INFO]", "SUCCESS": "[OK]", "ERROR": "[ERROR]", "WARNING": "[WARNING]"}
+    formatted_message = f"{symbols.get(status, '[INFO]')} {message}"
+    print(formatted_message)
 
 def check_python():
     """Check if Python is installed and version is adequate"""
@@ -156,6 +150,13 @@ def setup_mysql_database():
     """Setup MySQL database and tables"""
     print_status("Setting up FinGuard database...")
     
+    # Import pymysql only after it's been installed
+    try:
+        import pymysql
+    except ImportError:
+        print_status("PyMySQL not found. Please ensure Python packages are installed first.", "ERROR")
+        return False
+    
     # Get credentials from user
     credentials = get_mysql_credentials()
     
@@ -251,9 +252,9 @@ def start_application():
     print_status("Starting FinGuard application...")
     
     try:
-        print_status("🚀 FinGuard is starting up...")
-        print_status("🌐 Open http://localhost:5000 in your browser")
-        print_status("🔑 Login with: admin/admin, agent/agent, or user/user")
+        print_status("ROCKET FinGuard is starting up...")
+        print_status("WEB Open http://localhost:5000 in your browser")
+        print_status("KEY Login with: admin/admin, agent/agent, or user/user")
         
         # Start the Flask application
         subprocess.run([sys.executable, "run.py"])
@@ -266,18 +267,18 @@ def start_application():
 def main():
     """Main setup function"""
     print("=" * 60)
-    print("🚀 FinGuard Automatic Setup")
+    print("ROCKET FinGuard Automatic Setup")
     print("=" * 60)
     print()
     print("This setup will:")
-    print("✅ Check system requirements")
-    print("✅ Install MySQL (if needed)")
-    print("✅ Install Python packages")
-    print("🔄 Create fresh database (removes existing if found)")
-    print("✅ Add test data and user accounts")
-    print("✅ Start the FinGuard application")
+    print("[OK] Check system requirements")
+    print("[OK] Install MySQL (if needed)")
+    print("[OK] Install Python packages")
+    print("[REFRESH] Create fresh database (removes existing if found)")
+    print("[OK] Add test data and user accounts")
+    print("[OK] Start the FinGuard application")
     print()
-    print("⚠️  WARNING: This will delete any existing fin_guard database!")
+    print("[WARNING] This will delete any existing fin_guard database!")
     print()
     
     # Confirm before proceeding
@@ -320,13 +321,13 @@ def main():
     
     print()
     print("=" * 60)
-    print("✅ FinGuard Setup Complete!")
+    print("[OK] FinGuard Setup Complete!")
     print("=" * 60)
     print()
-    print("🔑 Test Accounts Created:")
-    print("   • admin/admin  (Administrator)")
-    print("   • agent/agent  (Financial Agent)")
-    print("   • user/user    (Regular User)")
+    print("[KEY] Test Accounts Created:")
+    print("   - admin/admin  (Administrator)")
+    print("   - agent/agent  (Financial Agent)")
+    print("   - user/user    (Regular User)")
     print()
     
     # Ask if user wants to start the application immediately
