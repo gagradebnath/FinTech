@@ -1,6 +1,7 @@
 # Utility functions for transaction operations
 from flask import current_app
 import uuid
+from .blockchain import process_blockchain_transaction
 
 def get_user_by_id(user_id):
     conn = current_app.get_db_connection()
@@ -58,6 +59,19 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
             params = (tx_id, amount_val, payment_method, sender['id'], recipient['id'], note, tx_type, location)
             print(f"SQL: {sql}\nPARAMS: {params}")
             cursor.execute(sql, params)
+            
+            # Also record transaction in blockchain
+            blockchain_success = process_blockchain_transaction(
+                sender_id=sender['id'],
+                receiver_id=recipient['id'],
+                amount=amount_val,
+                transaction_type=tx_type,
+                note=note,
+                location=location
+            )
+            
+            if not blockchain_success:
+                print("Warning: Transaction recorded in database but failed to record in blockchain")
             
             conn.commit()
             

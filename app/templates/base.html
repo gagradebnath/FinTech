@@ -72,6 +72,11 @@
                         <i class="bi bi-shield-exclamation"></i> Report Fraud
                     </a>
                 </li>
+                <li class="sidebar-item">
+                    <a href="{{ url_for('blockchain.blockchain_explorer') }}" class="sidebar-link {% if request.endpoint == 'blockchain.blockchain_explorer' %}active{% endif %}">
+                        <i class="bi bi-link-45deg"></i> Blockchain
+                    </a>
+                </li>
                 <li class="sidebar-item mt-auto">
                     <a href="{{ url_for('user.login') }}" class="sidebar-link text-danger">
                         <i class="bi bi-box-arrow-right"></i> Logout
