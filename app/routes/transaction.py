@@ -101,7 +101,7 @@ def send_money_route():
                 
                 # If no overspending or user confirmed, proceed with transaction
                 ok, msg, updated_user = send_money(
-                    user['id'], recipient['id'], amount, payment_method, note, location, 'Transfer')
+                    user['id'], recipient['id'], amount, payment_method, overspending['category']+' : '+ note, location, 'Transfer')
                 
                 if ok:
                     success = msg

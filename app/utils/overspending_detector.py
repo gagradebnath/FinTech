@@ -287,13 +287,44 @@ def get_all_category_budgets(user_id):
     
     return budgets
 
+def get_expense_till_now(user_id, category_name):
+    """
+    Returns the total expense for a given user and category for the current month.
+    """
+    if not user_id or not category_name:
+        return 0.0
+
+    try:
+        connection = current_app.get_db_connection()
+        with connection.cursor() as cursor:
+            # Get the first day of the current month
+            first_day = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            # Query to sum expenses for the current month, matching category in note
+            query = """
+            SELECT COALESCE(SUM(amount), 0)
+            FROM transactions t
+            WHERE t.sender_id IS NOT NULL
+              AND t.sender_id = %s
+
+              AND t.note LIKE %s
+              AND t.timestamp >= %s
+            """
+            cursor.execute(query, (user_id, category_name + '%', first_day))
+            result = cursor.fetchone()
+            return float(result[0]) if result and result[0] is not None else 0.0
+    except Exception as e:
+        print(f"Error retrieving expenses for user {user_id}, category {category_name}: {e}")
+        return 0.0
+    finally:
+        if 'connection' in locals():
+            connection.close()
 
 def detect_overspending(user_id, expense_description, expense_amount):
     # Categorize the expense
     category = categorize_expense(expense_description)
     
     # Get budget for the category
-    budget = get_category_budget(user_id, category)
+    budget = get_category_budget(user_id, category)-get_expense_till_now(user_id, category)
     
     # Calculate overspending
     is_overspending = expense_amount > budget if budget > 0 else False
