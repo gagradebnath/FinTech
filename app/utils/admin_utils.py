@@ -73,7 +73,7 @@ def update_user_balance(user_id, amount):
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (amount, user_id))
+            cursor.execute('UPDATE users SET balance = COALESCE(balance, 0) + %s WHERE id = %s', (amount, user_id))
         conn.commit()
     finally:
         conn.close()

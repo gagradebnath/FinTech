@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}Blockchain Status - FinGuard{% endblock %}
+
+{% block extra_css %}
+<style>
+.status-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.status-active { background-color: #28a745; }
+.status-inactive { background-color: #dc3545; }
+.status-warning { background-color: #ffc107; }
+
+.blockchain-section {
+    border-left: 4px solid #007bff;
+    padding-left: 20px;
+    margin: 20px 0;
+}
+
+.action-buttons {
+    margin-top: 20px;
+}
+
+.btn-reinit {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-reinit:hover {
+    opacity: 0.9;
+}
+
+.balance-info {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2><i class="fas fa-cube"></i> Blockchain Status</h2>
+            <p class="text-muted">Current status of FinGuard blockchain implementations</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="status-card">
+                <div class="blockchain-section">
+                    <h4>
+                        <span class="status-indicator {% if status.python_blockchain %}status-active{% else %}status-inactive{% endif %}"></span>
+                        Python Blockchain
+                    </h4>
+                    <p>
+                        {% if status.python_blockchain %}
+                        <i class="fas fa-check-circle text-success"></i> Active and operational
+                        {% else %}
+                        <i class="fas fa-times-circle text-danger"></i> Not available
+                        {% endif %}
+                    </p>
+                    <small class="text-muted">Handles database persistence and basic blockchain operations</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="status-card">
+                <div class="blockchain-section">
+                    <h4>
+                        <span class="status-indicator {% if status.solidity_blockchain %}status-active{% elif status.solidity_connected %}status-warning{% else %}status-inactive{% endif %}"></span>
+                        Solidity Blockchain
+                    </h4>
+                    <p>
+                        {% if status.solidity_blockchain %}
+                        <i class="fas fa-check-circle text-success"></i> Contracts loaded and ready
+                        {% elif status.solidity_connected %}
+                        <i class="fas fa-exclamation-triangle text-warning"></i> Connected but contracts not loaded
+                        {% else %}
+                        <i class="fas fa-times-circle text-danger"></i> Not connected
+                        {% endif %}
+                    </p>
+                    <small class="text-muted">Ethereum smart contracts for advanced features</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if user %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="status-card">
+                <h4><i class="fas fa-wallet"></i> Your Blockchain Balance</h4>
+                <div id="balance-info" class="balance-info">
+                    <p class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading balance...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if is_admin %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="status-card">
+                <h4><i class="fas fa-cogs"></i> Admin Controls</h4>
+                <div class="action-buttons">
+                    <button id="reinit-btn" class="btn-reinit">
+                        <i class="fas fa-sync-alt"></i> Reinitialize Blockchain
+                    </button>
+                    <small class="d-block mt-2 text-muted">
+                        Reconnects to blockchain networks and reloads contracts
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load user balance
+    {% if user %}
+    fetch('/blockchain/balance/{{ user.id }}')
+        .then(response => response.json())
+        .then(data => {
+            const balanceDiv = document.getElementById('balance-info');
+            if (data.error) {
+                balanceDiv.innerHTML = `<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> ${data.error}</p>`;
+            } else {
+                balanceDiv.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Ethereum Balance:</strong><br>
+                            <span class="h5">${data.eth_balance.toFixed(4)} ETH</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>FinGuard Tokens:</strong><br>
+                            <span class="h5">${data.fgt_balance.toFixed(2)} FGT</span>
+                        </div>
+                    </div>
+                    <small class="text-muted">Address: ${data.address}</small>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('balance-info').innerHTML = 
+                `<p class="text-danger"><i class="fas fa-times"></i> Failed to load balance</p>`;
+        });
+    {% endif %}
+
+    // Reinitialize blockchain
+    {% if is_admin %}
+    document.getElementById('reinit-btn').addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reinitializing...';
+        
+        fetch('/blockchain/reinitialize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Blockchain reinitialized successfully!');
+                location.reload();
+            } else {
+                alert('Failed to reinitialize: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error: ' + error.message);
+        })
+        .finally(() => {
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-sync-alt"></i> Reinitialize Blockchain';
+        });
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

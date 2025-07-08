@@ -1,0 +1,36 @@
+{
+  "network": "hardhat",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "contracts": {
+    "FinGuardToken": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
+    "TransactionManager": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c",
+    "BudgetManager": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d"
+  },
+  "testAccounts": [
+    {
+      "address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      "userId": "admin",
+      "balance": "10000"
+    },
+    {
+      "address": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+      "userId": "admin2",
+      "balance": "10000"
+    },
+    {
+      "address": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+      "userId": "admin3",
+      "balance": "10000"
+    },
+    {
+      "address": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "userId": "admin4",
+      "balance": "10000"
+    },
+    {
+      "address": "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
+      "userId": "admin5",
+      "balance": "10000"
+    }
+  ]
+}

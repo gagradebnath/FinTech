@@ -100,8 +100,9 @@ def send_money_route():
                                         overspending_warning=overspending_warning)
                 
                 # If no overspending or user confirmed, proceed with transaction
+                category_note = f"{overspending.get('category', 'Other')} : {note}" if note else overspending.get('category', 'Money transfer')
                 ok, msg, updated_user = send_money(
-                    user['id'], recipient['id'], amount, payment_method, overspending['category']+' : '+ note, location, 'Transfer')
+                    user['id'], recipient['id'], amount, payment_method, category_note, location, 'Transfer')
                 
                 if ok:
                     success = msg

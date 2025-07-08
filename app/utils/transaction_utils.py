@@ -3,6 +3,10 @@ from flask import current_app
 import uuid
 from .blockchain import process_blockchain_transaction
 
+def get_hybrid_blockchain():
+    from .hybrid_blockchain import hybrid_blockchain
+    return hybrid_blockchain
+
 def get_user_by_id(user_id):
     conn = current_app.get_db_connection()
     try:
@@ -25,6 +29,9 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
             
             print(f"Sender: {sender['id'] if sender else None}, Recipient: {recipient['id'] if recipient else None}")
             
+            if not sender:
+                print("Sender not found.")
+                return False, 'Sender not found.', None
             if not recipient:
                 print("Recipient not found.")
                 return False, 'Recipient not found.', sender
@@ -37,8 +44,14 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
             except Exception as e:
                 print(f"Invalid amount: {amount}")
                 return False, 'Invalid amount.', sender
-                
-            if sender['balance'] < amount_val:
+            
+            # Handle None/NULL balances by setting to 0
+            sender_balance = float(sender['balance']) if sender['balance'] is not None else 0.0
+            recipient_balance = float(recipient['balance']) if recipient['balance'] is not None else 0.0
+            
+            print(f"Sender balance: {sender_balance}, Recipient balance: {recipient_balance}")
+            
+            if sender_balance < amount_val:
                 print("Insufficient balance.")
                 return False, 'Insufficient balance.', sender
             if not payment_method:
@@ -47,21 +60,24 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
             if not tx_type:
                 print("Missing transaction type")
                 return False, 'Transaction type is required.', sender
+            
                 
             # Print all params before insert
             tx_id = str(uuid.uuid4())
             print(f"INSERT PARAMS: id={tx_id}, amount={amount_val}, payment_method={payment_method}, sender_id={sender['id']}, receiver_id={recipient['id']}, note={note}, type={tx_type}, location={location}")
             
-            cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (amount_val, sender['id']))
-            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (amount_val, recipient['id']))
+            # Update balances with NULL handling
+            cursor.execute('UPDATE users SET balance = COALESCE(balance, 0) - %s WHERE id = %s', (amount_val, sender['id']))
+            cursor.execute('UPDATE users SET balance = COALESCE(balance, 0) + %s WHERE id = %s', (amount_val, recipient['id']))
             
             sql = '''INSERT INTO transactions (id, amount, payment_method, timestamp, sender_id, receiver_id, note, type, location) VALUES (%s, %s, %s, NOW(), %s, %s, %s, %s, %s)'''
             params = (tx_id, amount_val, payment_method, sender['id'], recipient['id'], note, tx_type, location)
             print(f"SQL: {sql}\nPARAMS: {params}")
             cursor.execute(sql, params)
             
-            # Also record transaction in blockchain
-            blockchain_success = process_blockchain_transaction(
+            # Record transaction in blockchain(s)
+            hybrid_blockchain = get_hybrid_blockchain()
+            blockchain_results = hybrid_blockchain.process_transaction(
                 sender_id=sender['id'],
                 receiver_id=recipient['id'],
                 amount=amount_val,
@@ -70,8 +86,13 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
                 location=location
             )
             
-            if not blockchain_success:
-                print("Warning: Transaction recorded in database but failed to record in blockchain")
+            # Log blockchain results
+            if blockchain_results["python_blockchain"]:
+                print("✅ Transaction recorded in Python blockchain")
+            if blockchain_results["solidity_blockchain"]:
+                print(f"✅ Transaction recorded in Solidity blockchain")
+            if blockchain_results["errors"]:
+                print(f"⚠️ Blockchain errors: {blockchain_results['errors']}")
             
             conn.commit()
             
@@ -102,7 +123,7 @@ def lookup_user_by_identifier(identifier):
     try:
         with conn.cursor() as cursor:
             cursor.execute('''
-                SELECT u.id FROM users u
+                SELECT u.* FROM users u
                 LEFT JOIN contact_info c ON u.id = c.user_id
                 WHERE LOWER(u.id) = %s OR LOWER(c.email) = %s OR c.phone = %s
             ''', (identifier.lower(), identifier.lower(), identifier))
@@ -125,8 +146,8 @@ def agent_add_money(agent_id, user_id, amount):
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (amount, agent_id))
-            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (amount, user_id))
+            cursor.execute('UPDATE users SET balance = COALESCE(balance, 0) - %s WHERE id = %s', (amount, agent_id))
+            cursor.execute('UPDATE users SET balance = COALESCE(balance, 0) + %s WHERE id = %s', (amount, user_id))
             cursor.execute('''INSERT INTO transactions (id, amount, payment_method, timestamp, sender_id, receiver_id, note, type, location) VALUES (%s, %s, %s, NOW(), %s, %s, %s, %s, %s)''',
                 (str(uuid.uuid4()), amount, 'agent_add', agent_id, user_id, f'Agent {agent_id} added money', 'Deposit', None))
         conn.commit()
@@ -141,8 +162,8 @@ def agent_cash_out(agent_id, user_id, amount):
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (amount, user_id))
-            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (amount, agent_id))
+            cursor.execute('UPDATE users SET balance = COALESCE(balance, 0) - %s WHERE id = %s', (amount, user_id))
+            cursor.execute('UPDATE users SET balance = COALESCE(balance, 0) + %s WHERE id = %s', (amount, agent_id))
             cursor.execute('''INSERT INTO transactions (id, amount, payment_method, timestamp, sender_id, receiver_id, note, type, location) VALUES (%s, %s, %s, NOW(), %s, %s, %s, %s, %s)''',
                 (str(uuid.uuid4()), amount, 'agent_cashout', user_id, agent_id, f'Agent {agent_id} cashed out', 'Withdrawal', None))
         conn.commit()

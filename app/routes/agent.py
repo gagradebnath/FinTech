@@ -36,7 +36,10 @@ def agent_dashboard():
                     add_money_error = 'You cannot add or cash out money to your own account.'
                 else:
                     amount_val = float(amount)
-                    agent_bal = get_user_by_id(user['id'])['balance']
+                    agent = get_user_by_id(user['id'])
+                    agent_bal = float(agent['balance']) if agent['balance'] is not None else 0.0
+                    target_bal = float(target['balance']) if target['balance'] is not None else 0.0
+                    
                     if operation == 'add':
                         if not has_permission(user['id'], 'perm_add_money'):
                             add_money_error = 'Permission denied.'
@@ -48,7 +51,7 @@ def agent_dashboard():
                     elif operation == 'cashout':
                         if not has_permission(user['id'], 'perm_cash_out'):
                             add_money_error = 'Permission denied.'
-                        elif target['balance'] < amount_val:
+                        elif target_bal < amount_val:
                             add_money_error = 'Insufficient user balance for cash out.'
                         else:
                             from app.utils.transaction_utils import agent_cash_out
