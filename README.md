@@ -13,6 +13,7 @@ The setup will prompt you for MySQL credentials, then everything happens automat
 - ✅ Installs MySQL (if needed)
 - ✅ Installs Python packages  
 - 🔄 Creates fresh database (removes existing if found)
+- 🔧 Updates app/config.py with your MySQL credentials
 - ✅ Adds test data and user accounts
 - ✅ Starts the application
 

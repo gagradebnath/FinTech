@@ -146,6 +146,49 @@ def get_mysql_credentials():
         'password': password
     }
 
+def update_config_file(credentials):
+    """Update app/config.py with the user's MySQL credentials"""
+    print_status("Updating app/config.py with your MySQL credentials...")
+    
+    config_path = os.path.join("app", "config.py")
+    
+    try:
+        # Read the current config file
+        with open(config_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Create new content with updated credentials
+        new_content = f"""import os
+
+class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev')
+    
+    # MySQL Configuration
+    MYSQL_HOST = os.environ.get('MYSQL_HOST', '{credentials['host']}')
+    MYSQL_PORT = int(os.environ.get('MYSQL_PORT', {credentials['port']}))
+    MYSQL_USER = os.environ.get('MYSQL_USER', '{credentials['user']}')
+    MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD', '{credentials['password']}')
+    MYSQL_DATABASE = os.environ.get('MYSQL_DATABASE', 'fin_guard')
+    
+    # SQLAlchemy Database URI for MySQL
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 
+        f'mysql+pymysql://{{MYSQL_USER}}:{{MYSQL_PASSWORD}}@{{MYSQL_HOST}}:{{MYSQL_PORT}}/{{MYSQL_DATABASE}}')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+"""
+        
+        # Write the updated content
+        with open(config_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        
+        print_status("Config file updated successfully", "SUCCESS")
+        print_status("Your credentials are now saved as defaults in app/config.py", "INFO")
+        return True
+        
+    except Exception as e:
+        print_status(f"Failed to update config file: {str(e)}", "ERROR")
+        print_status("Config file will use environment variables instead", "WARNING")
+        return False
+
 def setup_mysql_database():
     """Setup MySQL database and tables"""
     print_status("Setting up FinGuard database...")
@@ -159,6 +202,11 @@ def setup_mysql_database():
     
     # Get credentials from user
     credentials = get_mysql_credentials()
+    
+    # Ask if user wants to save credentials permanently
+    print()
+    save_config = input("Save these credentials permanently in app/config.py? (Y/n): ").lower()
+    save_permanently = not save_config.startswith('n')
     
     try:
         print_status(f"Connecting to MySQL at {credentials['host']}:{credentials['port']}...")
@@ -212,6 +260,12 @@ def setup_mysql_database():
         os.environ['MYSQL_PORT'] = str(credentials['port'])
         os.environ['MYSQL_USER'] = credentials['user']
         os.environ['MYSQL_PASSWORD'] = credentials['password']
+        
+        # Update config file with credentials (if user chose to)
+        if save_permanently:
+            update_config_file(credentials)
+        else:
+            print_status("Credentials saved temporarily for this session only", "INFO")
         
         print_status("Fresh database and schema created successfully", "SUCCESS")
         return True
@@ -275,6 +329,7 @@ def main():
     print("[OK] Install MySQL (if needed)")
     print("[OK] Install Python packages")
     print("[REFRESH] Create fresh database (removes existing if found)")
+    print("[CONFIG] Update app/config.py with your MySQL credentials")
     print("[OK] Add test data and user accounts")
     print("[OK] Start the FinGuard application")
     print()

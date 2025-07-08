@@ -8,7 +8,7 @@ import sys
 def safe_print(message):
     """Safely print messages with ASCII fallback"""
     # Replace Unicode characters with ASCII equivalents
-    message = message.replace('✅', '[OK]').replace('❌', '[ERROR]').replace('⚠️', '[WARNING]').replace('ℹ️', '[INFO]')
+    message = message.replace('[OK]', '[OK]').replace('[ERROR]', '[ERROR]').replace('[WARNING]', '[WARNING]').replace('[INFO]', '[INFO]')
     print(message)
 
 # MySQL Database Configuration
@@ -26,7 +26,7 @@ def get_mysql_config():
     
     # Try to load from mysql_config.py file first
     try:
-        from mysql_config import MYSQL_CONFIG as file_config
+        from app.config import MYSQL_CONFIG as file_config
         config.update(file_config)
         safe_print("[OK] Loaded configuration from mysql_config.py")
     except ImportError:
