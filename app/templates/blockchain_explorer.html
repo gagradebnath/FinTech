@@ -129,7 +129,12 @@
     </div>
     
     <!-- Recent Blocks -->
-    <h4>Recent Blocks</h4>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Recent Blocks</h4>
+        <a href="{{ url_for('blockchain.blockchain_database_view') }}" class="btn btn-outline-info">
+            <i class="fas fa-database"></i> View Database Tables
+        </a>
+    </div>
     <div id="blocksList">
         {% for block in blocks %}
         <div class="block-card">

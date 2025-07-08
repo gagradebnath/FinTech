@@ -104,7 +104,30 @@ class FinGuardBlockchain:
         try:
             from flask import current_app
             if current_app:
-                self.save_block_to_db(genesis_block)
+                # For genesis block, we don't have transactions to link
+                # So we'll create a special database entry
+                conn = current_app.get_db_connection()
+                try:
+                    with conn.cursor() as cursor:
+                        cursor.execute('''
+                            INSERT INTO blockchain (id, `index`, type, timestamp, previous_hash, hash, transaction_id)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        ''', (
+                            str(uuid.uuid4()),
+                            genesis_block.index,
+                            'genesis',
+                            genesis_block.timestamp,
+                            genesis_block.previous_hash,
+                            genesis_block.hash,
+                            None
+                        ))
+                    conn.commit()
+                    print("✅ Genesis block saved to database")
+                except Exception as e:
+                    print(f"Error saving genesis block to database: {e}")
+                    conn.rollback()
+                finally:
+                    conn.close()
         except RuntimeError:
             # Not in application context, skip database save
             print("Genesis block created (database save skipped - no app context)")
@@ -176,7 +199,6 @@ class FinGuardBlockchain:
         
         # Save to database
         self.save_block_to_db(block)
-        self.save_transactions_to_db(block.transactions, block.hash)
         
         # Clear pending transactions
         self.pending_transactions = []
@@ -215,11 +237,60 @@ class FinGuardBlockchain:
         return True
     
     def save_block_to_db(self, block: Block):
-        """Save block to database"""
+        """Save block to database with proper transaction relationships"""
         try:
             conn = current_app.get_db_connection()
             try:
                 with conn.cursor() as cursor:
+                    # First save all transactions for this block
+                    transaction_ids = []
+                    for transaction in block.transactions:
+                        # Check if user exists before inserting blockchain transaction
+                        cursor.execute('SELECT id FROM users WHERE id = %s', (transaction.sender_id,))
+                        sender_exists = cursor.fetchone()
+                        
+                        cursor.execute('SELECT id FROM users WHERE id = %s', (transaction.receiver_id,))
+                        receiver_exists = cursor.fetchone()
+                        
+                        # Save blockchain transaction for sender if user exists
+                        if sender_exists:
+                            sender_tx_id = str(uuid.uuid4())  # Generate new UUID for sender entry
+                            cursor.execute('''
+                                INSERT INTO blockchain_transactions (id, user_id, amount, current_balance, method, timestamp)
+                                VALUES (%s, %s, %s, %s, %s, %s)
+                            ''', (
+                                sender_tx_id,
+                                transaction.sender_id,
+                                -transaction.amount,  # Negative for sender
+                                self.get_balance(transaction.sender_id),
+                                transaction.transaction_type,
+                                transaction.timestamp
+                            ))
+                            transaction_ids.append(sender_tx_id)
+                        
+                        # Save blockchain transaction for receiver if user exists
+                        if receiver_exists:
+                            receiver_tx_id = str(uuid.uuid4())  # Generate new UUID for receiver entry
+                            cursor.execute('''
+                                INSERT INTO blockchain_transactions (id, user_id, amount, current_balance, method, timestamp)
+                                VALUES (%s, %s, %s, %s, %s, %s)
+                            ''', (
+                                receiver_tx_id,
+                                transaction.receiver_id,
+                                transaction.amount,  # Positive for receiver
+                                self.get_balance(transaction.receiver_id),
+                                transaction.transaction_type,
+                                transaction.timestamp
+                            ))
+                            transaction_ids.append(receiver_tx_id)
+                        
+                        # If neither user exists (system transactions), create a general entry
+                        if not sender_exists and not receiver_exists:
+                            print(f"Warning: Neither sender nor receiver exists for transaction {transaction.id}")
+                    
+                    # Now save the block with reference to first transaction if any
+                    first_transaction_id = transaction_ids[0] if transaction_ids else None
+                    
                     cursor.execute('''
                         INSERT INTO blockchain (id, `index`, type, timestamp, previous_hash, hash, transaction_id)
                         VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -230,9 +301,11 @@ class FinGuardBlockchain:
                         block.timestamp,
                         block.previous_hash,
                         block.hash,
-                        None  # We'll link to first transaction for simplicity
+                        first_transaction_id
                     ))
+                
                 conn.commit()
+                print(f"✅ Block {block.index} and {len(transaction_ids)} transactions saved to database")
             except Exception as e:
                 print(f"Error saving block to database: {e}")
                 conn.rollback()
@@ -241,35 +314,6 @@ class FinGuardBlockchain:
         except RuntimeError:
             # Not in application context
             print(f"Block {block.index} saved in memory only (no app context)")
-            pass
-    
-    def save_transactions_to_db(self, transactions: List[Transaction], block_hash: str):
-        """Save blockchain transactions to database"""
-        try:
-            conn = current_app.get_db_connection()
-            try:
-                with conn.cursor() as cursor:
-                    for transaction in transactions:
-                        cursor.execute('''
-                            INSERT INTO blockchain_transactions (id, user_id, amount, current_balance, method, timestamp)
-                            VALUES (%s, %s, %s, %s, %s, %s)
-                        ''', (
-                            transaction.id,
-                            transaction.sender_id,
-                            transaction.amount,
-                            self.get_balance(transaction.sender_id),
-                            transaction.transaction_type,
-                            transaction.timestamp
-                        ))
-                conn.commit()
-            except Exception as e:
-                print(f"Error saving transactions to database: {e}")
-                conn.rollback()
-            finally:
-                conn.close()
-        except RuntimeError:
-            # Not in application context
-            print(f"Transactions saved in memory only (no app context)")
             pass
     
     def get_transaction_history(self, user_id: str) -> List[Dict]:

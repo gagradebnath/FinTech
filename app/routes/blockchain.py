@@ -89,3 +89,55 @@ def get_blockchain_balance(user_id):
     
     balance = finguard_blockchain.get_balance(user_id)
     return jsonify({'user_id': user_id, 'blockchain_balance': balance})
+
+@blockchain_bp.route('/blockchain/database-view')
+def blockchain_database_view():
+    """View blockchain tables in database"""
+    from flask import current_app
+    user = get_current_user()
+    if not user or not has_permission(user['id'], 'perm_admin_access'):
+        return jsonify({'error': 'Admin access required'}), 403
+    
+    try:
+        conn = current_app.get_db_connection()
+        with conn.cursor() as cursor:
+            # Get blockchain table data
+            cursor.execute('''
+                SELECT b.id, b.index, b.type, b.timestamp, 
+                       LEFT(b.previous_hash, 20) as prev_hash_short,
+                       LEFT(b.hash, 20) as hash_short,
+                       b.transaction_id
+                FROM blockchain b 
+                ORDER BY b.index DESC 
+                LIMIT 20
+            ''')
+            blockchain_data = cursor.fetchall()
+            
+            # Get blockchain transactions data
+            cursor.execute('''
+                SELECT bt.id, bt.user_id, bt.amount, bt.current_balance, 
+                       bt.method, bt.timestamp, u.first_name, u.last_name
+                FROM blockchain_transactions bt
+                LEFT JOIN users u ON bt.user_id = u.id
+                ORDER BY bt.timestamp DESC 
+                LIMIT 50
+            ''')
+            transactions_data = cursor.fetchall()
+            
+            # Get summary statistics
+            cursor.execute('SELECT COUNT(*) as count FROM blockchain')
+            block_count = cursor.fetchone()['count']
+            
+            cursor.execute('SELECT COUNT(*) as count FROM blockchain_transactions')
+            tx_count = cursor.fetchone()['count']
+            
+        conn.close()
+        
+        return render_template('blockchain_database_view.html', 
+                             blockchain_data=blockchain_data,
+                             transactions_data=transactions_data,
+                             block_count=block_count,
+                             tx_count=tx_count)
+                             
+    except Exception as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500

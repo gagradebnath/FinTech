@@ -66,7 +66,7 @@ def test_with_flask_context():
                     break
         
         # Test 5: Database integration
-        print("\n🗄️  Test 5: Database integration...")
+        print("\n  Test 5: Database integration...")
         
         # Check if blocks and transactions were saved to database
         try:
