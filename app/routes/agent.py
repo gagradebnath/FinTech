@@ -3,6 +3,7 @@ from app.utils.user_utils import get_current_user
 from app.utils.dashboard import get_user_budgets, get_recent_transactions
 from app.utils.permissions_utils import has_permission
 from app.utils.transaction_utils import get_user_by_id, agent_add_money, agent_cash_out
+from app.utils.user_utils import get_all_users
 import uuid
 
 agent_bp = Blueprint('agent', __name__)
@@ -20,6 +21,7 @@ def agent_dashboard():
     transactions = get_recent_transactions(user['id'])
     add_money_success = None
     add_money_error = None
+    users = get_all_users()  # Fetch all users for the agent dashboard
     if request.method == 'POST':
         target_identifier = request.form.get('target_identifier')
         amount = request.form.get('amount')
@@ -55,4 +57,4 @@ def agent_dashboard():
                             add_money_success, add_money_error = agent_cash_out(user['id'], target['id'], amount_val)
             except Exception as e:
                 add_money_error = 'Failed to process: ' + str(e)
-    return render_template('agent_dashboard.html', user=user, budgets=budgets, transactions=transactions, add_money_success=add_money_success, add_money_error=add_money_error)
+    return render_template('agent_dashboard.html', user=user, budgets=budgets, transactions=transactions, add_money_success=add_money_success, add_money_error=add_money_error, users=users)

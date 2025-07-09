@@ -18,11 +18,11 @@
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header">Budgets</div>
-                <div class="card-body">
+                <div class="card-body bg-dark text-white">
                     {% if budgets %}
-                        <ul class="list-group">
+                        <ul class="list-group bg-dark">
                         {% for budget in budgets %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
                                 {{ budget.name if budget.name else 'N/A' }} ({{ budget.currency if budget.currency else '' }})
                                 <span class="badge bg-primary">{{ budget.amount }}</span>
                             </li>
@@ -37,11 +37,11 @@
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header">Recent Expenses</div>
-                <div class="card-body">
+                <div class="card-body bg-dark">
                     {% if expenses %}
-                        <ul class="list-group">
+                        <ul class="list-group bg-dark">
                         {% for exp in expenses %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
                                 {{ exp.note if exp.note else 'Expense' }} ({{ exp.location if exp.location else '' }})
                                 <span class="badge bg-danger">{{ exp.amount }}</span>
                             </li>
@@ -61,7 +61,7 @@
                 <div class="card-body">
                     {% if transactions %}
                         <ul class="list-group">{% for tx in transactions %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
                                 <div>
                                     <span class="fw-bold">{{ tx.type|capitalize }}</span>
                                     {% if tx.sender_id == user.id %}
@@ -90,7 +90,19 @@
                     <form method="POST">
                         <div class="mb-3">
                             <label for="target_identifier" class="form-label">User (User ID, Email, or Phone)</label>
-                            <input type="text" class="form-control" id="target_identifier" name="target_identifier" required>
+                            <input type="text" class="form-control" id="userSearch" autocomplete="off" placeholder="Search user..." required>
+                            <input type="hidden" name="target_identifier" id="target_identifier" required>
+                            <div class="list-group position-absolute w-100 d-none" id="userDropdown" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                {% for u in users %}
+                                <button type="button" class="list-group-item list-group-item-action"
+                                    data-user-id="{{ u.id }}"
+                                    data-user-name="{{ u.first_name }} {{ u.last_name }}"
+                                    data-user-email="{{ u.email }}"
+                                    data-user-phone="{{ u.phone }}">
+                                    {{ u.first_name }} {{ u.last_name }} ({{ u.id }}) - {{ u.email }} - {{ u.phone }}
+                                </button>
+                                {% endfor %}
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="amount" class="form-label">Amount</label>
@@ -116,4 +128,44 @@
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const userSearch = document.getElementById('userSearch');
+    const userDropdown = document.getElementById('userDropdown');
+    const targetIdentifier = document.getElementById('target_identifier');
+    const userButtons = Array.from(userDropdown.querySelectorAll('button'));
+
+    function filterUsers() {
+        const query = userSearch.value.toLowerCase();
+        let anyVisible = false;
+        userButtons.forEach(btn => {
+            const text = btn.textContent.toLowerCase();
+            if (text.includes(query)) {
+                btn.style.display = '';
+                anyVisible = true;
+            } else {
+                btn.style.display = 'none';
+            }
+        });
+        userDropdown.classList.toggle('d-none', !anyVisible);
+    }
+
+    userSearch.addEventListener('focus', filterUsers);
+    userSearch.addEventListener('input', filterUsers);
+
+    userButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            targetIdentifier.value = btn.getAttribute('data-user-id');
+            userSearch.value = btn.getAttribute('data-user-name') + ' (' + btn.getAttribute('data-user-id') + ')';
+            userDropdown.classList.add('d-none');
+        });
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!userSearch.contains(e.target) && !userDropdown.contains(e.target)) {
+            userDropdown.classList.add('d-none');
+        }
+    });
+});
+</script>
 {% endblock %}
