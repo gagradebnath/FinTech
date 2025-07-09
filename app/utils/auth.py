@@ -1,5 +1,6 @@
 import pymysql
 from flask import current_app
+from .password_utils import verify_password, is_password_hashed
 
 def get_user_by_login_id(login_id):
     """Get user by user_id, email, or phone (case-insensitive)."""
@@ -23,6 +24,19 @@ def check_password(user_id, password):
         with conn.cursor() as cursor:
             cursor.execute('SELECT password FROM user_passwords WHERE user_id = %s', (user_id,))
             pw_row = cursor.fetchone()
-        return pw_row and pw_row['password'] == password
+        
+        if not pw_row:
+            return False
+        
+        stored_password = pw_row['password']
+        
+        # Check if the stored password is hashed
+        if is_password_hashed(stored_password):
+            # Use bcrypt verification for hashed passwords
+            return verify_password(password, stored_password)
+        else:
+            # Fallback to plain text comparison for backwards compatibility
+            # This allows existing plain text passwords to still work during transition
+            return stored_password == password
     finally:
         conn.close()

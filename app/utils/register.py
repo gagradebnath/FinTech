@@ -1,6 +1,7 @@
 import sqlite3
 import uuid
 from datetime import date
+from .password_utils import hash_password
 
 def is_email_unique(email):
     conn = sqlite3.connect('fin_guard.db')
@@ -46,7 +47,9 @@ def create_user_and_contact(role_id, first_name, last_name, dob, age, gender, ma
         cur.execute('INSERT INTO contact_info (id, user_id, email, phone, address_id) VALUES (?, ?, ?, ?, ?)',
             (contact_id, user_id, email, phone, None))
         cur.execute('CREATE TABLE IF NOT EXISTS user_passwords (user_id TEXT PRIMARY KEY, password TEXT)')
-        cur.execute('INSERT INTO user_passwords (user_id, password) VALUES (?, ?)', (user_id, password))
+        # Hash the password before storing
+        hashed_password = hash_password(password)
+        cur.execute('INSERT INTO user_passwords (user_id, password) VALUES (?, ?)', (user_id, hashed_password))
         conn.commit()
     except Exception as e:
         conn.rollback()
