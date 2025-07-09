@@ -206,39 +206,18 @@ class FinGuardBlockchain:
         return block
     
     def get_balance(self, user_id: str) -> float:
-        """Calculate user balance from blockchain + initial database balance"""
+        """Calculate user balance from blockchain"""
         self.ensure_initialized()
+        balance = 0
         
-        # Get initial balance from database
-        try:
-            from flask import current_app
-            if current_app:
-                conn = current_app.get_db_connection()
-                try:
-                    with conn.cursor() as cursor:
-                        cursor.execute('SELECT COALESCE(balance, 0) as balance FROM users WHERE id = %s', (user_id,))
-                        result = cursor.fetchone()
-                        initial_balance = float(result['balance']) if result else 0.0
-                finally:
-                    conn.close()
-            else:
-                initial_balance = 0.0
-        except:
-            initial_balance = 0.0
-        
-        # Calculate blockchain transactions
-        blockchain_balance = 0
         for block in self.chain:
             for transaction in block.transactions:
                 if transaction.receiver_id == user_id:
-                    blockchain_balance += transaction.amount
+                    balance += transaction.amount
                 if transaction.sender_id == user_id:
-                    blockchain_balance -= transaction.amount
-        
-        # Return database balance + blockchain transactions
-        total_balance = initial_balance + blockchain_balance
-        print(f"Balance calculation for {user_id}: DB={initial_balance} + Blockchain={blockchain_balance} = {total_balance}")
-        return total_balance
+                    balance -= transaction.amount
+                    
+        return balance
     
     def is_chain_valid(self) -> bool:
         """Validate the entire blockchain"""
@@ -258,17 +237,74 @@ class FinGuardBlockchain:
         return True
     
     def save_block_to_db(self, block: Block):
-        """Save block to database with minimal operations to avoid timeouts"""
+        """Save block to database with proper transaction relationships and optimized performance"""
         try:
             conn = current_app.get_db_connection()
             try:
-                # Set very short timeouts for blockchain operations
+                # Set connection timeout and lock wait timeout for better performance
                 with conn.cursor() as cursor:
-                    cursor.execute('SET innodb_lock_wait_timeout = 3')
-                    cursor.execute('SET lock_wait_timeout = 3')
+                    cursor.execute('SET innodb_lock_wait_timeout = 10')
+                    cursor.execute('SET lock_wait_timeout = 10')
                 
                 with conn.cursor() as cursor:
-                    # Only save the block itself, skip complex transaction linking to avoid timeouts
+                    transaction_ids = []
+                    
+                    # Bulk check if users exist to reduce database calls
+                    user_ids = set()
+                    for transaction in block.transactions:
+                        user_ids.add(transaction.sender_id)
+                        user_ids.add(transaction.receiver_id)
+                    
+                    # Single query to check all users
+                    existing_users = set()
+                    if user_ids:
+                        user_placeholders = ','.join(['%s'] * len(user_ids))
+                        cursor.execute(f'SELECT id FROM users WHERE id IN ({user_placeholders})', list(user_ids))
+                        existing_users = {row['id'] for row in cursor.fetchall()}
+                    
+                    # Process transactions with existing user data
+                    for transaction in block.transactions:
+                        # Save blockchain transaction for sender if user exists
+                        if transaction.sender_id in existing_users:
+                            sender_tx_id = str(uuid.uuid4())
+                            cursor.execute('''
+                                INSERT INTO blockchain_transactions (id, user_id, amount, current_balance, method, timestamp)
+                                SELECT %s, %s, %s, COALESCE(balance, 0), %s, %s
+                                FROM users WHERE id = %s
+                            ''', (
+                                sender_tx_id,
+                                transaction.sender_id,
+                                -transaction.amount,
+                                transaction.transaction_type,
+                                transaction.timestamp,
+                                transaction.sender_id
+                            ))
+                            transaction_ids.append(sender_tx_id)
+                        
+                        # Save blockchain transaction for receiver if user exists
+                        if transaction.receiver_id in existing_users:
+                            receiver_tx_id = str(uuid.uuid4())
+                            cursor.execute('''
+                                INSERT INTO blockchain_transactions (id, user_id, amount, current_balance, method, timestamp)
+                                SELECT %s, %s, %s, COALESCE(balance, 0), %s, %s
+                                FROM users WHERE id = %s
+                            ''', (
+                                receiver_tx_id,
+                                transaction.receiver_id,
+                                transaction.amount,
+                                transaction.transaction_type,
+                                transaction.timestamp,
+                                transaction.receiver_id
+                            ))
+                            transaction_ids.append(receiver_tx_id)
+                        
+                        # Log warning for non-existent users
+                        if transaction.sender_id not in existing_users or transaction.receiver_id not in existing_users:
+                            print(f"Warning: User(s) not found for transaction {transaction.id}")
+                    
+                    # Save the block with reference to first transaction if any
+                    first_transaction_id = transaction_ids[0] if transaction_ids else None
+                    
                     cursor.execute('''
                         INSERT INTO blockchain (id, `index`, type, timestamp, previous_hash, hash, transaction_id)
                         VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -279,11 +315,11 @@ class FinGuardBlockchain:
                         block.timestamp,
                         block.previous_hash,
                         block.hash,
-                        None  # Skip transaction linking to avoid complex queries
+                        first_transaction_id
                     ))
                 
                 conn.commit()
-                print(f"✅ Block {block.index} saved to database (lightweight mode)")
+                print(f"✅ Block {block.index} and {len(transaction_ids)} transactions saved to database")
             except Exception as e:
                 print(f"Error saving block to database: {e}")
                 conn.rollback()

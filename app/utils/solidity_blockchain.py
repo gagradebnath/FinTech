@@ -40,19 +40,9 @@ class SolidityBlockchain:
     def load_contracts(self, deployment_file: str = "deployment-info.json"):
         """Load deployed contract addresses and ABIs"""
         try:
-            # Add debug info about current working directory and file path
-            import os
-            current_dir = os.getcwd()
-            full_path = os.path.abspath(deployment_file)
-            print(f"🔍 Loading contracts from: {full_path}")
-            print(f"🔍 Current working directory: {current_dir}")
-            print(f"🔍 File exists: {os.path.exists(deployment_file)}")
-            
             # Load deployment info
             with open(deployment_file, 'r') as f:
                 deployment_info = json.load(f)
-            
-            print(f"🔍 Deployment info loaded, found {len(deployment_info.get('testAccounts', []))} test accounts")
             
             # Load contract ABIs
             abi_files = {
@@ -77,13 +67,6 @@ class SolidityBlockchain:
             # Load test accounts
             for account_info in deployment_info.get('testAccounts', []):
                 self.accounts[account_info['userId']] = account_info['address']
-            
-            print(f"✅ Loaded {len(self.accounts)} accounts to Solidity blockchain")
-            if len(self.accounts) > 0:
-                # Show sample accounts
-                sample_accounts = list(self.accounts.items())[:3]
-                for user_id, address in sample_accounts:
-                    print(f"   {user_id}: {address}")
             
             return True
             
@@ -339,45 +322,6 @@ class SolidityBlockchain:
             
         except Exception as e:
             return {"error": str(e)}
-    
-    def reload_accounts(self, deployment_file: str = "deployment-info.json"):
-        """Reload accounts from deployment file without restarting application"""
-        try:
-            print("🔄 Reloading accounts from deployment-info.json...")
-            
-            # Load deployment info
-            with open(deployment_file, 'r') as f:
-                deployment_info = json.load(f)
-            
-            # Clear existing accounts
-            old_count = len(self.accounts)
-            self.accounts.clear()
-            
-            # Load test accounts
-            for account_info in deployment_info.get('testAccounts', []):
-                self.accounts[account_info['userId']] = account_info['address']
-            
-            print(f"✅ Loaded {len(self.accounts)} accounts to Solidity blockchain")
-            if len(self.accounts) > 0:
-                # Show sample accounts
-                sample_accounts = list(self.accounts.items())[:3]
-                for user_id, address in sample_accounts:
-                    print(f"   {user_id}: {address}")
-            
-            new_count = len(self.accounts)
-            print(f"✅ Reloaded accounts: {old_count} → {new_count}")
-            print(f"💰 Sample accounts:")
-            
-            # Show some sample accounts
-            sample_accounts = list(self.accounts.items())[:5]
-            for user_id, address in sample_accounts:
-                print(f"  {user_id}: {address[:10]}...")
-            
-            return True
-            
-        except Exception as e:
-            print(f"❌ Error reloading accounts: {e}")
-            return False
 
 # Global Solidity blockchain instance
 solidity_blockchain = SolidityBlockchain()

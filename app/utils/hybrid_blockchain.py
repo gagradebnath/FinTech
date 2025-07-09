@@ -27,35 +27,25 @@ class HybridBlockchain:
             try:
                 self.solidity_blockchain = SolidityBlockchain()
                 if self.solidity_blockchain.connect():
-                    # Load contracts and accounts for the reloader
-                    if self.solidity_blockchain.load_contracts():
-                        self.solidity_available = True
-                        print(f"✅ Solidity blockchain available (cached) - {len(self.solidity_blockchain.accounts)} accounts loaded")
-                    else:
-                        print("⚠️ Solidity blockchain cache failed to load contracts")
-                else:
-                    print("⚠️ Solidity blockchain cache connection failed")
+                    self.solidity_available = True
+                    print("✅ Solidity blockchain available (cached)")
             except Exception as e:
                 print(f"⚠️ Solidity blockchain cache failed: {e}")
             return
             
         try:
-            print("🚀 Initializing Solidity blockchain...")
             self.solidity_blockchain = SolidityBlockchain()
             # Try to connect and load contracts
             if self.solidity_blockchain.connect():
-                print("✅ Solidity blockchain connected")
                 if self.solidity_blockchain.load_contracts():
                     self.solidity_available = True
-                    print(f"✅ Solidity blockchain available - {len(self.solidity_blockchain.accounts)} accounts loaded")
+                    print("✅ Solidity blockchain available")
                 else:
                     print("⚠️ Solidity blockchain connected but contracts not loaded")
             else:
                 print("⚠️ Solidity blockchain connection failed")
         except Exception as e:
             print(f"⚠️ Solidity blockchain initialization failed: {e}")
-            import traceback
-            traceback.print_exc()
     
     def process_transaction(self, sender_id, receiver_id, amount, transaction_type, note, location):
         """Process transaction using available blockchain(s)"""
@@ -86,36 +76,28 @@ class HybridBlockchain:
         if self.solidity_available:
             try:
                 # First ensure users are registered in Solidity blockchain
-                users_registered = self._ensure_users_registered([sender_id, receiver_id])
+                self._ensure_users_registered([sender_id, receiver_id])
                 
-                if users_registered:
-                    tx_result = self.solidity_blockchain.create_transaction(
-                        sender_id, receiver_id, amount, transaction_type, note, location
+                tx_result = self.solidity_blockchain.create_transaction(
+                    sender_id, receiver_id, amount, transaction_type, note, location
+                )
+                results["solidity_blockchain"] = tx_result.get("success", False)
+                if results["solidity_blockchain"]:
+                    results["solidity_tx_hash"] = tx_result["transaction_hash"]
+                    results["solidity_tx_id"] = tx_result.get("transaction_id")
+                    
+                    # Update blockchain_transactions table with Solidity details
+                    self._update_blockchain_tables(
+                        sender_id, receiver_id, amount, transaction_type, 
+                        note, location, tx_result
                     )
-                    results["solidity_blockchain"] = tx_result.get("success", False)
-                    if results["solidity_blockchain"]:
-                        results["solidity_tx_hash"] = tx_result["transaction_hash"]
-                        results["solidity_tx_id"] = tx_result.get("transaction_id")
-                        
-                        # Update blockchain_transactions table with Solidity details
-                        self._update_blockchain_tables(
-                            sender_id, receiver_id, amount, transaction_type, 
-                            note, location, tx_result
-                        )
-                        
-                        print(f"✅ Transaction recorded in Solidity blockchain: {tx_result['transaction_hash']}")
-                    else:
-                        error_msg = tx_result.get('error', 'Unknown error')
-                        results["errors"].append(f"Solidity blockchain error: {error_msg}")
-                        print(f"⚠️ Solidity blockchain transaction failed: {error_msg}")
+                    
+                    print(f"✅ Transaction recorded in Solidity blockchain: {tx_result['transaction_hash']}")
                 else:
-                    results["errors"].append("Solidity blockchain error: Users not registered")
-                    print("⚠️ Solidity blockchain transaction skipped: Users not registered")
+                    results["errors"].append(f"Solidity blockchain error: {tx_result.get('error', 'Unknown error')}")
             except Exception as e:
                 results["errors"].append(f"Solidity blockchain error: {e}")
                 print(f"❌ Solidity blockchain error: {e}")
-        else:
-            print("ℹ️ Solidity blockchain not available, using Python blockchain only")
         
         return results
     
@@ -206,52 +188,53 @@ class HybridBlockchain:
     def _ensure_users_registered(self, user_ids):
         """Ensure users are registered in Solidity blockchain"""
         if not self.solidity_available:
-            print("⚠️ Solidity blockchain not available")
-            return False
+            return
             
-        print(f"🔍 Checking if users are registered: {user_ids}")
-        
-        # First, check if we have accounts loaded - if not, try to reload them
-        if not self.solidity_blockchain.accounts:
-            print("🔄 No accounts loaded in Solidity blockchain, attempting to reload...")
-            try:
-                if self.solidity_blockchain.reload_accounts():
-                    print(f"✅ Reloaded {len(self.solidity_blockchain.accounts)} accounts")
-                else:
-                    print("❌ Failed to reload accounts")
-                    return False
-            except Exception as e:
-                print(f"❌ Exception during account reload: {e}")
-                return False
-        
-        # Check if the specific users we need are in the loaded accounts
-        missing_users = [user_id for user_id in user_ids if user_id not in self.solidity_blockchain.accounts]
-        
-        if missing_users:
-            print(f"⚠️ Users not found in Solidity accounts: {missing_users}")
-            # Try reloading accounts one more time
-            print("🔄 Attempting to reload accounts for missing users...")
-            try:
-                if self.solidity_blockchain.reload_accounts():
-                    print(f"✅ Reloaded {len(self.solidity_blockchain.accounts)} accounts")
-                    # Check again
-                    still_missing = [user_id for user_id in missing_users if user_id not in self.solidity_blockchain.accounts]
-                    if still_missing:
-                        print(f"❌ Users still missing after reload: {still_missing}")
-                        return False
-                    else:
-                        print("✅ All users found after reload")
-                        return True
-                else:
-                    print("❌ Failed to reload accounts for missing users")
-                    return False
-            except Exception as e:
-                print(f"❌ Exception during second reload attempt: {e}")
-                return False
-        
-        print(f"✅ All required users found in Solidity blockchain: {user_ids}")
-        return True
-    
+        try:
+            from flask import current_app
+            conn = current_app.get_db_connection()
+            
+            with conn.cursor() as cursor:
+                # Get user details for registration
+                user_placeholders = ','.join(['%s'] * len(user_ids))
+                cursor.execute(f'''
+                    SELECT u.id, u.first_name, u.last_name, c.email, c.phone
+                    FROM users u
+                    LEFT JOIN contact_info c ON u.id = c.user_id
+                    WHERE u.id IN ({user_placeholders})
+                ''', user_ids)
+                
+                users = cursor.fetchall()
+                
+            conn.close()
+            
+            # Register each user in Solidity blockchain if not already registered
+            for user in users:
+                try:
+                    # Check if user exists in Solidity blockchain
+                    user_exists = self.solidity_blockchain.get_account_balance(user['id'])
+                    
+                    if user_exists.get('error') == 'User address not found':
+                        # Register the user
+                        registration_result = self.solidity_blockchain.register_user(
+                            user['id'],
+                            user.get('first_name', ''),
+                            user.get('last_name', ''),
+                            user.get('email', ''),
+                            user.get('phone', '')
+                        )
+                        
+                        if registration_result.get('success'):
+                            print(f"✅ User {user['id']} registered in Solidity blockchain")
+                        else:
+                            print(f"⚠️ Failed to register user {user['id']} in Solidity blockchain: {registration_result.get('error')}")
+                    
+                except Exception as e:
+                    print(f"⚠️ Error checking/registering user {user['id']} in Solidity blockchain: {e}")
+                    
+        except Exception as e:
+            print(f"⚠️ Error ensuring users are registered: {e}")
+
     def get_blockchain_status(self):
         """Get status of both blockchain implementations"""
         return {
