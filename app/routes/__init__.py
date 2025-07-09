@@ -8,6 +8,7 @@ from .chat import chat_bp
 from .blockchain import blockchain_bp
 from .blockchain_mgmt import blockchain_mgmt_bp
 from .debug import debug_bp
+from .reload import reload_bp
 
 def register_blueprints(app):
     app.register_blueprint(user_bp)
@@ -20,3 +21,4 @@ def register_blueprints(app):
     app.register_blueprint(blockchain_bp)
     app.register_blueprint(blockchain_mgmt_bp)
     app.register_blueprint(debug_bp)
+    app.register_blueprint(reload_bp)

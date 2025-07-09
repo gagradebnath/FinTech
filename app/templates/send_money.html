@@ -15,8 +15,11 @@
     <div class="row">
         <div class="col-lg-5">
             <div class="card mb-4">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="m-0">Send Money</h5>
+                    {% if user_balance is defined %}
+                    <span class="badge bg-primary fs-6">Balance: ${{ "%.2f"|format(user_balance) }}</span>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     <form method="POST">

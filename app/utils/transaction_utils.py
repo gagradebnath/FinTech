@@ -2,6 +2,7 @@
 from flask import current_app
 import uuid
 from .blockchain import process_blockchain_transaction
+from .overspending_detector import detect_overspending
 
 def get_hybrid_blockchain():
     from .hybrid_blockchain import hybrid_blockchain
@@ -75,7 +76,7 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
             print(f"SQL: {sql}\nPARAMS: {params}")
             cursor.execute(sql, params)
             
-            # Record transaction in blockchain(s)
+            # Record transaction in blockchain(s) with better error handling
             hybrid_blockchain = get_hybrid_blockchain()
             blockchain_results = hybrid_blockchain.process_transaction(
                 sender_id=sender['id'],
@@ -86,13 +87,17 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
                 location=location
             )
             
-            # Log blockchain results
+            # Log blockchain results and provide informative messages
+            blockchain_messages = []
             if blockchain_results["python_blockchain"]:
                 print("✅ Transaction recorded in Python blockchain")
+                blockchain_messages.append("recorded in secure blockchain")
             if blockchain_results["solidity_blockchain"]:
                 print(f"✅ Transaction recorded in Solidity blockchain")
+                blockchain_messages.append("verified on Ethereum network")
             if blockchain_results["errors"]:
                 print(f"⚠️ Blockchain errors: {blockchain_results['errors']}")
+                # Don't fail the transaction for blockchain errors, just log them
             
             conn.commit()
             
@@ -171,5 +176,153 @@ def agent_cash_out(agent_id, user_id, amount):
     except Exception as e:
         conn.rollback()
         return (None, f"Failed to cash out: {str(e)}")
+    finally:
+        conn.close()
+
+def check_transaction_overspending(user_id, note, amount):
+    """
+    Check if a transaction would result in overspending
+    Returns a dictionary with overspending information and whether to proceed
+    """
+    try:
+        amount_float = float(amount)
+        overspending = detect_overspending(user_id, note or 'Money transfer', amount_float)
+        
+        return {
+            'success': True,
+            'overspending_data': overspending,
+            'should_warn': overspending['is_overspending'],
+            'error': None
+        }
+    except ValueError:
+        return {
+            'success': False,
+            'overspending_data': None,
+            'should_warn': False,
+            'error': 'Invalid amount specified.'
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'overspending_data': None,
+            'should_warn': False,
+            'error': f'Error checking overspending: {str(e)}'
+        }
+
+def process_send_money_with_overspending(user_id, recipient_identifier, amount, payment_method, note, location, confirm_overspending=False):
+    """
+    Process send money transaction with overspending checks
+    Returns a comprehensive result dictionary
+    """
+    # Import here to avoid circular imports
+    from .permissions_utils import has_permission
+    
+    result = {
+        'success': False,
+        'error': None,
+        'warning': None,
+        'overspending_warning': None,
+        'updated_user': None,
+        'message': None
+    }
+    
+    # Check permissions
+    if not has_permission(user_id, 'perm_send_money'):
+        result['error'] = 'Permission denied.'
+        return result
+    
+    # Look up recipient
+    recipient = lookup_user_by_identifier(recipient_identifier)
+    
+    # Basic validation
+    if not recipient:
+        result['error'] = 'Recipient not found.'
+        return result
+    elif recipient['id'] == user_id:
+        result['error'] = 'Cannot send money to yourself.'
+        return result
+    elif is_user_flagged_fraud(recipient['id']):
+        result['error'] = 'Cannot send money: recipient is flagged for fraud.'
+        return result
+    
+    # Check overspending
+    overspending_check = check_transaction_overspending(user_id, note, amount)
+    
+    if not overspending_check['success']:
+        result['error'] = overspending_check['error']
+        return result
+    
+    overspending = overspending_check['overspending_data']
+    
+    # If overspending detected and user hasn't confirmed yet
+    if overspending['is_overspending'] and not confirm_overspending:
+        result['overspending_warning'] = {
+            'category': overspending['category'],
+            'budget': overspending['budget'],
+            'expense_amount': overspending['expense_amount'],
+            'overspending_amount': overspending['overspending_amount'],
+            'percentage_over': overspending['percentage_over'],
+            'message': overspending['message'],
+            'recipient_identifier': recipient_identifier,
+            'amount': amount,
+            'payment_method': payment_method,
+            'note': note,
+            'location': location
+        }
+        result['warning'] = 'Transaction requires overspending confirmation'
+        return result
+    
+    # Proceed with transaction
+    category_note = f"{overspending.get('category', 'Other')} : {note}" if note else overspending.get('category', 'Money transfer')
+    ok, msg, updated_user = send_money(
+        user_id, recipient['id'], amount, payment_method, category_note, location, 'Transfer')
+    
+    if ok:
+        result['success'] = True
+        result['message'] = msg
+        result['updated_user'] = updated_user
+        
+        # Add overspending acknowledgment to success message if applicable
+        if overspending['is_overspending'] and confirm_overspending:
+            result['message'] += f" (Note: This transaction exceeded your {overspending['category']} budget by ${overspending['overspending_amount']:.2f})"
+    else:
+        result['error'] = msg
+    
+    return result
+
+def get_user_balance_info(user_id):
+    """Get comprehensive user balance information"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Get user with balance
+            cursor.execute('SELECT id, first_name, last_name, COALESCE(balance, 0) as balance FROM users WHERE id = %s', (user_id,))
+            user = cursor.fetchone()
+            
+            if not user:
+                return None
+                
+            # Get recent transactions for context
+            cursor.execute('''
+                SELECT amount, type, timestamp, 
+                       CASE 
+                           WHEN sender_id = %s THEN 'debit'
+                           WHEN receiver_id = %s THEN 'credit'
+                           ELSE 'unknown'
+                       END as direction
+                FROM transactions 
+                WHERE sender_id = %s OR receiver_id = %s 
+                ORDER BY timestamp DESC 
+                LIMIT 5
+            ''', (user_id, user_id, user_id, user_id))
+            
+            recent_transactions = cursor.fetchall()
+            
+            return {
+                'user_id': user['id'],
+                'name': f"{user.get('first_name', '')} {user.get('last_name', '')}".strip(),
+                'balance': float(user['balance']),
+                'recent_transactions': recent_transactions
+            }
     finally:
         conn.close()
