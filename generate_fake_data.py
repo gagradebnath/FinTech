@@ -1,20 +1,3 @@
-"""
-FinGuard Database Fake Data Generator
-=====================================
-
-This script generates a large amount of realistic fake data for the FinGuard application.
-It populates all tables with comprehensive test data for development and testing purposes.
-
-Usage:
-    python generate_fake_data.py
-
-Environment Variables:
-    MYSQL_HOST      - MySQL server host (default: localhost)
-    MYSQL_PORT      - MySQL server port (default: 3306)
-    MYSQL_USER      - MySQL username (default: root)
-    MYSQL_PASSWORD  - MySQL password (required)
-    MYSQL_DATABASE  - MySQL database name (default: fin_guard)
-"""
 
 import os
 import sys
@@ -39,11 +22,13 @@ def safe_print(message):
 
 def get_mysql_config():
     """Get MySQL configuration from environment variables"""
+    pwd = str(input("Enter MySQL password: "))
     config = {
         'host': os.environ.get('MYSQL_HOST', 'localhost'),
         'port': int(os.environ.get('MYSQL_PORT', 3306)),
         'user': os.environ.get('MYSQL_USER', 'root'),
-        'password': os.environ.get('MYSQL_PASSWORD', '6251wnwnwn'),
+
+        'password': os.environ.get('MYSQL_PASSWORD', pwd),
         'database': os.environ.get('MYSQL_DATABASE', 'fin_guard'),
         'charset': 'utf8mb4'
     }
