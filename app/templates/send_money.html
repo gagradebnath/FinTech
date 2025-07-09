@@ -156,7 +156,8 @@
 </div>
 
 <!-- Loading overlay -->
-<div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(255,255,255,0.7); z-index:2000; align-items:center; justify-content:center;">
+<div id="loadingOverlay"
+    style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(255,255,255,0.7); z-index:2000; align-items:center; justify-content:center;">
     <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
         <span class="visually-hidden">Loading...</span>
     </div>
@@ -173,7 +174,7 @@
                 <h5 class="modal-title" id="sendMoneyErrorModalLabel">Transaction Failed</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body text-black">
                 {{ error }}
             </div>
             <div class="modal-footer">
@@ -200,6 +201,9 @@
                 <h5 class="modal-title" id="sendMoneySuccessModalLabel">Transaction Successful</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <div class="modal-body text-black"><!-- Add text-black here -->
+                {{ success }}
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
             </div>
@@ -214,14 +218,14 @@
 </script>
 {% endif %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    var sendMoneyForm = document.querySelector('form');
-    var loadingOverlay = document.getElementById('loadingOverlay');
-    if (sendMoneyForm && loadingOverlay) {
-        sendMoneyForm.addEventListener('submit', function () {
-            loadingOverlay.style.display = 'flex';
-        });
-    }
-});
+    document.addEventListener('DOMContentLoaded', function () {
+        var sendMoneyForm = document.querySelector('form');
+        var loadingOverlay = document.getElementById('loadingOverlay');
+        if (sendMoneyForm && loadingOverlay) {
+            sendMoneyForm.addEventListener('submit', function () {
+                loadingOverlay.style.display = 'flex';
+            });
+        }
+    });
 </script>
 {% endblock %}
