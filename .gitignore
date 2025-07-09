@@ -15,7 +15,7 @@ __pycache__/
 
 # FinGuard MySQL Configuration (contains sensitive passwords)
 mysql_config.py
-config.py
+
 # Environment files
 .env
 .env.local
@@ -23,3 +23,4 @@ config.py
 
 # Logs
 *.log
+node_modules
