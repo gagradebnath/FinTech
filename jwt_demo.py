@@ -124,8 +124,8 @@ def demo_api_usage():
     # NOTE: Replace these with actual test credentials from your database
     login_success = client.login(
         role="user",
-        login_id="test@example.com",  # Replace with actual test email
-        password="testpassword"       # Replace with actual test password
+        login_id="user",  # Replace with actual test email
+        password="user"       # Replace with actual test password
     )
     
     if not login_success:
