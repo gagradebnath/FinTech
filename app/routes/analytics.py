@@ -30,6 +30,7 @@ def user_statistics_api(user_id):
                 'risk_score': risk_score,
                 'account_age_days': account_age,
                 'monthly_velocity': velocity
+
             }
         })
     except Exception as e:
