@@ -1,17 +1,11 @@
--- Advanced SQL Features for FinGuard FinTech Application
--- This file contains stored procedures, functions, triggers, and complex queries
--- to enhance backend data operations
+
 
 USE fin_guard;
 
--- Set delimiter for stored procedures
+
 DELIMITER //
 
--- ============================================================================
--- STORED PROCEDURES
--- ============================================================================
 
--- Procedure: Process Money Transfer with Enhanced Validation
 DROP PROCEDURE IF EXISTS ProcessMoneyTransfer//
 CREATE PROCEDURE ProcessMoneyTransfer(
     IN p_sender_id CHAR(36),
@@ -421,11 +415,7 @@ CREATE TRIGGER tr_update_user_activity
     AFTER INSERT ON transactions
     FOR EACH ROW
 BEGIN
-    -- Add a last_activity column to users table if it doesn't exist
-    -- This would be done in a migration, but for demo purposes we'll handle it gracefully
-    -- UPDATE users SET last_activity = NEW.timestamp WHERE id = NEW.sender_id OR id = NEW.receiver_id;
-    
-    -- Log the activity instead since we don't want to modify the schema
+
     INSERT INTO admin_logs (id, admin_id, ip_address, timestamp, details)
     VALUES (UUID(), 'system', '127.0.0.1', NOW(), 
             CONCAT('Transaction activity - Sender: ', NEW.sender_id, ', Receiver: ', NEW.receiver_id, ', Amount: ', NEW.amount));
@@ -434,9 +424,6 @@ END//
 -- Reset delimiter
 DELIMITER ;
 
--- ============================================================================
--- COMPLEX QUERIES AND VIEWS
--- ============================================================================
 
 -- View: User Transaction Summary
 CREATE OR REPLACE VIEW v_user_transaction_summary AS

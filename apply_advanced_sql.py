@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 Migration script to apply advanced SQL features to the FinGuard database
 This script applies stored procedures, functions, triggers, and views

@@ -212,7 +212,7 @@ def test_views():
 def test_advanced_sql_utils():
     """Test the AdvancedSQLUtils class if features are installed"""
     try:
-        from utils.advanced_sql_utils import AdvancedSQLUtils, AdvancedReportingUtils
+        from app.utils.advanced_sql_utils import AdvancedSQLUtils, AdvancedReportingUtils
         
         print("✓ Successfully imported AdvancedSQLUtils")
         
