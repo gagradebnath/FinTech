@@ -43,7 +43,7 @@
             </div>
             <ul class="list-unstyled sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="{{ url_for('user.dashboard') }}" class="sidebar-link {% if request.endpoint == 'user.dashboard' %}active{% endif %}">
+                    <a href="{{ get_dashboard_url_for_user(user) if user else url_for('user.dashboard') }}" class="sidebar-link {% if request.endpoint in ['user.dashboard', 'admin.admin_dashboard', 'agent.agent_dashboard'] %}active{% endif %}">
                         <i class="bi bi-house-door"></i> Home
                     </a>
                 </li>

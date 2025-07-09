@@ -61,7 +61,7 @@
                     </form>
                 </div>
             </div>
-            <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-secondary mb-4">
+            <a href="{{ get_dashboard_url_for_user(user) }}" class="btn btn-outline-secondary mb-4">
                 <i class="bi bi-arrow-left"></i> Back to Dashboard
             </a>
         </div>

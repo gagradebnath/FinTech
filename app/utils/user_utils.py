@@ -1,5 +1,5 @@
 # Utility functions for user operations (session, fetch by id)
-from flask import current_app, session
+from flask import current_app, session, url_for
 
 def get_current_user():
     user_id = session.get('user_id')
@@ -26,3 +26,20 @@ def get_role_name_by_id(role_id):
         return row['name'] if row else None
     finally:
         conn.close()
+
+def get_dashboard_url_for_user(user):
+    """Get the appropriate dashboard URL based on user role"""
+    if not user or 'role_id' not in user:
+        return url_for('user.dashboard')
+    
+    role_name = get_role_name_by_id(user['role_id'])
+    if not role_name:
+        return url_for('user.dashboard')
+    
+    role_name = role_name.lower()
+    if role_name == 'agent':
+        return url_for('agent.agent_dashboard')
+    elif role_name == 'admin':
+        return url_for('admin.admin_dashboard')
+    else:
+        return url_for('user.dashboard')

@@ -21,6 +21,11 @@ mysql_config.py
 .env.local
 .env.production
 
+# Virtual environments
+venv/
+env/
+.venv/
+
 # Logs
 *.log
 node_modules
