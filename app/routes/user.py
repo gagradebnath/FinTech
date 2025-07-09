@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, current_app, flash, jsonify, session
 from urllib.parse import urlencode
 import uuid
-import sqlite3
 from datetime import date
 import random
 import string
