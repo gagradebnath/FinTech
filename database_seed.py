@@ -4,6 +4,10 @@ import random
 import os
 import sys
 
+# Import password hashing utilities
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from app.utils.password_utils import hash_password
+
 # Safe print function for cross-platform compatibility
 def safe_print(message):
     """Safely print messages with ASCII fallback"""
@@ -139,10 +143,10 @@ def insert_dummy_data(cursor):
                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
         ('user', 'John', 'Doe', '1995-03-03', 30, 'M', 'Single', 'B+', 10000, today, user_role_id))
 
-    # Insert passwords
-    cursor.execute('INSERT INTO user_passwords (user_id, password) VALUES (%s, %s)', ('admin', 'admin'))
-    cursor.execute('INSERT INTO user_passwords (user_id, password) VALUES (%s, %s)', ('agent', 'agent'))
-    cursor.execute('INSERT INTO user_passwords (user_id, password) VALUES (%s, %s)', ('user', 'user'))
+    # Insert passwords (hashed)
+    cursor.execute('INSERT INTO user_passwords (user_id, password) VALUES (%s, %s)', ('admin', hash_password('admin')))
+    cursor.execute('INSERT INTO user_passwords (user_id, password) VALUES (%s, %s)', ('agent', hash_password('agent')))
+    cursor.execute('INSERT INTO user_passwords (user_id, password) VALUES (%s, %s)', ('user', hash_password('user')))
 
     # Insert permissions
     permissions = [
