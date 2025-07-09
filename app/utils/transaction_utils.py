@@ -1,6 +1,7 @@
 # Utility functions for transaction operations
 from flask import current_app
 import uuid
+from .advanced_sql_utils import AdvancedSQLUtils
 
 def get_user_by_id(user_id):
     conn = current_app.get_db_connection()
@@ -13,7 +14,38 @@ def get_user_by_id(user_id):
         conn.close()
 
 def send_money(sender_id, recipient_id, amount, payment_method, note, location, tx_type):
+    """
+    Send money between users with enhanced validation using stored procedures
+    Falls back to original implementation if stored procedure fails
+    """
     print(f"send_money called: sender_id={sender_id}, recipient_id={recipient_id}, amount={amount}, payment_method={payment_method}, note={note}, location={location}, type={tx_type}")
+    
+    # Try using the advanced stored procedure first
+    try:
+        success, message, transaction_id = AdvancedSQLUtils.process_money_transfer(
+            sender_id, recipient_id, float(amount), payment_method, note, tx_type, location
+        )
+        
+        if success:
+            # Get updated sender info
+            sender = get_user_by_id(sender_id)
+            log_message = f"Transaction successful via stored procedure: id={transaction_id}, amount={amount}, payment_method={payment_method}, sender_id={sender_id}, receiver_id={recipient_id}, note={note}, type={tx_type}, location={location}"
+            print(log_message)
+            
+            # Log to browser console via /log endpoint
+            try:
+                import requests
+                requests.post('http://localhost:5000/log', json={"message": log_message})
+            except Exception as e:
+                print(f"Failed to log to browser console: {e}")
+            
+            return True, message, sender
+        else:
+            print(f"Stored procedure failed: {message}. Falling back to original implementation.")
+    except Exception as e:
+        print(f"Error using stored procedure: {e}. Falling back to original implementation.")
+    
+    # Original implementation as fallback
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
@@ -64,7 +96,7 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
             cursor.execute('SELECT * FROM users WHERE id = %s', (sender['id'],))
             sender = cursor.fetchone()
             
-            log_message = f"Transaction successful: id={tx_id}, amount={amount_val}, payment_method={payment_method}, sender_id={sender['id']}, receiver_id={recipient['id']}, note={note}, type={tx_type}, location={location}"
+            log_message = f"Transaction successful (fallback): id={tx_id}, amount={amount_val}, payment_method={payment_method}, sender_id={sender['id']}, receiver_id={recipient['id']}, note={note}, type={tx_type}, location={location}"
             print(log_message)
             
             # Log to browser console via /log endpoint
