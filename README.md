@@ -3,7 +3,7 @@
 > **🚀 INSTANT SETUP: Just run `setup.bat` → Open http://localhost:5000**  
 > Login: admin/admin, agent/agent, or user/user
 
-FinGuard is a comprehensive personal finance management web application with modern UI, role-based access control, budget planning, and transaction management.
+FinGuard is a comprehensive personal finance management web application with advanced PL/SQL optimizations, rollback functionality, modern UI, role-based access control, budget planning, and transaction management.
 
 ## 🚀 **ONE-CLICK SETUP**
 
@@ -14,6 +14,7 @@ The setup will prompt you for MySQL credentials, then everything happens automat
 - ✅ Installs Python packages  
 - 🔄 Creates fresh database (removes existing if found)
 - 🔧 Updates app/config.py with your MySQL credentials
+- ✅ Deploys comprehensive PL/SQL optimizations
 - ✅ Adds test data and user accounts
 - ✅ Starts the application
 
@@ -23,6 +24,7 @@ The setup will prompt you for MySQL credentials, then everything happens automat
 
 - Windows OS
 - Python 3.8+ (will be installed if missing)
+- MySQL 5.7+ (will be installed if missing)
 - Internet connection (for package installation)
 
 **No need to install MySQL manually - the setup script handles it!**
@@ -41,35 +43,93 @@ Access: http://localhost:5000 (opens automatically)
 
 ## ✨ **Key Features**
 
-- **💼 Multi-Role System**: Admin, Agent, User dashboards
-- **💰 Financial Management**: Budgets, expenses, money transfers
-- **📊 Modern UI**: Dark theme, responsive design, charts
-- **🔒 Security**: Role-based permissions, fraud reporting
-- **📱 User-Friendly**: Easy registration, profile management
+### 🏦 **Core Banking Features**
+- **� Enhanced Money Transfers**: Fraud detection, balance validation
+- **🔄 Transaction Rollbacks**: 72-hour rollback window with audit trail
+- **📊 Risk Assessment**: Real-time user risk scoring
+- **🛡️ Fraud Protection**: Automatic fraud flagging and prevention
+
+### 🎛️ **Advanced PL/SQL Features**
+- **⚡ Stored Procedures**: 7 optimized procedures for core operations
+- **� Functions**: 4 analytical functions for risk and spending analysis
+- **👁️ Views**: 3 comprehensive views for reporting and monitoring
+- **🔔 Triggers**: 3 audit triggers for automatic logging
+
+### 💼 **Multi-Role System**
+- **Admin Dashboard**: User management, system monitoring, fraud reports
+- **Agent Dashboard**: Customer service, transaction assistance
+- **User Dashboard**: Personal finance, budgets, transaction history
+
+### 📱 **Modern Interface**
+- **🌙 Dark Theme**: Professional dark mode interface
+- **📱 Responsive Design**: Works on all devices
+- **📊 Real-time Charts**: Interactive financial analytics
+- **🔒 Security**: Role-based permissions, session management
 
 ## 🛠️ **What's Inside**
 
-- **Send Money**: Transfer funds between users
-- **Budget Planning**: Create and manage budgets
-- **Transaction History**: View all financial activities  
-- **Admin Panel**: User management and monitoring
-- **Agent Tools**: Add money, cash out operations
-- **Profile Management**: Update personal information
+### 🏦 **Core Banking Operations**
+- **💸 Enhanced Money Transfers**: Secure transfers with fraud detection
+- **🔄 Transaction Rollbacks**: Undo transactions within 72 hours
+- **📊 Budget Planning**: Create and manage personal budgets
+- **📈 Transaction Analytics**: Real-time financial insights
+- **🛡️ Fraud Protection**: Automatic fraud detection and reporting
+
+### 👨‍💼 **Multi-Role Dashboards**
+- **🔧 Admin Panel**: User management, system monitoring, fraud reports
+- **🎯 Agent Tools**: Customer service, money operations, transaction assistance
+- **👤 User Portal**: Personal finance, budgets, transaction history
+
+### 📊 **Advanced Analytics**
+- **📈 Risk Scoring**: AI-powered user risk assessment
+- **💰 Spending Analysis**: Daily/weekly/monthly spending patterns
+- **🔍 Audit Trails**: Complete transaction logging and monitoring
+- **📋 Reporting**: Comprehensive financial reports
+
+## 🗃️ **Database Features**
+
+### 📦 **Stored Procedures**
+- **`ProcessMoneyTransferEnhanced`**: Enhanced money transfer with fraud detection
+- **`RollbackTransaction`**: Rollback completed transactions
+- **`GetTransactionStatus`**: Check transaction status and rollback eligibility
+- **`BackupUserBalance`**: Create user balance backups
+- **`RestoreUserBalance`**: Restore user balance from backup
+- **`AutoRollbackFailedTransactions`**: Auto-rollback failed transactions
+- **`CleanupOldFraudReports`**: Clean up old fraud reports
+
+### 🔧 **Functions**
+- **`GetUserRiskScore`**: Calculate user risk score (0-100)
+- **`GetUserDailySpending`**: Get daily spending amount
+- **`IsWithinSpendingLimit`**: Check if user is within spending limits
+- **`GetUserTransactionCount`**: Get transaction count for specified period
+
+### 👁️ **Views**
+- **`v_transaction_analytics`**: Comprehensive transaction analysis
+- **`v_user_risk_analysis`**: User risk and spending analysis
+- **`v_rollback_monitoring`**: Rollback eligibility monitoring
+
+### 🔔 **Triggers**
+- **`tr_transaction_balance_update`**: Auto-update balances on transactions
+- **`tr_fraud_report_audit`**: Audit fraud report submissions
+- **`tr_user_update_audit`**: Audit user account changes
 
 ## 📁 **Project Structure**
 
 ```
 FinGuard/
-├── setup.bat              # 🚀 One-click setup script (run this!)
-├── auto_setup.py          # Automatic MySQL installation and setup
-├── database_seed.py       # Database seeding with test data
-├── run.py                 # Start the application
-├── app/                   # Main application code
-│   ├── routes/           # Web pages and API endpoints
-│   ├── templates/        # HTML templates
-│   ├── static/          # CSS, JavaScript, images
-│   └── utils/           # Business logic and database operations
-└── DatabaseSchema_MySQL.sql  # MySQL database schema
+├── setup.bat                      # 🚀 One-click setup script (run this!)
+├── auto_setup.py                  # Automatic MySQL installation and setup
+├── database_seed.py               # Database seeding with test data
+├── run.py                         # Start the application
+├── FinGuard_Complete_PL_SQL.sql   # 🆕 Complete PL/SQL optimizations
+├── deploy_complete.bat            # Deploy all PL/SQL features
+├── fix_collations.sql             # Fix database collation issues
+├── app/                           # Main application code
+│   ├── routes/                    # Web pages and API endpoints
+│   ├── templates/                 # HTML templates
+│   ├── static/                    # CSS, JavaScript, images
+│   └── utils/                     # Business logic and database operations
+└── DatabaseSchema_MySQL.sql       # MySQL database schema
 ```
 
 ## 🆘 **Need Help?**
@@ -79,6 +139,7 @@ FinGuard/
 - **Permission denied**: Run `setup.bat` as administrator
 - **Python not found**: Install Python 3.8+ from https://python.org
 - **MySQL connection fails**: Double-check your MySQL credentials (host, port, username, password)
+- **Collation errors**: Run `fix_collations.bat` to fix database collation issues
 
 ### **Application Issues**  
 - **Can't login**: Use test accounts (admin/admin, agent/agent, user/user)
