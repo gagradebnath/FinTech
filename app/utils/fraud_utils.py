@@ -38,3 +38,22 @@ def add_fraud_report(reporter_id, reported_user_id, reason):
         return False, str(e)
     finally:
         conn.close()
+
+def get_fraud_reports(limit=50, offset=0):
+    """Get fraud reports from the database"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('''
+                SELECT id, user_id, reported_user_id, reason, created_at
+                FROM fraud_list
+                ORDER BY created_at DESC
+                LIMIT %s OFFSET %s
+            ''', (limit, offset))
+            reports = cursor.fetchall()
+            return reports
+    except Exception as e:
+        print(f"Error getting fraud reports: {e}")
+        return []
+    finally:
+        conn.close()
