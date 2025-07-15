@@ -30,3 +30,4 @@ env/
 *.log
 node_modules
 
+app/config.py

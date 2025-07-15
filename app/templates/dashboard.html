@@ -6,7 +6,7 @@
             <h2 class="mb-4">Home</h2>
         </div>
     </div>
-    
+
     <!-- Balance Cards -->
     <div class="row mb-4">
         <div class="col-md-4 mb-3">
@@ -52,7 +52,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Transaction Reports & Cards -->
     <div class="row">
         <div class="col-lg-8">
@@ -60,27 +60,31 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>Transaction Reports</div>
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Monthly
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                            id="reportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="reportDropdownLabel">Monthly</span>
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Weekly</a></li>
-                            <li><a class="dropdown-item" href="#">Monthly</a></li>
-                            <li><a class="dropdown-item" href="#">Yearly</a></li>
+                            <li><a class="dropdown-item" href="#"
+                                    onclick="loadReport('monthly');return false;">Monthly</a></li>
+                            <li><a class="dropdown-item" href="#"
+                                    onclick="loadReport('yearly');return false;">Yearly</a></li>
                         </ul>
                     </div>
                 </div>
-                <div class="card-body">                    <div class="chart-container">
-                        <canvas id="transactionChart"></canvas>
+                <div class="card-body">
+                    <div class="chart-container" style = "position:relative; width : 100%; height : 350 px;">
+                        <canvas id="transactionChart" style = "width : 100%; height: 100%;"></canvas>
                     </div>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>Recent Transactions</div>
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             Today
                         </button>
                         <ul class="dropdown-menu">
@@ -89,74 +93,86 @@
                             <li><a class="dropdown-item" href="#">This Week</a></li>
                         </ul>
                     </div>
-                </div>                <div class="card-body p-0">
+                </div>
+                <div class="card-body p-0">
                     {% if transactions %}
-                        <div class="table-responsive">
-                            <table class="transaction-table dashboard-transaction-table">
-                                <thead>
-                                    <tr>
-                                        <th>Account</th>
-                                        <th>Amount</th>
-                                        <th>Date</th>
-                                        <th>Status</th>
-                                        <th>Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for tx in transactions %}
-                                    <tr>
-                                        <td>
-                                            <div class="transaction-account">
-                                                <div class="transaction-icon">
-                                                    {% if tx.type|lower == 'payment' %}
-                                                    <i class="bi bi-credit-card text-primary"></i>
-                                                    {% elif tx.type|lower == 'transfer' %}
-                                                    <i class="bi bi-arrow-left-right text-success"></i>
-                                                    {% elif tx.type|lower == 'withdrawal' %}
-                                                    <i class="bi bi-cash text-danger"></i>
-                                                    {% else %}
-                                                    <i class="bi bi-currency-exchange text-warning"></i>
-                                                    {% endif %}                                                </div>
-                                                <div>
-                                                    <div class="transaction-vendor">{{ tx.type|capitalize }}</div>
-                                                    <div class="transaction-category">
-                                                        {% if tx.sender_id == user.id %}
-                                                            Sent{% if tx.receiver_id %} to {{ tx.receiver_id }}{% endif %}
-                                                        {% elif tx.receiver_id == user.id %}
-                                                            Received{% if tx.sender_id %} from {{ tx.sender_id }}{% endif %}
-                                                        {% endif %}
-                                                    </div>
+                    <div class="table-responsive">
+                        <table class="transaction-table dashboard-transaction-table">
+                            <thead>
+                                <tr>
+                                    <th>Account</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tx in transactions %}
+                                <tr>
+                                    <td>
+                                        <div class="transaction-account">
+                                            <div class="transaction-icon">
+                                                {% if tx.type|lower == 'payment' %}
+                                                <i class="bi bi-credit-card text-primary"></i>
+                                                {% elif tx.type|lower == 'transfer' %}
+                                                <i class="bi bi-arrow-left-right text-success"></i>
+                                                {% elif tx.type|lower == 'withdrawal' %}
+                                                <i class="bi bi-cash text-danger"></i>
+                                                {% else %}
+                                                <i class="bi bi-currency-exchange text-warning"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="transaction-vendor">{{ tx.type|capitalize }}</div>
+                                                <div class="transaction-category">
+                                                    {% if tx.sender_id == user.id %}
+                                                    Sent{% if tx.receiver_id %} to {{ tx.receiver_id }}{% endif %}
+                                                    {% elif tx.receiver_id == user.id %}
+                                                    Received{% if tx.sender_id %} from {{ tx.sender_id }}{% endif %}
+                                                    {% endif %}
                                                 </div>
                                             </div>
-                                        </td>
-                                        <td>
-                                            <div class="transaction-amount {{ 'amount-negative' if tx.sender_id == user.id else 'amount-positive' }}">
-                                                {{ '-' if tx.sender_id == user.id else '+' }}${{ tx.amount }}
-                                            </div>
-                                        </td>
-                                        <td>{{ tx.timestamp|format_date }}</td>
-                                        <td>
-                                            <span class="transaction-status {{ 'success' if tx.status|lower == 'completed' else ('pending' if tx.status|lower == 'pending' else 'canceled') }}">
-                                                {{ tx.status|default('Completed')|capitalize }}
-                                            </span>
-                                        </td>
-                                        <td class="transaction-time">{{ tx.timestamp|format_time }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>                    {% else %}
-                        <div class="no-transactions">
-                            <i class="bi bi-credit-card"></i>
-                            <h5>No transactions yet</h5>
-                            <p>Your recent transactions will appear here</p>
-                        </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div
+                                            class="transaction-amount {{ 'amount-negative' if tx.sender_id == user.id else 'amount-positive' }}">
+                                            {{ '-' if tx.sender_id == user.id else '+' }}${{ tx.amount }}
+                                        </div>
+                                    </td>
+                                    <td>{{ tx.timestamp|format_date }}</td>
+                                    <td>
+                                        <span
+                                            class="transaction-status
+    {% if tx.status|lower == 'completed' %}
+        success
+    {% elif tx.status|lower == 'pending' %}
+        pending
+    {% else %}
+        canceled
+    {% endif %}">
+                                            {{ tx.status|default('Completed')|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td class="transaction-time">{{ tx.timestamp|format_time }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div> {% else %}
+                    <div class="no-transactions">
+                        <i class="bi bi-credit-card"></i>
+                        <h5>No transactions yet</h5>
+                        <p>Your recent transactions will appear here</p>
+                    </div>
                     {% endif %}
-                    <a href="{{ url_for('transaction.send_money_route') }}" class="view-all-link">View All Transactions</a>
+                    <a href="{{ url_for('transaction.send_money_route') }}" class="view-all-link">View All
+                        Transactions</a>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-4">
             <div class="card mb-4">
                 <div class="card-header">My Cards</div>
@@ -205,7 +221,8 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>Expenses</div>
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             Monthly
                         </button>
                         <ul class="dropdown-menu">
@@ -271,7 +288,7 @@
 {% block extra_scripts %}
 <script>
     // Set current year for card expiration date
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const currentYear = new Date().getFullYear();
         const expiryElements = document.querySelectorAll('.credit-card-inner .text-end div:last-child');
         expiryElements.forEach(el => {
@@ -279,6 +296,120 @@
                 el.innerText = `12/${currentYear + 1}`;
             }
         });
+    });
+
+    function drawHistogram(labels, received, spent) {
+        const canvas = document.getElementById('transactionChart');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const width = canvas.width;
+        const height = canvas.height;
+        const barWidth = Math.floor((width - 60) / (labels.length * 3));
+        const maxVal = Math.max(...received, ...spent, 1);
+        const yTicks = [0, Math.round(maxVal / 2), Math.round(maxVal)];
+
+        // Draw Y axis grid lines and labels
+        ctx.strokeStyle = "#eee";
+        ctx.fillStyle = "#fff";
+        ctx.font = "12px Arial";
+        for (let i = 0; i < yTicks.length; i++) {
+            let y = height - 20 - (yTicks[i] / maxVal) * (height - 60);
+            ctx.beginPath();
+            ctx.moveTo(40, y);
+            ctx.lineTo(width - 10, y);
+            ctx.stroke();
+            ctx.fillText(yTicks[i], 15, y + 4);
+        }
+
+        // Draw X axis
+        ctx.strokeStyle = "#aaa";
+        ctx.beginPath();
+        ctx.moveTo(40, height - 20);
+        ctx.lineTo(width - 10, height - 20);
+        ctx.stroke();
+
+        // Draw bars and X labels
+        for (let i = 0; i < labels.length; i++) {
+            // Received (green)
+            let barHeight = Math.round((received[i] / maxVal) * (height - 60));
+            ctx.fillStyle = "#4caf50";
+            ctx.fillRect(50 + i * barWidth * 3, height - 20 - barHeight, barWidth, barHeight);
+
+            // Spent (red)
+            barHeight = Math.round((spent[i] / maxVal) * (height - 60));
+            ctx.fillStyle = "#f44336";
+            ctx.fillRect(50 + i * barWidth * 3 + barWidth, height - 20 - barHeight, barWidth, barHeight);
+
+            // X label
+            ctx.save();
+            ctx.fillStyle = "#fff";
+            ctx.font = "12px Arial";
+            ctx.translate(50 + i * barWidth * 3 + barWidth / 2, height - 5);
+            ctx.rotate(-Math.PI / 8);
+            ctx.fillText(labels[i], 0, 0);
+            ctx.restore();
+        }
+
+        // Y axis label
+        ctx.save();
+        ctx.translate(15, height / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#333";
+        ctx.font = "16px Arial";
+        ctx.fillText("Amount", 40, 0);
+        ctx.restore();
+
+        //X axis label
+        ctx.fillStyle = "#333";
+        ctx.font = "16px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Period", width / 2, height );
+
+        // Legend
+        ctx.fillStyle = "#4caf50";
+        ctx.fillRect(width - 150, 2, 12, 12);
+        ctx.fillStyle = "#fff";
+        ctx.fillText("Received", width - 100, 12);
+        ctx.fillStyle = "#f44336";
+        ctx.fillRect(width - 150, 20, 12, 12);
+        ctx.fillStyle = "#fff";
+        ctx.fillText("Spent", width - 110, 32);
+    }
+
+    function loadReport(period) {
+        document.getElementById('reportDropdownLabel').innerText =
+            period.charAt(0).toUpperCase() + period.slice(1);
+        localStorage.setItem('transactionReportPeriod', period);
+        fetch(`/api/transaction-report?period=${period}`)
+            .then(res => res.json())
+            .then (data => {
+                drawHistogram(data.labels, data.received, data.spent);
+            });
+    }
+
+    function resizeChart() {
+        const canvas = document.getElementById('transactionChart');
+        const container = canvas.parentElement;
+        canvas.width = container.offsetWidth;
+        canvas.height = container.offsetHeight;
+    }
+    document.addEventListener('DOMContentLoaded', resizeChart);
+    window.addEventListener('resize', resizeChart);
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', function () {
+        // Set canvas size
+        const canvas = document.getElementById('transactionChart');
+        canvas.width = 600;
+        canvas.height = 250;
+        const lastperiod = localStorage.getItem('transactionReportPeriod');
+        if (lastperiod === 'weekly') {
+            loadReport('monthly'); // fallback to monthly if previously set to weekly
+        } else {
+            loadReport(lastperiod || 'monthly');
+        }
     });
 </script>
 {% endblock %}

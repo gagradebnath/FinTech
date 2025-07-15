@@ -43,3 +43,16 @@ def get_dashboard_url_for_user(user):
         return url_for('admin.admin_dashboard')
     else:
         return url_for('user.dashboard')
+def get_all_users():
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('''
+                SELECT u.id, u.first_name, u.last_name, c.email, c.phone
+                FROM users u
+                LEFT JOIN contact_info c ON u.id = c.user_id
+            ''')
+            users = cursor.fetchall()
+        return users
+    finally:
+        conn.close()

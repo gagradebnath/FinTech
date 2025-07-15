@@ -1,13 +1,23 @@
 {% extends 'base.html' %}
 {% block content %}
-    <div class="container py-5">
-    <h2 class="text-center mb-4">Personal Budget Planner</h2>    {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
+<style>
+    /* Make the placeholder (first option) gray, others black */
+    select.form-select option[value=""] {
+        color: #e6e1e1d7 !important;
+    }
+
+    select.form-select option:not([value=""]) {
+        color: #000 !important;
+    }
+</style>
+<div class="container py-5">
+    <h2 class="text-center mb-4">Personal Budget Planner</h2> {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
     {% endif %}
     {% if success %}
-        <div class="alert alert-success">{{ success }}</div>
+    <div class="alert alert-success">{{ success }}</div>
     {% endif %}
-    
+
     <!-- Pass budget data to JavaScript -->
     {% if budget %}
     <script>
@@ -15,20 +25,22 @@
         console.log('Preloaded budget data:', window.preloadedBudget);
     </script>
     {% endif %}
-    
+
     <!-- Budget selection dropdown -->
     {% if user_budgets and user_budgets|length > 0 %}
     <div class="card mb-4">
         <div class="card-header">
             <h5 class="mb-0">Your Saved Budgets</h5>
         </div>
-        <div class="card-body">            <div class="row align-items-center">
+        <div class="card-body">
+            <div class="row align-items-center">
                 <div class="col-md-8">
                     <label for="saved-budgets" class="visually-hidden">Select a saved budget</label>
                     <select class="form-select" id="saved-budgets" aria-label="Select a saved budget">
                         <option value="">Select a saved budget</option>
                         {% for budget_item in user_budgets %}
-                        <option value="{{ budget_item.id }}">{{ budget_item.name }} ({{ budget_item.currency }} {{ budget_item.amount }})</option>
+                        <option value="{{ budget_item.id }}">{{ budget_item.name }} ({{ budget_item.currency }} {{
+                            budget_item.amount }})</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -39,15 +51,17 @@
         </div>
     </div>
     {% endif %}
-    
+
     <form id="budget-form" class="card p-4" method="post">
         <div class="mb-3">
             <label for="budget-name" class="form-label">Budget Name</label>
-            <input type="text" class="form-control" id="budget-name" name="name" placeholder="e.g. Monthly Budget May 2025" value="{{ budget.name if budget else '' }}" required>
+            <input type="text" class="form-control" id="budget-name" name="name"
+                placeholder="e.g. Monthly Budget May 2025" value="{{ budget.name if budget else '' }}" required>
         </div>
         <div class="mb-3">
             <label for="currency" class="form-label">Currency</label>
-            <input type="text" class="form-control" id="currency" name="currency" placeholder="e.g. BDT" value="{{ budget.currency if budget else '' }}" required>
+            <input type="text" class="form-control" id="currency" name="currency" placeholder="e.g. BDT"
+                value="{{ budget.currency if budget else '' }}" required>
         </div>
         <h4>Income Sources</h4>
         <div id="income-list" class="income-list">

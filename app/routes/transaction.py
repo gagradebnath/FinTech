@@ -1,9 +1,11 @@
 from flask import Blueprint, render_template, request, current_app, session, redirect, url_for, jsonify
 import uuid
 from .user import get_current_user
-from app.utils.transaction_utils import get_user_by_id, send_money, lookup_user_by_identifier, is_user_flagged_fraud
+from app.utils.transaction_utils import get_user_by_id, send_money, lookup_user_by_identifier, is_user_flagged_fraud, get_all_transactions
 from app.utils.permissions_utils import has_permission
 from app.utils.jwt_auth import token_required, get_current_user_from_jwt
+from datetime import datetime, timedelta
+import calendar
 
 transaction_bp = Blueprint('transaction', __name__)
 
@@ -43,12 +45,39 @@ def send_money_route():
     success = None
     
     if not has_permission(user['id'], 'perm_send_money'):
-        error_msg = 'Permission denied.'
-        is_api_request = request.headers.get('Authorization') or request.args.get('token') or request.is_json
-        if is_api_request:
-            return jsonify({'error': error_msg}), 403
-        return render_template('send_money.html', error=error_msg, success=None)
-    
+        return render_template('send_money.html', error='Permission denied.', success=None, transactions=[], user=user)
+
+    # Get filter from query params
+    time_filter = request.args.get('filter', 'week')  # default to 'week'
+
+    # Calculate date range based on filter
+    now = datetime.now()
+    if time_filter == 'today':
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif time_filter == 'yesterday':
+        start_date = (now - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        end_date = start_date + timedelta(days=1)
+    elif time_filter == 'month':
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    else:  # week
+        start_date = now - timedelta(days=now.weekday())
+        start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Fetch all transactions
+    transactions = get_all_transactions(user['id'])
+
+    # Filter transactions in Python (or you can do it in SQL for efficiency)
+    if time_filter == 'today':
+        filtered_transactions = [tx for tx in transactions if tx['timestamp'].date() == now.date()]
+    elif time_filter == 'yesterday':
+        filtered_transactions = [tx for tx in transactions if tx['timestamp'].date() == (now - timedelta(days=1)).date()]
+    elif time_filter == 'month':
+        filtered_transactions = [tx for tx in transactions if tx['timestamp'].month == now.month and tx['timestamp'].year == now.year]
+    elif time_filter == 'all':
+        filtered_transactions = transactions
+    else:  # week
+        filtered_transactions = [tx for tx in transactions if tx['timestamp'] >= start_date]
+
     if request.method == 'POST':
         # Handle both JSON and form data
         if request.is_json:
@@ -80,24 +109,88 @@ def send_money_route():
                 user = updated_user
             else:
                 error = msg
-        
-        # Return JSON response for API requests
-        if request.is_json:
-            if error:
-                return jsonify({'error': error}), 400
-            else:
-                return jsonify({
-                    'success': True,
-                    'message': success,
-                    'updated_balance': user.get('balance') if user else None
-                }), 200
-    
-    # Return JSON response for API GET requests
-    is_api_request = request.headers.get('Authorization') or request.args.get('token')
-    if is_api_request and request.method == 'GET':
-        return jsonify({
-            'user_balance': user.get('balance', 0),
-            'message': 'Send money endpoint ready'
-        }), 200
-    
-    return render_template('send_money.html', error=error, success=success)
+    transactions = get_all_transactions(user['id'])
+    return render_template(
+        'send_money.html',
+        error=error,
+        success=success,
+        transactions=filtered_transactions,
+        user=user,
+        time_filter=time_filter
+    )
+
+@transaction_bp.route('/api/transaction-report')
+def transaction_report():
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    period = request.args.get('period', 'monthly')
+    now = datetime.now()
+    data = []
+
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            if period == 'yearly':
+                labels = []
+                received = []
+                spent = []
+                current_year = now.year
+                for y in range(current_year - 3, current_year + 1):
+                    labels.append(str(y))
+                    # Received
+                    cursor.execute('''SELECT IFNULL(SUM(amount),0) FROM transactions
+                        WHERE receiver_id = %s  AND YEAR(timestamp) = %s''', (user['id'], y))
+                    row = cursor.fetchone()
+                    if row:
+                        received.append(float(list(row.values())[0]))
+                    else:
+                        received.append(0)
+                    # Spent
+                    cursor.execute('''SELECT IFNULL(SUM(amount),0) FROM transactions
+                        WHERE sender_id = %s AND YEAR(timestamp) = %s''', (user['id'], y))
+                    row = cursor.fetchone()
+                    spent.append(float(list(row.values())[0]) if row else 0)
+                return jsonify({'labels': labels, 'received': received, 'spent': spent})
+
+            elif period == 'weekly':
+                year = now.year
+                month = now.month
+                num_days = calendar.monthrange(year, month)[1]
+                num_weeks = (num_days + 6) // 7
+                labels = [f'Week {i+1}' for i in range(num_weeks)]
+                received = [0] * num_weeks
+                spent = [0] * num_weeks
+                for week in range(num_weeks):
+                    start = datetime(year, month, 1) + timedelta(days=7*week)
+                    end = start + timedelta(days=7)
+                    cursor.execute('SELECT IFNULL(SUM(amount),0) FROM transactions WHERE receiver_id = %s AND timestamp >= %s AND timestamp < %s', (user['id'], start, end))
+                    row = cursor.fetchone()
+                    received[week] = float(list(row.values())[0]) if row else 0
+                    cursor.execute('SELECT IFNULL(SUM(amount),0) FROM transactions WHERE sender_id = %s AND timestamp >= %s AND timestamp < %s', (user['id'], start, end))
+                    row = cursor.fetchone()
+                    spent[week] = float(list(row.values())[0]) if row else 0
+                return jsonify({'labels': labels, 'received': received, 'spent': spent})
+
+            else:  # monthly (default)
+                labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                received = []
+                spent = []
+                year = now.year
+                for m in range(1, 13):
+                    # Received
+                    cursor.execute('''SELECT IFNULL(SUM(amount),0) FROM transactions
+                        WHERE receiver_id = %s  AND YEAR(timestamp) = %s AND MONTH(timestamp) = %s''',
+                        (user['id'], year, m))
+                    row = cursor.fetchone()
+                    received.append(float(list(row.values())[0]) if row else 0)
+                    # Spent
+                    cursor.execute('''SELECT IFNULL(SUM(amount),0) FROM transactions
+                        WHERE sender_id = %s  AND YEAR(timestamp) = %s AND MONTH(timestamp) = %s''',
+                        (user['id'], year, m))
+                    row = cursor.fetchone()
+                    spent.append(float(list(row.values())[0]) if row else 0)
+                return jsonify({'labels': labels, 'received': received, 'spent': spent})
+    finally:
+        conn.close()

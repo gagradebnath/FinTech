@@ -1,5 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
+<style>
+    /* Make the placeholder (first option) gray, others black */
+    select.form-select option[value=""] {
+        color: #e6e1e1d7 !important;
+    }
+
+    select.form-select option:not([value=""]) {
+        color: #000 !important;
+    }
+</style>
 <div class="container py-4">
     <h2>User Profile</h2>
     <form method="POST" action="/profile">
