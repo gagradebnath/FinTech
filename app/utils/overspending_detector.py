@@ -32,7 +32,8 @@ CATEGORY_KEYWORDS = {
     'Housing': [
         'rent', 'mortgage', 'house', 'home', 'apartment', 'property', 'landlord',
         'hoa', 'homeowners', 'real estate', 'housing', 'lease', 'rental',
-        'property tax', 'home insurance', 'maintenance', 'repair', 'utilities deposit'
+        'property tax', 'home insurance', 'maintenance', 'repair', 'utilities deposit',
+        'mortgage payment', 'rental payment'
     ],
     
     'Utilities': [
@@ -51,7 +52,8 @@ CATEGORY_KEYWORDS = {
         'gas', 'fuel', 'gasoline', 'car', 'auto', 'vehicle', 'transport',
         'bus', 'train', 'subway', 'metro', 'taxi', 'uber', 'lyft',
         'parking', 'toll', 'car payment', 'auto insurance', 'maintenance',
-        'repair', 'oil change', 'tires', 'registration', 'dmv'
+        'repair', 'oil change', 'tires', 'registration', 'dmv',
+        'gas station', 'fill-up', 'public transit', 'transportation'
     ],
     
     'Healthcare': [
@@ -116,7 +118,7 @@ CATEGORY_KEYWORDS = {
     'Travel': [
         'travel', 'trip', 'vacation', 'flight', 'airline', 'hotel', 'airbnb',
         'booking', 'rental car', 'cruise', 'tour', 'luggage', 'passport',
-        'visa', 'travel insurance', 'sightseeing'
+        'visa', 'travel insurance', 'sightseeing', 'vacation rental'
     ],
     
     'Childcare': [
@@ -187,34 +189,21 @@ def get_category_budget(user_id, category_name):
         connection = current_app.get_db_connection()
         
         with connection.cursor() as cursor:
-            # Fixed SQL query (moved WHERE clause before ORDER BY)
+            # Simplified query to get budget for a specific category
             query = """
-            SELECT
-                t.sum as budget
-            FROM
-            (
-                SELECT
-                    b.user_id,
-                    c.category_name,
-                    COALESCE(SUM(i.amount), 0) as sum
-                FROM
-                    budgets b
-                    LEFT JOIN budget_expense_categories c ON b.id = c.budget_id
-                    LEFT JOIN budget_expense_items i ON c.id = i.category_id
-                WHERE 
-                    b.user_id = %s AND c.category_name = %s
-                GROUP BY
-                    b.user_id,
-                    c.category_name
-            ) t
+            SELECT COALESCE(SUM(i.amount), 0) as budget_amount
+            FROM budgets b
+            JOIN budget_expense_categories c ON b.id = c.budget_id
+            JOIN budget_expense_items i ON c.id = i.category_id
+            WHERE b.user_id = %s AND c.category_name = %s
             """
             
             # Execute query with parameters
             cursor.execute(query, (user_id, category_name))
             result = cursor.fetchone()
             
-            if result and result[0] is not None:
-                return float(result[0])
+            if result and result['budget_amount'] is not None:
+                return float(result['budget_amount'])
             else:
                 return 0.0 
                 
@@ -251,15 +240,15 @@ def get_all_category_budgets(user_id):
         connection = current_app.get_db_connection()
         
         with connection.cursor() as cursor:
-            # Query to get all category budgets for the user
+            # Simplified query to get all category budgets for the user
             query = """
             SELECT
                 c.category_name,
                 COALESCE(SUM(i.amount), 0) as budget_amount
             FROM
                 budgets b
-                LEFT JOIN budget_expense_categories c ON b.id = c.budget_id
-                LEFT JOIN budget_expense_items i ON c.id = i.category_id
+                JOIN budget_expense_categories c ON b.id = c.budget_id
+                JOIN budget_expense_items i ON c.id = i.category_id
             WHERE 
                 b.user_id = %s
             GROUP BY
@@ -274,8 +263,8 @@ def get_all_category_budgets(user_id):
             
             # Convert results to dictionary
             for row in results:
-                if row[0]:  # category_name is not None
-                    budgets[row[0]] = float(row[1]) if row[1] is not None else 0.0
+                if row['category_name']:  # category_name is not None
+                    budgets[row['category_name']] = float(row['budget_amount']) if row['budget_amount'] is not None else 0.0
                     
     except Exception as e:
         print(f"Error retrieving all budgets for user {user_id}: {e}")
