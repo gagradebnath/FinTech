@@ -39,34 +39,39 @@ def generate_user_id():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
 def create_user_and_contact(role_id, first_name, last_name, dob, age, gender, marital_status, blood_group, email, phone, password):
+    """Create user and contact using stored procedure"""
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
-            # Generate unique user_id
-            while True:
-                user_id = generate_user_id()
-                cursor.execute('SELECT 1 FROM users WHERE LOWER(id) = %s', (user_id.lower(),))
-                if not cursor.fetchone():
-                    break
+            # Get role name from role_id
+            cursor.execute('SELECT name FROM roles WHERE id = %s', (role_id,))
+            role_row = cursor.fetchone()
             
-            # Insert user
-            cursor.execute('''INSERT INTO users (id, first_name, last_name, dob, age, gender, marital_status, blood_group, balance, joining_date, role_id) 
-                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
-                (user_id, first_name, last_name, dob, age, gender, marital_status, blood_group, 0, date.today().isoformat(), role_id))
+            if not role_row:
+                return None, 'Invalid role ID'
+                
+            role_name = role_row['name']
             
-            # Insert contact info
-            contact_id = str(uuid.uuid4())
-            cursor.execute('INSERT INTO contact_info (id, user_id, email, phone, address_id) VALUES (%s, %s, %s, %s, %s)',
-                (contact_id, user_id, email, phone, None))
-            
-            # Hash the password before storing
+            # Hash the password
             hashed_password = hash_password(password)
-            cursor.execute('INSERT INTO user_passwords (user_id, password) VALUES (%s, %s)', (user_id, hashed_password))
             
-        conn.commit()
-        return user_id, None
+            # Call the stored procedure
+            cursor.callproc('RegisterUser', [
+                role_name, first_name, last_name, dob, age, gender, 
+                marital_status, blood_group, email, phone, hashed_password,
+                None, None, None  # OUT parameters
+            ])
+            
+            # Fetch the OUT parameters
+            cursor.execute("SELECT @_RegisterUser_11 as user_id, @_RegisterUser_12 as success, @_RegisterUser_13 as message")
+            result = cursor.fetchone()
+            
+            if result and result['success']:
+                return result['user_id'], None
+            else:
+                return None, result['message'] if result else 'Registration failed'
+                
     except Exception as e:
-        conn.rollback()
         return None, str(e)
     finally:
         conn.close()

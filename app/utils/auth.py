@@ -1,6 +1,20 @@
 import pymysql
-from flask import current_app
+from flask import current_app, session, redirect, url_for, request, jsonify
+from functools import wraps
 from .password_utils import verify_password, is_password_hashed
+
+
+def login_required(f):
+    """Decorator to require login for routes"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            if request.is_json:
+                return jsonify({'error': 'Login required'}), 401
+            return redirect(url_for('user.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 def get_user_by_login_id(login_id):
     """Get user by user_id, email, or phone (case-insensitive)."""

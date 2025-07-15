@@ -14,23 +14,58 @@ def get_role_name_by_id(role_id):
     finally:
         conn.close()
 
-def get_agents():
+def get_all_users():
+    """Get all users using optimized view"""
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute('SELECT u.id, u.first_name, u.last_name, u.balance FROM users u JOIN roles r ON u.role_id = r.id WHERE LOWER(r.name) = "agent"')
-            agents = cursor.fetchall()
-        return agents
+            cursor.execute('''
+                SELECT u.id, u.first_name, u.last_name, u.balance, u.risk_score, u.spending_pattern 
+                FROM v_user_dashboard_summary u
+                ORDER BY u.last_name, u.first_name
+            ''')
+            users = cursor.fetchall()
+        return users
+    except Exception as e:
+        print(f"Error getting users: {e}")
+        # Fallback to original query
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute('SELECT u.id, u.first_name, u.last_name, u.balance FROM users u')
+                users = cursor.fetchall()
+            return users
+        except Exception as fallback_error:
+            print(f"Fallback query also failed: {fallback_error}")
+            return []
     finally:
         conn.close()
 
-def get_all_users():
+def get_agents():
+    """Get all agents using optimized view"""
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute('SELECT u.id, u.first_name, u.last_name, u.balance FROM users u')
-            users = cursor.fetchall()
-        return users
+            cursor.execute('''
+                SELECT u.id, u.first_name, u.last_name, u.balance, u.risk_score
+                FROM v_user_dashboard_summary u
+                JOIN users ur ON u.id = ur.id
+                JOIN roles r ON ur.role_id = r.id 
+                WHERE LOWER(r.name) = "agent"
+                ORDER BY u.last_name, u.first_name
+            ''')
+            agents = cursor.fetchall()
+        return agents
+    except Exception as e:
+        print(f"Error getting agents: {e}")
+        # Fallback to original query
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute('SELECT u.id, u.first_name, u.last_name, u.balance FROM users u JOIN roles r ON u.role_id = r.id WHERE LOWER(r.name) = "agent"')
+                agents = cursor.fetchall()
+            return agents
+        except Exception as fallback_error:
+            print(f"Fallback query also failed: {fallback_error}")
+            return []
     finally:
         conn.close()
 
@@ -48,15 +83,51 @@ def get_all_transactions(limit=100):
         conn.close()
 
 def get_all_frauds(limit=100):
+    """Get all fraud reports with risk indicators"""
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute('''SELECT f.*, u1.first_name as reporter_first, u1.last_name as reporter_last, u2.first_name as reported_first, u2.last_name as reported_last FROM fraud_list f
-                LEFT JOIN users u1 ON f.user_id = u1.id
-                LEFT JOIN users u2 ON f.reported_user_id = u2.id
-                ORDER BY f.id DESC LIMIT %s''', (limit,))
+            cursor.execute('''
+                SELECT f.*, 
+                       u1.first_name as reporter_first, u1.last_name as reporter_last, 
+                       u2.first_name as reported_first, u2.last_name as reported_last,
+                       f.created_at
+                FROM fraud_list f
+                LEFT JOIN users u1 ON f.user_id COLLATE utf8mb4_unicode_ci = u1.id COLLATE utf8mb4_unicode_ci
+                LEFT JOIN users u2 ON f.reported_user_id COLLATE utf8mb4_unicode_ci = u2.id COLLATE utf8mb4_unicode_ci
+                ORDER BY f.created_at DESC
+                LIMIT %s
+            ''', (limit,))
             frauds = cursor.fetchall()
         return frauds
+    finally:
+        conn.close()
+
+def batch_update_user_balances(admin_id, user_ids, amounts, reason):
+    """Batch update user balances using stored procedure"""
+    conn = current_app.get_db_connection()
+    try:
+        # Convert lists to comma-separated strings
+        user_ids_str = ','.join(user_ids)
+        amounts_str = ','.join(str(amount) for amount in amounts)
+        
+        with conn.cursor() as cursor:
+            cursor.callproc('AdminBatchBalanceUpdate', [
+                admin_id, user_ids_str, amounts_str, reason,
+                None, None, None  # OUT parameters
+            ])
+            
+            # Fetch the OUT parameters
+            cursor.execute("SELECT @_AdminBatchBalanceUpdate_4 as success, @_AdminBatchBalanceUpdate_5 as message, @_AdminBatchBalanceUpdate_6 as updated_count")
+            result = cursor.fetchone()
+            
+            if result and result['success']:
+                return True, result['message'], result['updated_count']
+            else:
+                return False, result['message'] if result else 'Unknown error', 0
+                
+    except Exception as e:
+        return False, str(e), 0
     finally:
         conn.close()
 

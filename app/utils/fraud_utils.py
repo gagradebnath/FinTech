@@ -17,15 +17,24 @@ def lookup_user_by_identifier(identifier):
         conn.close()
 
 def add_fraud_report(reporter_id, reported_user_id, reason):
+    """Add fraud report using stored procedure"""
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
-            cursor.execute('INSERT INTO fraud_list (id, user_id, reported_user_id, reason) VALUES (%s, %s, %s, %s)',
-                         (str(uuid.uuid4()), reporter_id, reported_user_id, reason))
-        conn.commit()
-        return True, None
+            cursor.callproc('ProcessFraudReport', [
+                reporter_id, reported_user_id, reason, None, None  # OUT parameters
+            ])
+            
+            # Fetch the OUT parameters
+            cursor.execute("SELECT @_ProcessFraudReport_3 as success, @_ProcessFraudReport_4 as message")
+            result = cursor.fetchone()
+            
+            if result and result['success']:
+                return True, None
+            else:
+                return False, result['message'] if result else 'Unknown error'
+                
     except Exception as e:
-        conn.rollback()
         return False, str(e)
     finally:
         conn.close()
