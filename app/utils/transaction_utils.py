@@ -152,3 +152,315 @@ def get_all_transactions(user_id):
         return txs
     finally:
         conn.close()
+
+def rollback_transaction(transaction_id, reason):
+    """Rollback a transaction by reversing the balance changes"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Get the original transaction
+            cursor.execute('''
+                SELECT id, sender_id, receiver_id, amount, timestamp
+                FROM transactions 
+                WHERE id = %s
+            ''', (transaction_id,))
+            transaction = cursor.fetchone()
+            
+            if not transaction:
+                return False, "Transaction not found"
+            
+            # Check if transaction is within rollback window (72 hours)
+            from datetime import datetime, timedelta
+            if transaction['timestamp'] < datetime.now() - timedelta(hours=72):
+                return False, "Transaction is too old to rollback (72 hour limit)"
+            
+            # Check if already rolled back
+            cursor.execute('SELECT id FROM transactions WHERE note LIKE %s', (f'%ROLLBACK of {transaction_id}%',))
+            if cursor.fetchone():
+                return False, "Transaction has already been rolled back"
+            
+            # Reverse the transaction
+            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', 
+                         (transaction['amount'], transaction['sender_id']))
+            cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s', 
+                         (transaction['amount'], transaction['receiver_id']))
+            
+            # Create rollback transaction record
+            rollback_id = str(uuid.uuid4())
+            cursor.execute('''
+                INSERT INTO transactions (id, amount, payment_method, timestamp, sender_id, receiver_id, note, type, location)
+                VALUES (%s, %s, %s, NOW(), %s, %s, %s, %s, %s)
+            ''', (rollback_id, transaction['amount'], 'rollback', transaction['receiver_id'], transaction['sender_id'], 
+                  f'ROLLBACK of {transaction_id}: {reason}', 'Refund', None))
+            
+            # Log the rollback
+            cursor.execute('''
+                INSERT INTO admin_logs (id, admin_id, ip_address, timestamp, details)
+                VALUES (%s, %s, %s, NOW(), %s)
+            ''', (str(uuid.uuid4()), transaction['sender_id'], '127.0.0.1', 
+                  f'Transaction {transaction_id} rolled back: {reason}'))
+            
+            conn.commit()
+            return True, f"Transaction {transaction_id} successfully rolled back"
+            
+    except Exception as e:
+        conn.rollback()
+        return False, f"Rollback failed: {str(e)}"
+    finally:
+        conn.close()
+
+def get_transaction_status(transaction_id):
+    """Check if a transaction can be rolled back"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Get the transaction
+            cursor.execute('''
+                SELECT id, sender_id, receiver_id, amount, timestamp
+                FROM transactions 
+                WHERE id = %s
+            ''', (transaction_id,))
+            transaction = cursor.fetchone()
+            
+            if not transaction:
+                return "NOT_FOUND", False, "Transaction not found"
+            
+            # Check if already rolled back
+            cursor.execute('SELECT id FROM transactions WHERE note LIKE %s', (f'%ROLLBACK of {transaction_id}%',))
+            if cursor.fetchone():
+                return "ROLLED_BACK", False, "Transaction has already been rolled back"
+            
+            # Check rollback window (72 hours)
+            from datetime import datetime, timedelta
+            if transaction['timestamp'] < datetime.now() - timedelta(hours=72):
+                return "EXPIRED", False, "Transaction is too old to rollback (72 hour limit)"
+            
+            return "ELIGIBLE", True, "Transaction is eligible for rollback"
+            
+    except Exception as e:
+        return "ERROR", False, f"Error checking status: {str(e)}"
+    finally:
+        conn.close()
+
+def backup_user_balance(user_id, operation_type):
+    """Create a backup of user balance"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Get current balance
+            cursor.execute('SELECT balance FROM users WHERE id = %s', (user_id,))
+            user = cursor.fetchone()
+            
+            if not user:
+                return False, "User not found", None
+            
+            backup_id = str(uuid.uuid4())
+            
+            # Log the backup (using admin_logs table for now)
+            cursor.execute('''
+                INSERT INTO admin_logs (id, admin_id, ip_address, timestamp, details)
+                VALUES (%s, %s, %s, NOW(), %s)
+            ''', (backup_id, user_id, '127.0.0.1', 
+                  f'Balance backup created: {operation_type} - Balance: {user["balance"]}'))
+            
+            conn.commit()
+            return True, f"Balance backup created successfully", backup_id
+            
+    except Exception as e:
+        conn.rollback()
+        return False, f"Backup failed: {str(e)}", None
+    finally:
+        conn.close()
+
+def restore_user_balance(backup_id, reason):
+    """Restore user balance from backup"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Get backup information from admin_logs
+            cursor.execute('''
+                SELECT admin_id, details FROM admin_logs 
+                WHERE id = %s AND details LIKE '%Balance backup created%'
+            ''', (backup_id,))
+            backup = cursor.fetchone()
+            
+            if not backup:
+                return False, "Backup not found"
+            
+            # Extract balance from details (simple parsing)
+            import re
+            balance_match = re.search(r'Balance: (\d+(?:\.\d+)?)', backup['details'])
+            if not balance_match:
+                return False, "Unable to parse backup balance"
+            
+            balance = float(balance_match.group(1))
+            user_id = backup['admin_id']
+            
+            # Restore the balance
+            cursor.execute('UPDATE users SET balance = %s WHERE id = %s', (balance, user_id))
+            
+            # Log the restore
+            cursor.execute('''
+                INSERT INTO admin_logs (id, admin_id, ip_address, timestamp, details)
+                VALUES (%s, %s, %s, NOW(), %s)
+            ''', (str(uuid.uuid4()), user_id, '127.0.0.1', 
+                  f'Balance restored from backup {backup_id}: {reason}'))
+            
+            conn.commit()
+            return True, f"Balance restored successfully from backup {backup_id}"
+            
+    except Exception as e:
+        conn.rollback()
+        return False, f"Restore failed: {str(e)}"
+    finally:
+        conn.close()
+
+def auto_rollback_failed_transactions(hours_threshold=24):
+    """Auto-rollback failed transactions older than threshold"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            from datetime import datetime, timedelta
+            
+            # Find transactions that might be considered "failed"
+            # For now, we'll look for transactions that are older than threshold
+            # and don't have corresponding successful completions
+            threshold_time = datetime.now() - timedelta(hours=hours_threshold)
+            
+            cursor.execute('''
+                SELECT id, sender_id, receiver_id, amount
+                FROM transactions 
+                WHERE timestamp < %s 
+                AND note NOT LIKE '%ROLLBACK%'
+                AND type != 'Refund'
+            ''', (threshold_time,))
+            
+            potential_failed = cursor.fetchall()
+            rolled_back_count = 0
+            
+            for tx in potential_failed:
+                # Check if this transaction has already been rolled back
+                cursor.execute('SELECT id FROM transactions WHERE note LIKE %s', (f'%ROLLBACK of {tx["id"]}%',))
+                if not cursor.fetchone():
+                    # Try to rollback
+                    success, message = rollback_transaction(tx['id'], 'Auto-rollback due to age')
+                    if success:
+                        rolled_back_count += 1
+            
+            return True, f"Auto-rollback completed. {rolled_back_count} transactions rolled back.", rolled_back_count
+            
+    except Exception as e:
+        return False, f"Auto-rollback failed: {str(e)}", 0
+    finally:
+        conn.close()
+
+def get_transaction_history_with_status(user_id, limit=10, offset=0):
+    """Get transaction history with rollback status"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('''
+                SELECT t.id, t.amount, t.timestamp, t.note, t.type, t.sender_id, t.receiver_id,
+                       CASE 
+                           WHEN rb.id IS NOT NULL THEN 'ROLLED_BACK'
+                           WHEN t.timestamp < DATE_SUB(NOW(), INTERVAL 72 HOUR) THEN 'EXPIRED'
+                           ELSE 'ELIGIBLE'
+                       END as rollback_status
+                FROM transactions t
+                LEFT JOIN transactions rb ON rb.note LIKE CONCAT('%ROLLBACK of ', t.id, '%')
+                WHERE t.sender_id = %s OR t.receiver_id = %s
+                ORDER BY t.timestamp DESC
+                LIMIT %s OFFSET %s
+            ''', (user_id, user_id, limit, offset))
+            
+            transactions = cursor.fetchall()
+            return transactions
+            
+    except Exception as e:
+        return []
+    finally:
+        conn.close()
+
+def get_failed_transactions(limit=50):
+    """Get failed transactions for admin review"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            from datetime import datetime, timedelta
+            
+            # For now, we'll consider transactions older than 24 hours as potentially failed
+            # In a real implementation, you'd have a proper failed_transactions table
+            threshold_time = datetime.now() - timedelta(hours=24)
+            
+            cursor.execute('''
+                SELECT t.id as attempted_transaction_id, t.amount, t.timestamp as failure_timestamp,
+                       t.payment_method, t.note as failure_reason,
+                       CONCAT(s.first_name, ' ', s.last_name) as sender_name,
+                       CONCAT(r.first_name, ' ', r.last_name) as receiver_name
+                FROM transactions t
+                LEFT JOIN users s ON t.sender_id = s.id
+                LEFT JOIN users r ON t.receiver_id = r.id
+                LEFT JOIN transactions rb ON rb.note LIKE CONCAT('%ROLLBACK of ', t.id, '%')
+                WHERE t.timestamp < %s 
+                AND rb.id IS NULL
+                AND t.type != 'Refund'
+                ORDER BY t.timestamp DESC
+                LIMIT %s
+            ''', (threshold_time, limit))
+            
+            failed_transactions = cursor.fetchall()
+            return failed_transactions
+            
+    except Exception as e:
+        return []
+    finally:
+        conn.close()
+
+def get_system_audit_log(limit=50, operation_type=None):
+    """Get system audit log"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            if operation_type:
+                cursor.execute('''
+                    SELECT al.id, al.timestamp, al.details,
+                           CASE 
+                               WHEN al.details LIKE '%rollback%' THEN 'ROLLBACK'
+                               WHEN al.details LIKE '%backup%' THEN 'BACKUP'
+                               WHEN al.details LIKE '%restore%' THEN 'RESTORE'
+                               ELSE 'OTHER'
+                           END as operation_type,
+                           'TRANSACTION' as entity_type,
+                           CONCAT(u.first_name, ' ', u.last_name) as user_name,
+                           TRUE as success
+                    FROM admin_logs al
+                    LEFT JOIN users u ON al.admin_id = u.id
+                    WHERE al.details LIKE %s
+                    ORDER BY al.timestamp DESC
+                    LIMIT %s
+                ''', (f'%{operation_type.lower()}%', limit))
+            else:
+                cursor.execute('''
+                    SELECT al.id, al.timestamp, al.details,
+                           CASE 
+                               WHEN al.details LIKE '%rollback%' THEN 'ROLLBACK'
+                               WHEN al.details LIKE '%backup%' THEN 'BACKUP'
+                               WHEN al.details LIKE '%restore%' THEN 'RESTORE'
+                               ELSE 'OTHER'
+                           END as operation_type,
+                           'TRANSACTION' as entity_type,
+                           CONCAT(u.first_name, ' ', u.last_name) as user_name,
+                           TRUE as success
+                    FROM admin_logs al
+                    LEFT JOIN users u ON al.admin_id = u.id
+                    ORDER BY al.timestamp DESC
+                    LIMIT %s
+                ''', (limit,))
+            
+            audit_logs = cursor.fetchall()
+            return audit_logs
+            
+    except Exception as e:
+        return []
+    finally:
+        conn.close()
