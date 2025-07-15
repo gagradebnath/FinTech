@@ -117,7 +117,11 @@ def save_budget():
 
 @budget_bp.route('/get_budget/<budget_id>', methods=['GET'])
 def get_budget_by_id_route(budget_id):
-    user = get_current_user()
+    # Support both session-based and JWT-based authentication
+    user = get_current_user_from_jwt()
+    if not user:
+        user = get_current_user()
+    
     if not user:
         return jsonify({'success': False, 'message': 'Not logged in'}), 401
     

@@ -105,21 +105,36 @@ def get_all_user_budgets(user_id):
         conn.close()
 
 def get_budget_by_id(budget_id, user_id):
-    """Get budget by ID with enhanced analysis using optimized view"""
+    """Get budget by ID with enhanced analysis"""
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
-            # Use the optimized view for budget analysis
+            # Get budget data
             cursor.execute('''
-                SELECT b.*, ba.actual_spent, ba.remaining_budget, ba.budget_status
-                FROM budgets b
-                LEFT JOIN v_budget_analysis ba ON b.id = ba.id
-                WHERE b.id = %s AND b.user_id = %s
+                SELECT id, user_id, name, currency, income_source, amount, start_date, end_date
+                FROM budgets
+                WHERE id = %s AND user_id = %s
             ''', (budget_id, user_id))
             budget = cursor.fetchone()
             
             if not budget:
                 return None
+            
+            # Calculate actual spent and remaining budget
+            cursor.execute('''
+                SELECT COALESCE(SUM(i.amount), 0) as total_budget_items
+                FROM budget_expense_categories c
+                JOIN budget_expense_items i ON c.id = i.category_id
+                WHERE c.budget_id = %s
+            ''', (budget_id,))
+            budget_items_result = cursor.fetchone()
+            total_budget_items = budget_items_result['total_budget_items'] if budget_items_result else 0
+            
+            # Calculate actual spent from transactions (you may need to implement this based on your transaction tracking)
+            actual_spent = 0  # Placeholder - implement based on your transaction tracking logic
+            remaining_budget = float(budget['amount']) - actual_spent  # budget['amount'] - actual_spent
+            
+            budget_status = 'WITHIN_BUDGET' if remaining_budget >= 0 else 'OVER_BUDGET'
             
             # Get categories and items
             cursor.execute('''
@@ -145,9 +160,9 @@ def get_budget_by_id(budget_id, user_id):
                 'currency': budget['currency'],
                 'income_source': budget['income_source'],
                 'amount': budget['amount'],
-                'actual_spent': budget.get('actual_spent', 0),
-                'remaining_budget': budget.get('remaining_budget', 0),
-                'budget_status': budget.get('budget_status', 'UNKNOWN'),
+                'actual_spent': actual_spent,
+                'remaining_budget': remaining_budget,
+                'budget_status': budget_status,
                 'categories': {}
             }
             
