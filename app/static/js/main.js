@@ -42,10 +42,11 @@ function initializeCharts() {
         new Chart(txChartEl, {
             type: 'bar',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],                datasets: [{
+                labels: [...],
+                datasets: [{
                     label: 'Transactions',
-                    data: [250, 300, 750, 400, 450, 460, 470, 480, 490],
-                    backgroundColor: '#3ed6c2',
+                    data: [...],
+                    backgroundColor: '#3ed641ff',
                     borderRadius: 5
                 }]
             },
