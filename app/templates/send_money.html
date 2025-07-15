@@ -73,13 +73,19 @@
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
                             data-bs-toggle="dropdown">
-                            This Week
+                            {% if time_filter == 'today' %}Today
+                            {% elif time_filter == 'yesterday' %}Yesterday
+                            {% elif time_filter == 'month' %}This Month
+                            {% elif time_filter == 'all' %}All Time
+                            {% else %}This Week
+                            {% endif %}
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Today</a></li>
-                            <li><a class="dropdown-item" href="#">Yesterday</a></li>
-                            <li><a class="dropdown-item" href="#">This Week</a></li>
-                            <li><a class="dropdown-item" href="#">This Month</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('transaction.send_money_route', filter='today') }}">Today</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('transaction.send_money_route', filter='yesterday') }}">Yesterday</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('transaction.send_money_route', filter='week') }}">This Week</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('transaction.send_money_route', filter='month') }}">This Month</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('transaction.send_money_route', filter='all') }}">All Time</a></li>
                         </ul>
                     </div>
                 </div>

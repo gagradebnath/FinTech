@@ -138,3 +138,17 @@ def agent_cash_out(agent_id, user_id, amount):
         return (None, f"Failed to cash out: {str(e)}")
     finally:
         conn.close()
+def get_all_transactions(user_id):
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('''
+                SELECT t.amount, t.timestamp, t.note, t.location, t.type, t.receiver_id, t.sender_id, t.payment_method
+                FROM transactions t
+                WHERE t.sender_id = %s OR t.receiver_id = %s
+                ORDER BY t.timestamp DESC
+            ''', (user_id, user_id))
+            txs = cursor.fetchall()
+        return txs
+    finally:
+        conn.close()
