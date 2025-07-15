@@ -170,6 +170,89 @@
     <div class="mt-3 text-primary fw-bold fs-4">Processing Transaction...</div>
 </div>
 
+<!-- Overspending Warning Modal -->
+{% if overspending_warning %}
+<div class="modal fade" id="overspendingWarningModal" tabindex="-1" aria-labelledby="overspendingWarningModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="overspendingWarningModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Overspending Alert
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning" role="alert">
+                    <h6 class="alert-heading">⚠️ Budget Exceeded</h6>
+                    <p class="mb-3">{{ overspending_warning.message }}</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Transaction Details:</strong>
+                            <ul class="list-unstyled mt-2">
+                                <li><strong>Category:</strong> {{ overspending_warning.category }}</li>
+                                <li><strong>Amount:</strong> ${{ "%.2f"|format(overspending_warning.expense_amount) }}</li>
+                                <li><strong>Current Budget:</strong> ${{ "%.2f"|format(overspending_warning.budget) }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Overspending Analysis:</strong>
+                            <ul class="list-unstyled mt-2">
+                                <li><strong>Over Budget By:</strong> 
+                                    <span class="text-danger">${{ "%.2f"|format(overspending_warning.overspending_amount) }}</span>
+                                </li>
+                                <li><strong>Percentage Over:</strong> 
+                                    <span class="text-danger">{{ "%.1f"|format(overspending_warning.percentage_over) }}%</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info" role="alert">
+                    <strong>What would you like to do?</strong>
+                    <p class="mb-0">You can still proceed with this transaction if you wish, or cancel and return to your dashboard.</p>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <form method="POST" class="me-2">
+                    <!-- Preserve form data -->
+                    <input type="hidden" name="recipient_identifier" value="{{ overspending_warning.recipient_identifier }}">
+                    <input type="hidden" name="amount" value="{{ overspending_warning.amount }}">
+                    <input type="hidden" name="payment_method" value="{{ overspending_warning.payment_method }}">
+                    <input type="hidden" name="note" value="{{ overspending_warning.note }}">
+                    <input type="hidden" name="location" value="{{ overspending_warning.location }}">
+                    <input type="hidden" name="cancel_transaction" value="1">
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Cancel Transaction
+                    </button>
+                </form>
+                
+                <form method="POST">
+                    <!-- Preserve form data -->
+                    <input type="hidden" name="recipient_identifier" value="{{ overspending_warning.recipient_identifier }}">
+                    <input type="hidden" name="amount" value="{{ overspending_warning.amount }}">
+                    <input type="hidden" name="payment_method" value="{{ overspending_warning.payment_method }}">
+                    <input type="hidden" name="note" value="{{ overspending_warning.note }}">
+                    <input type="hidden" name="location" value="{{ overspending_warning.location }}">
+                    <input type="hidden" name="confirm_overspending" value="1">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check-circle me-1"></i>Proceed Anyway
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var warningModal = new bootstrap.Modal(document.getElementById('overspendingWarningModal'));
+        warningModal.show();
+    });
+</script>
+{% endif %}
+
 <!-- Error popup -->
 {% if error %}
 <div class="modal fade" id="sendMoneyErrorModal" tabindex="-1" aria-labelledby="sendMoneyErrorModalLabel"

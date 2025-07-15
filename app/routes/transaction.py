@@ -3,6 +3,7 @@ import uuid
 from .user import get_current_user
 from app.utils.transaction_utils import get_user_by_id, send_money, lookup_user_by_identifier, is_user_flagged_fraud, get_all_transactions
 from app.utils.permissions_utils import has_permission
+<<<<<<< HEAD
 from app.utils.jwt_auth import token_required, get_current_user_from_jwt
 from datetime import datetime, timedelta
 import calendar
@@ -34,6 +35,14 @@ def get_transactions_api():
 def send_money_route():
     # Support both session-based and JWT-based authentication
     user = get_current_user_from_jwt()
+=======
+from app.utils.overspending_detector import detect_overspending
+transaction_bp = Blueprint('transaction', __name__)
+
+@transaction_bp.route('/transaction', methods=['GET', 'POST'])
+def save_transaction():
+    user = get_current_user()
+>>>>>>> budget
     if not user:
         # Check if it's an API request
         is_api_request = request.headers.get('Authorization') or request.args.get('token') or request.is_json
