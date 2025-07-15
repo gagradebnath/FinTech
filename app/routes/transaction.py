@@ -3,8 +3,8 @@ import uuid
 from .user import get_current_user
 from app.utils.transaction_utils import get_user_by_id, send_money, lookup_user_by_identifier, is_user_flagged_fraud, get_all_transactions
 from app.utils.permissions_utils import has_permission
-<<<<<<< HEAD
 from app.utils.jwt_auth import token_required, get_current_user_from_jwt
+from app.utils.overspending_detector import detect_overspending
 from datetime import datetime, timedelta
 import calendar
 
@@ -31,18 +31,38 @@ def get_transactions_api():
         'count': len(transactions)
     }), 200
 
+@transaction_bp.route('/api/check-overspending', methods=['POST'])
+def check_overspending():
+    """API endpoint to check if a transaction would cause overspending"""
+    user = get_current_user_from_jwt()
+    if not user:
+        user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    data = request.get_json()
+    expense_description = data.get('description', '')
+    expense_amount = data.get('amount', 0)
+    
+    try:
+        expense_amount = float(expense_amount)
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Invalid amount'}), 400
+    
+    # Check for overspending
+    overspending_info = detect_overspending(user['id'], expense_description, expense_amount)
+    
+    return jsonify({
+        'success': True,
+        'overspending_info': overspending_info
+    }), 200
+
 @transaction_bp.route('/send-money', methods=['GET', 'POST'])
 def send_money_route():
     # Support both session-based and JWT-based authentication
     user = get_current_user_from_jwt()
-=======
-from app.utils.overspending_detector import detect_overspending
-transaction_bp = Blueprint('transaction', __name__)
-
-@transaction_bp.route('/transaction', methods=['GET', 'POST'])
-def save_transaction():
-    user = get_current_user()
->>>>>>> budget
+    if not user:
+        user = get_current_user()
     if not user:
         # Check if it's an API request
         is_api_request = request.headers.get('Authorization') or request.args.get('token') or request.is_json
@@ -111,6 +131,52 @@ def save_transaction():
         elif is_user_flagged_fraud(recipient['id']):
             error = 'Cannot send money: recipient is flagged for fraud.'
         else:
+            # Check if this is a force override (user clicked "proceed anyway")
+            force_override = request.form.get('force_override') == 'true' or (request.is_json and data.get('force_override') == True)
+            
+            # Check for overspending only if not forcing override
+            if not force_override:
+                try:
+                    amount_float = float(amount)
+                    overspending_info = detect_overspending(user['id'], note or '', amount_float)
+                    
+                    # If overspending detected, return warning instead of processing
+                    if overspending_info['is_overspending']:
+                        if request.is_json:
+                            return jsonify({
+                                'warning': True,
+                                'overspending_info': overspending_info
+                            }), 200
+                        else:
+                            # For form submission, render template with warning
+                            return render_template(
+                                'send_money.html',
+                                error=None,
+                                success=None,
+                                transactions=filtered_transactions,
+                                user=user,
+                                time_filter=time_filter,
+                                overspending_warning=overspending_info,
+                                form_data={
+                                    'recipient_identifier': recipient_identifier,
+                                    'amount': amount,
+                                    'payment_method': payment_method,
+                                    'note': note,
+                                    'location': location
+                                }
+                            )
+                except (ValueError, TypeError):
+                    error = 'Invalid amount format.'
+                    return render_template(
+                        'send_money.html',
+                        error=error,
+                        success=success,
+                        transactions=filtered_transactions,
+                        user=user,
+                        time_filter=time_filter
+                    )
+            
+            # Process the transaction
             ok, msg, updated_user = send_money(
                 user['id'], recipient['id'], amount, payment_method, note, location, 'Transfer')
             if ok:

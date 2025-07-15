@@ -216,7 +216,7 @@ def get_category_budget(user_id, category_name):
             if result and result[0] is not None:
                 return float(result[0])
             else:
-                return 
+                return 0.0 
                 
     except Exception as e:
         print(f"Error retrieving budget for user {user_id}, category {category_name}: {e}")

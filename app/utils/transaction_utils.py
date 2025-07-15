@@ -153,7 +153,7 @@ def get_all_transactions(user_id):
     finally:
         conn.close()
 
-def rollback_transaction(transaction_id, reason):
+def rollback_transaction(transaction_id, reason, admin_user_id=None):
     """Rollback a transaction by reversing the balance changes"""
     conn = current_app.get_db_connection()
     try:
@@ -193,12 +193,19 @@ def rollback_transaction(transaction_id, reason):
             ''', (rollback_id, transaction['amount'], 'rollback', transaction['receiver_id'], transaction['sender_id'], 
                   f'ROLLBACK of {transaction_id}: {reason}', 'Refund', None))
             
-            # Log the rollback
-            cursor.execute('''
-                INSERT INTO admin_logs (id, admin_id, ip_address, timestamp, details)
-                VALUES (%s, %s, %s, NOW(), %s)
-            ''', (str(uuid.uuid4()), transaction['sender_id'], '127.0.0.1', 
-                  f'Transaction {transaction_id} rolled back: {reason}'))
+            # Log the rollback only if admin_user_id is provided and exists
+            if admin_user_id:
+                try:
+                    cursor.execute('SELECT id FROM users WHERE id = %s', (admin_user_id,))
+                    if cursor.fetchone():
+                        cursor.execute('''
+                            INSERT INTO admin_logs (id, admin_id, ip_address, timestamp, details)
+                            VALUES (%s, %s, %s, NOW(), %s)
+                        ''', (str(uuid.uuid4()), admin_user_id, '127.0.0.1', 
+                              f'Transaction {transaction_id} rolled back: {reason}'))
+                except Exception as log_error:
+                    # If logging fails, continue with rollback but log the error
+                    print(f"Failed to log rollback action: {log_error}")
             
             conn.commit()
             return True, f"Transaction {transaction_id} successfully rolled back"
@@ -242,7 +249,7 @@ def get_transaction_status(transaction_id):
     finally:
         conn.close()
 
-def backup_user_balance(user_id, operation_type):
+def backup_user_balance(user_id, operation_type, admin_user_id=None):
     """Create a backup of user balance"""
     conn = current_app.get_db_connection()
     try:
@@ -256,12 +263,18 @@ def backup_user_balance(user_id, operation_type):
             
             backup_id = str(uuid.uuid4())
             
-            # Log the backup (using admin_logs table for now)
-            cursor.execute('''
-                INSERT INTO admin_logs (id, admin_id, ip_address, timestamp, details)
-                VALUES (%s, %s, %s, NOW(), %s)
-            ''', (backup_id, user_id, '127.0.0.1', 
-                  f'Balance backup created: {operation_type} - Balance: {user["balance"]}'))
+            # Log the backup only if admin_user_id is provided and exists
+            if admin_user_id:
+                try:
+                    cursor.execute('SELECT id FROM users WHERE id = %s', (admin_user_id,))
+                    if cursor.fetchone():
+                        cursor.execute('''
+                            INSERT INTO admin_logs (id, admin_id, ip_address, timestamp, details)
+                            VALUES (%s, %s, %s, NOW(), %s)
+                        ''', (backup_id, admin_user_id, '127.0.0.1', 
+                              f'Balance backup created for user {user_id}: {operation_type} - Balance: {user["balance"]}'))
+                except Exception as log_error:
+                    print(f"Failed to log backup action: {log_error}")
             
             conn.commit()
             return True, f"Balance backup created successfully", backup_id
@@ -272,7 +285,7 @@ def backup_user_balance(user_id, operation_type):
     finally:
         conn.close()
 
-def restore_user_balance(backup_id, reason):
+def restore_user_balance(backup_id, reason, admin_user_id=None):
     """Restore user balance from backup"""
     conn = current_app.get_db_connection()
     try:
@@ -294,17 +307,29 @@ def restore_user_balance(backup_id, reason):
                 return False, "Unable to parse backup balance"
             
             balance = float(balance_match.group(1))
-            user_id = backup['admin_id']
+            # Extract user_id from details instead of using admin_id
+            user_match = re.search(r'for user ([^:]+):', backup['details'])
+            if user_match:
+                user_id = user_match.group(1)
+            else:
+                # Fallback to admin_id if user_id not found in details
+                user_id = backup['admin_id']
             
             # Restore the balance
             cursor.execute('UPDATE users SET balance = %s WHERE id = %s', (balance, user_id))
             
-            # Log the restore
-            cursor.execute('''
-                INSERT INTO admin_logs (id, admin_id, ip_address, timestamp, details)
-                VALUES (%s, %s, %s, NOW(), %s)
-            ''', (str(uuid.uuid4()), user_id, '127.0.0.1', 
-                  f'Balance restored from backup {backup_id}: {reason}'))
+            # Log the restore only if admin_user_id is provided and exists
+            if admin_user_id:
+                try:
+                    cursor.execute('SELECT id FROM users WHERE id = %s', (admin_user_id,))
+                    if cursor.fetchone():
+                        cursor.execute('''
+                            INSERT INTO admin_logs (id, admin_id, ip_address, timestamp, details)
+                            VALUES (%s, %s, %s, NOW(), %s)
+                        ''', (str(uuid.uuid4()), admin_user_id, '127.0.0.1', 
+                              f'Balance restored from backup {backup_id} for user {user_id}: {reason}'))
+                except Exception as log_error:
+                    print(f"Failed to log restore action: {log_error}")
             
             conn.commit()
             return True, f"Balance restored successfully from backup {backup_id}"
@@ -315,7 +340,7 @@ def restore_user_balance(backup_id, reason):
     finally:
         conn.close()
 
-def auto_rollback_failed_transactions(hours_threshold=24):
+def auto_rollback_failed_transactions(hours_threshold=24, admin_user_id=None):
     """Auto-rollback failed transactions older than threshold"""
     conn = current_app.get_db_connection()
     try:
@@ -343,7 +368,7 @@ def auto_rollback_failed_transactions(hours_threshold=24):
                 cursor.execute('SELECT id FROM transactions WHERE note LIKE %s', (f'%ROLLBACK of {tx["id"]}%',))
                 if not cursor.fetchone():
                     # Try to rollback
-                    success, message = rollback_transaction(tx['id'], 'Auto-rollback due to age')
+                    success, message = rollback_transaction(tx['id'], 'Auto-rollback due to age', admin_user_id)
                     if success:
                         rolled_back_count += 1
             

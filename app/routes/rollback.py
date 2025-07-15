@@ -51,7 +51,7 @@ def rollback_transaction_route():
             return jsonify({'success': False, 'message': status_message}), 400
         
         # Perform rollback
-        success, message = rollback_transaction(transaction_id, reason)
+        success, message = rollback_transaction(transaction_id, reason, session.get('user_id'))
         
         if success:
             logger.info(f"Admin {session['user_id']} rolled back transaction {transaction_id}")
@@ -99,7 +99,7 @@ def backup_user_balance_route():
         if not user_id:
             return jsonify({'success': False, 'message': 'User ID required'}), 400
         
-        success, message, backup_id = backup_user_balance(user_id, operation_type)
+        success, message, backup_id = backup_user_balance(user_id, operation_type, session.get('user_id'))
         
         if success:
             logger.info(f"Admin {session['user_id']} created backup for user {user_id}: {backup_id}")
@@ -126,7 +126,7 @@ def restore_user_balance_route():
         if not backup_id:
             return jsonify({'success': False, 'message': 'Backup ID required'}), 400
         
-        success, message = restore_user_balance(backup_id, reason)
+        success, message = restore_user_balance(backup_id, reason, session.get('user_id'))
         
         if success:
             logger.info(f"Admin {session['user_id']} restored balance from backup {backup_id}")
@@ -149,7 +149,7 @@ def auto_rollback_route():
         data = request.get_json()
         hours_threshold = data.get('hours_threshold', 24)
         
-        success, message, rolled_back_count = auto_rollback_failed_transactions(hours_threshold)
+        success, message, rolled_back_count = auto_rollback_failed_transactions(hours_threshold, session.get('user_id'))
         
         if success:
             logger.info(f"Admin {session['user_id']} performed auto-rollback: {rolled_back_count} transactions")
