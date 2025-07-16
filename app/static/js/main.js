@@ -87,45 +87,6 @@ function initializeCharts() {
             }
         });
     }
-
-    // Expense chart
-    const expenseChartEl = document.getElementById('expenseChart');
-    if (expenseChartEl) {
-        new Chart(expenseChartEl, {
-            type: 'doughnut',
-            data: {
-                labels: ['Shopping', 'Food', 'Travel', 'Health'],
-                datasets: [{
-                    data: [30, 20, 35, 15],                    backgroundColor: [
-                        '#ff6384',
-                        '#3ed6c2',
-                        '#ffcd56',
-                        '#8a5fff'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: 'rgba(255, 255, 255, 0.7)'
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(26, 26, 46, 0.9)',
-                        titleColor: '#3ed6c2',
-                        bodyColor: 'rgba(255, 255, 255, 0.8)',
-                        borderColor: 'rgba(62, 214, 194, 0.3)',
-                        borderWidth: 1
-                    }
-                },
-                cutout: '70%'
-            }
-        });
-    }
 }
 
 // Apply animations to elements

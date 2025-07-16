@@ -266,6 +266,6 @@ def transaction_report():
                         (user['id'], year, m))
                     row = cursor.fetchone()
                     spent.append(float(list(row.values())[0]) if row else 0)
-                return jsonify({'labels': labels, 'received': received, 'spent': spent})
+                return jsonify({'labels': labels, 'received': received, 'spent': spent, 'year': year})
     finally:
         conn.close()

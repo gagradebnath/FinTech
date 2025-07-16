@@ -12,7 +12,9 @@ from app.utils.dashboard import get_user_budgets, get_recent_transactions
 from app.utils.expense_habit import get_expense_habit, upsert_expense_habit
 from app.utils.profile import get_user_and_contact, update_user_and_contact
 from app.utils.permissions_utils import has_permission
+from app.utils.budget_utils import get_all_user_budgets_with_categories
 from app.utils.jwt_auth import generate_jwt_token, token_required, get_current_user_from_jwt
+
 
 user_bp = Blueprint('user', __name__)
 
@@ -185,13 +187,15 @@ def dashboard():
         return redirect(url_for('user.login'))
     
     if not has_permission(user['id'], 'perm_view_dashboard'):
+
         error_msg = 'Permission denied.'
         is_api_request = request.headers.get('Authorization') or request.args.get('token')
         if is_api_request:
             return jsonify({'error': error_msg}), 403
         return render_template('dashboard.html', user=user, budgets=[], transactions=[], error=error_msg)
     
-    budgets = get_user_budgets(user['id'])
+    budgets = get_all_user_budgets_with_categories(user['id'])
+
     transactions = get_recent_transactions(user['id'])
     
     # Check if this is an API request
