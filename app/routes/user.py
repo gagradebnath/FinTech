@@ -13,6 +13,7 @@ from app.utils.dashboard import get_user_budgets, get_recent_transactions
 from app.utils.expense_habit import get_expense_habit, upsert_expense_habit
 from app.utils.profile import get_user_and_contact, update_user_and_contact
 from app.utils.permissions_utils import has_permission
+from app.utils.budget_utils import get_all_user_budgets_with_categories
 
 user_bp = Blueprint('user', __name__)
 
@@ -105,7 +106,7 @@ def dashboard():
         return redirect(url_for('user.login'))
     if not has_permission(user['id'], 'perm_view_dashboard'):
         return render_template('dashboard.html', user=user, budgets=[], transactions=[], error='Permission denied.')
-    budgets = get_user_budgets(user['id'])
+    budgets = get_all_user_budgets_with_categories(user['id'])
     transactions = get_recent_transactions(user['id'])
     
     # Debug: Ensure all transaction timestamps are proper datetime objects

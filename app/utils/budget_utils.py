@@ -150,3 +150,29 @@ def get_budget_by_id(budget_id, user_id):
             })
     
     return result
+def get_all_user_budgets_with_categories(user_id):
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Get all budgets for the user
+            cursor.execute("SELECT id, name, amount, currency FROM budgets WHERE user_id = %s", (user_id,))
+            budgets = cursor.fetchall()
+            result = []
+            for b in budgets:
+                budget_id = b['id']
+                # Get all categories and their amounts for this budget
+                cursor.execute(
+                    "SELECT category_name, amount FROM budget_expense_categories WHERE budget_id = %s",
+                    (budget_id,)
+                )
+                categories = {row['category_name']: float(row['amount']) for row in cursor.fetchall()}
+                result.append({
+                    'id': budget_id,
+                    'name': b['name'],
+                    'amount': float(b['amount']) if b['amount'] else 0,
+                    'currency': b['currency'],
+                    'categories': categories
+                })
+            return result
+    finally:
+        conn.close()
