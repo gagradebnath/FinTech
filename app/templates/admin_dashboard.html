@@ -16,6 +16,7 @@
         <div class="card-body">
             <h5 class="card-title">Welcome, {{ user.first_name }} {{ user.last_name }} (Admin)!</h5>
             <p class="card-text">User ID: <strong>{{ user.id }}</strong></p>
+            <a href="{{ url_for('analytics.test_features') }}" class="btn btn-info mt-2">View Advanced SQL Features Test Page</a>
         </div>
     </div>
     <div class="row">

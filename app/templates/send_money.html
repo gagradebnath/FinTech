@@ -61,7 +61,7 @@
                     </form>
                 </div>
             </div>
-            <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-secondary mb-4">
+            <a href="{{ get_dashboard_url_for_user(user) }}" class="btn btn-outline-secondary mb-4">
                 <i class="bi bi-arrow-left"></i> Back to Dashboard
             </a>
         </div>
@@ -170,6 +170,89 @@
     <div class="mt-3 text-primary fw-bold fs-4">Processing Transaction...</div>
 </div>
 
+<!-- Overspending Warning Modal -->
+{% if overspending_warning %}
+<div class="modal fade" id="overspendingWarningModal" tabindex="-1" aria-labelledby="overspendingWarningModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="overspendingWarningModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Overspending Alert
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning" role="alert">
+                    <h6 class="alert-heading">⚠️ Budget Exceeded</h6>
+                    <p class="mb-3">{{ overspending_warning.message }}</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Transaction Details:</strong>
+                            <ul class="list-unstyled mt-2">
+                                <li><strong>Category:</strong> {{ overspending_warning.category }}</li>
+                                <li><strong>Amount:</strong> ${{ "%.2f"|format(overspending_warning.expense_amount) }}</li>
+                                <li><strong>Current Budget:</strong> ${{ "%.2f"|format(overspending_warning.budget) }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Overspending Analysis:</strong>
+                            <ul class="list-unstyled mt-2">
+                                <li><strong>Over Budget By:</strong> 
+                                    <span class="text-danger">${{ "%.2f"|format(overspending_warning.overspending_amount) }}</span>
+                                </li>
+                                <li><strong>Percentage Over:</strong> 
+                                    <span class="text-danger">{{ "%.1f"|format(overspending_warning.percentage_over) }}%</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info" role="alert">
+                    <strong>What would you like to do?</strong>
+                    <p class="mb-0">You can still proceed with this transaction if you wish, or cancel and return to your dashboard.</p>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <form method="POST" class="me-2">
+                    <!-- Preserve form data -->
+                    <input type="hidden" name="recipient_identifier" value="{{ overspending_warning.recipient_identifier }}">
+                    <input type="hidden" name="amount" value="{{ overspending_warning.amount }}">
+                    <input type="hidden" name="payment_method" value="{{ overspending_warning.payment_method }}">
+                    <input type="hidden" name="note" value="{{ overspending_warning.note }}">
+                    <input type="hidden" name="location" value="{{ overspending_warning.location }}">
+                    <input type="hidden" name="cancel_transaction" value="1">
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Cancel Transaction
+                    </button>
+                </form>
+                
+                <form method="POST">
+                    <!-- Preserve form data -->
+                    <input type="hidden" name="recipient_identifier" value="{{ overspending_warning.recipient_identifier }}">
+                    <input type="hidden" name="amount" value="{{ overspending_warning.amount }}">
+                    <input type="hidden" name="payment_method" value="{{ overspending_warning.payment_method }}">
+                    <input type="hidden" name="note" value="{{ overspending_warning.note }}">
+                    <input type="hidden" name="location" value="{{ overspending_warning.location }}">
+                    <input type="hidden" name="confirm_overspending" value="1">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check-circle me-1"></i>Proceed Anyway
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var warningModal = new bootstrap.Modal(document.getElementById('overspendingWarningModal'));
+        warningModal.show();
+    });
+</script>
+{% endif %}
+
 <!-- Error popup -->
 {% if error %}
 <div class="modal fade" id="sendMoneyErrorModal" tabindex="-1" aria-labelledby="sendMoneyErrorModalLabel"
@@ -194,6 +277,74 @@
         var errorModal = new bootstrap.Modal(document.getElementById('sendMoneyErrorModal'));
         errorModal.show();
     });
+</script>
+{% endif %}
+
+<!-- Overspending Warning Modal -->
+{% if overspending_warning %}
+<div class="modal fade" id="overspendingWarningModal" tabindex="-1" aria-labelledby="overspendingWarningModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="overspendingWarningModalLabel">
+                    <i class="bi bi-exclamation-triangle"></i> Budget Warning
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-dark">
+                <div class="alert alert-warning">
+                    <h6><strong>{{ overspending_warning.message }}</strong></h6>
+                    <hr>
+                    <p><strong>Category:</strong> {{ overspending_warning.category }}</p>
+                    <p><strong>Budget Remaining:</strong> ${{ "%.2f"|format(overspending_warning.budget) }}</p>
+                    <p><strong>Transaction Amount:</strong> ${{ "%.2f"|format(overspending_warning.expense_amount) }}</p>
+                    {% if overspending_warning.is_overspending %}
+                    <p><strong>Amount Over Budget:</strong> ${{ "%.2f"|format(overspending_warning.overspending_amount) }}</p>
+                    <p><strong>Percentage Over:</strong> {{ overspending_warning.percentage_over }}%</p>
+                    {% endif %}
+                </div>
+                <p>Do you want to proceed with this transaction anyway?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="proceedWithTransaction()">
+                    <i class="bi bi-arrow-right"></i> Proceed Anyway
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var overspendingModal = new bootstrap.Modal(document.getElementById('overspendingWarningModal'));
+        overspendingModal.show();
+    });
+
+    function proceedWithTransaction() {
+        // Add hidden input to force override
+        var form = document.querySelector('form');
+        var forceOverrideInput = document.createElement('input');
+        forceOverrideInput.type = 'hidden';
+        forceOverrideInput.name = 'force_override';
+        forceOverrideInput.value = 'true';
+        form.appendChild(forceOverrideInput);
+        
+        // Pre-fill the form with the previous data
+        {% if form_data %}
+        document.getElementById('recipient_identifier').value = '{{ form_data.recipient_identifier|e }}';
+        document.getElementById('amount').value = '{{ form_data.amount|e }}';
+        document.getElementById('payment_method').value = '{{ form_data.payment_method|e }}';
+        document.getElementById('note').value = '{{ form_data.note|e }}';
+        document.getElementById('location').value = '{{ form_data.location|e }}';
+        {% endif %}
+        
+        // Hide modal and submit form
+        var modal = bootstrap.Modal.getInstance(document.getElementById('overspendingWarningModal'));
+        modal.hide();
+        form.submit();
+    }
 </script>
 {% endif %}
 
@@ -227,11 +378,126 @@
     document.addEventListener('DOMContentLoaded', function () {
         var sendMoneyForm = document.querySelector('form');
         var loadingOverlay = document.getElementById('loadingOverlay');
+        
         if (sendMoneyForm && loadingOverlay) {
-            sendMoneyForm.addEventListener('submit', function () {
-                loadingOverlay.style.display = 'flex';
+            sendMoneyForm.addEventListener('submit', function (e) {
+                // Check if this is a force override submission
+                var forceOverride = document.querySelector('input[name="force_override"]');
+                if (forceOverride && forceOverride.value === 'true') {
+                    // Allow the form to submit normally
+                    loadingOverlay.style.display = 'flex';
+                    return;
+                }
+                
+                // Prevent default submission to check for overspending first
+                e.preventDefault();
+                
+                // Get form data
+                var formData = new FormData(sendMoneyForm);
+                var amount = formData.get('amount');
+                var note = formData.get('note');
+                
+                // Check for overspending via API
+                fetch('/api/check-overspending', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        description: note || ''
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.overspending_info.is_overspending) {
+                        // Show overspending warning modal
+                        showOverspendingWarning(data.overspending_info);
+                    } else {
+                        // No overspending, proceed with normal submission
+                        loadingOverlay.style.display = 'flex';
+                        sendMoneyForm.submit();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking overspending:', error);
+                    // If there's an error, proceed with normal submission
+                    loadingOverlay.style.display = 'flex';
+                    sendMoneyForm.submit();
+                });
             });
         }
     });
+
+    function showOverspendingWarning(overspendingInfo) {
+        // Create modal dynamically if not from server-side warning
+        var modalHtml = `
+            <div class="modal fade" id="dynamicOverspendingWarningModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title">
+                                <i class="bi bi-exclamation-triangle"></i> Budget Warning
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-dark">
+                            <div class="alert alert-warning">
+                                <h6><strong>${overspendingInfo.message}</strong></h6>
+                                <hr>
+                                <p><strong>Category:</strong> ${overspendingInfo.category}</p>
+                                <p><strong>Budget Remaining:</strong> $${overspendingInfo.budget.toFixed(2)}</p>
+                                <p><strong>Transaction Amount:</strong> $${overspendingInfo.expense_amount.toFixed(2)}</p>
+                                <p><strong>Amount Over Budget:</strong> $${overspendingInfo.overspending_amount.toFixed(2)}</p>
+                                <p><strong>Percentage Over:</strong> ${overspendingInfo.percentage_over}%</p>
+                            </div>
+                            <p>Do you want to proceed with this transaction anyway?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-warning" onclick="proceedWithDynamicTransaction()">
+                                <i class="bi bi-arrow-right"></i> Proceed Anyway
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing dynamic modal if any
+        var existingModal = document.getElementById('dynamicOverspendingWarningModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Show modal
+        var modal = new bootstrap.Modal(document.getElementById('dynamicOverspendingWarningModal'));
+        modal.show();
+    }
+
+    function proceedWithDynamicTransaction() {
+        // Add hidden input to force override
+        var form = document.querySelector('form');
+        var forceOverrideInput = document.createElement('input');
+        forceOverrideInput.type = 'hidden';
+        forceOverrideInput.name = 'force_override';
+        forceOverrideInput.value = 'true';
+        form.appendChild(forceOverrideInput);
+        
+        // Hide modal and submit form
+        var modal = bootstrap.Modal.getInstance(document.getElementById('dynamicOverspendingWarningModal'));
+        modal.hide();
+        
+        // Show loading overlay
+        var loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'flex';
+        }
+        
+        form.submit();
+    }
 </script>
 {% endblock %}

@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Rollback Management - FinGuard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h2><i class="fas fa-undo"></i> Rollback Management Dashboard</h2>
+            <p class="text-muted">Manage transaction rollbacks and data recovery</p>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div id="alert-container"></div>
+
+    <!-- Transaction Status Check -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-search"></i> Check Transaction Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="transaction-id">Transaction ID</label>
+                        <input type="text" class="form-control" id="transaction-id" placeholder="Enter transaction ID">
+                    </div>
+                    <button class="btn btn-primary" onclick="checkTransactionStatus()">Check Status</button>
+                    <div id="transaction-status-result" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-robot"></i> Auto-Rollback Failed Transactions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="hours-threshold">Hours Threshold</label>
+                        <input type="number" class="form-control" id="hours-threshold" value="24" min="1" max="168">
+                        <small class="form-text text-muted">Auto-rollback failed transactions older than this many hours</small>
+                    </div>
+                    <button class="btn btn-warning" onclick="autoRollbackFailedTransactions()">
+                        <i class="fas fa-sync"></i> Auto-Rollback
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Failed Transactions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Failed Transactions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Sender</th>
+                                    <th>Receiver</th>
+                                    <th>Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Failure Reason</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="failed-transactions-table">
+                                {% for transaction in failed_transactions %}
+                                <tr>
+                                    <td>{{ transaction.failure_timestamp }}</td>
+                                    <td>{{ transaction.sender_name or 'Unknown' }}</td>
+                                    <td>{{ transaction.receiver_name or 'Unknown' }}</td>
+                                    <td>${{ "%.2f"|format(transaction.amount) }}</td>
+                                    <td>{{ transaction.payment_method }}</td>
+                                    <td class="text-danger">{{ transaction.failure_reason }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="viewTransactionDetails('{{ transaction.attempted_transaction_id }}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rollback History -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-history"></i> Rollback Audit Log</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Operation</th>
+                                    <th>Entity Type</th>
+                                    <th>User</th>
+                                    <th>Success</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-log-table">
+                                {% for log in audit_logs %}
+                                <tr>
+                                    <td>{{ log.timestamp }}</td>
+                                    <td>
+                                        <span class="badge badge-info">{{ log.operation_type }}</span>
+                                    </td>
+                                    <td>{{ log.entity_type }}</td>
+                                    <td>{{ log.user_name or 'System' }}</td>
+                                    <td>
+                                        {% if log.success %}
+                                            <span class="badge badge-success">Success</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Failed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="viewAuditDetails('{{ log.id }}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rollback Transaction Modal -->
+    <div class="modal fade" id="rollbackModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rollback Transaction</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="rollback-reason">Reason for Rollback</label>
+                        <textarea class="form-control" id="rollback-reason" rows="3" placeholder="Enter reason for rollback"></textarea>
+                    </div>
+                    <div id="rollback-transaction-details"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmRollback()">
+                        <i class="fas fa-undo"></i> Rollback Transaction
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTransactionId = null;
+
+function showAlert(message, type = 'success') {
+    const alertContainer = document.getElementById('alert-container');
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `;
+    alertContainer.innerHTML = alertHtml;
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        const alert = alertContainer.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+function checkTransactionStatus() {
+    const transactionId = document.getElementById('transaction-id').value;
+    if (!transactionId) {
+        showAlert('Please enter a transaction ID', 'warning');
+        return;
+    }
+
+    fetch(`/rollback/status/${transactionId}`)
+        .then(response => response.json())
+        .then(data => {
+            const resultDiv = document.getElementById('transaction-status-result');
+            if (data.success) {
+                const statusColor = data.can_rollback ? 'success' : 'warning';
+                const rollbackButton = data.can_rollback ? 
+                    `<button class="btn btn-sm btn-danger mt-2" onclick="prepareRollback('${transactionId}')">
+                        <i class="fas fa-undo"></i> Rollback
+                    </button>` : '';
+                
+                resultDiv.innerHTML = `
+                    <div class="alert alert-${statusColor}">
+                        <strong>Status:</strong> ${data.status}<br>
+                        <strong>Can Rollback:</strong> ${data.can_rollback ? 'Yes' : 'No'}<br>
+                        <strong>Message:</strong> ${data.message}
+                        ${rollbackButton}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Error:</strong> ${data.message}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error checking transaction status', 'danger');
+        });
+}
+
+function prepareRollback(transactionId) {
+    currentTransactionId = transactionId;
+    document.getElementById('rollback-reason').value = '';
+    document.getElementById('rollback-transaction-details').innerHTML = `
+        <div class="alert alert-info">
+            <strong>Transaction ID:</strong> ${transactionId}
+        </div>
+    `;
+    $('#rollbackModal').modal('show');
+}
+
+function confirmRollback() {
+    const reason = document.getElementById('rollback-reason').value;
+    if (!reason.trim()) {
+        showAlert('Please enter a reason for rollback', 'warning');
+        return;
+    }
+
+    fetch('/rollback/transaction', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            transaction_id: currentTransactionId,
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            $('#rollbackModal').modal('hide');
+            // Refresh the page to show updated data
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showAlert(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Error performing rollback', 'danger');
+    });
+}
+
+function autoRollbackFailedTransactions() {
+    const hoursThreshold = document.getElementById('hours-threshold').value;
+    
+    if (confirm(`Are you sure you want to auto-rollback failed transactions older than ${hoursThreshold} hours?`)) {
+        fetch('/rollback/auto', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                hours_threshold: parseInt(hoursThreshold)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(`${data.message} (${data.rolled_back_count} transactions rolled back)`, 'success');
+                // Refresh the page to show updated data
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } else {
+                showAlert(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error performing auto-rollback', 'danger');
+        });
+    }
+}
+
+function viewTransactionDetails(transactionId) {
+    // Implement transaction details view
+    checkTransactionStatus();
+    document.getElementById('transaction-id').value = transactionId;
+}
+
+function viewAuditDetails(auditId) {
+    // Implement audit details view
+    showAlert('Audit details view not implemented yet', 'info');
+}
+</script>
+{% endblock %}

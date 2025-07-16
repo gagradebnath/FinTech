@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-shield-lock"></i> Blockchain Security Dashboard
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Blockchain Status -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card {{ 'border-success' if blockchain_valid else 'border-danger' }}">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">
+                                        <i class="bi bi-{{ 'check-circle-fill text-success' if blockchain_valid else 'exclamation-triangle-fill text-danger' }}"></i>
+                                        Blockchain Status
+                                    </h5>
+                                    <p class="card-text">
+                                        {% if blockchain_valid %}
+                                            <span class="badge bg-success">VALID</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">INVALID</span>
+                                        {% endif %}
+                                    </p>
+                                    {% if blockchain_errors %}
+                                    <div class="alert alert-danger">
+                                        <strong>Errors Found:</strong>
+                                        <ul class="mb-0">
+                                            {% for error in blockchain_errors %}
+                                            <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">
+                                        <i class="bi bi-activity"></i> Quick Actions
+                                    </h5>
+                                    <div class="btn-group-vertical w-100">
+                                        <button class="btn btn-outline-primary" onclick="verifyBlockchain()">
+                                            <i class="bi bi-search"></i> Verify Blockchain
+                                        </button>
+                                        <button class="btn btn-outline-warning" onclick="detectFraud()">
+                                            <i class="bi bi-shield-exclamation"></i> Detect Fraud
+                                        </button>
+                                        <button class="btn btn-outline-info" onclick="refreshAnalytics()">
+                                            <i class="bi bi-arrow-clockwise"></i> Refresh Analytics
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="card-title">Total Blocks</h6>
+                                            <h4>{{ analytics.total_blocks or 0 }}</h4>
+                                        </div>
+                                        <div>
+                                            <i class="bi bi-layers fs-1"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="card-title">Unique Users</h6>
+                                            <h4>{{ analytics.unique_users or 0 }}</h4>
+                                        </div>
+                                        <div>
+                                            <i class="bi bi-people fs-1"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="card-title">Total Volume</h6>
+                                            <h4>${{ "%.2f"|format(analytics.total_volume or 0) }}</h4>
+                                        </div>
+                                        <div>
+                                            <i class="bi bi-currency-dollar fs-1"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="card-title">Fraud Flags</h6>
+                                            <h4>{{ analytics.total_fraud_flags or 0 }}</h4>
+                                        </div>
+                                        <div>
+                                            <i class="bi bi-shield-exclamation fs-1"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Fraud Reports -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="bi bi-shield-exclamation"></i> Recent Fraud Reports
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if fraud_reports %}
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>User ID</th>
+                                                    <th>Reported By</th>
+                                                    <th>Reason</th>
+                                                    <th>Date</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for report in fraud_reports %}
+                                                <tr>
+                                                    <td>
+                                                        <a href="{{ url_for('blockchain.blockchain_user_detail', user_id=report.reported_user_id) }}">
+                                                            {{ report.reported_user_id }}
+                                                        </a>
+                                                    </td>
+                                                    <td>{{ report.user_id }}</td>
+                                                    <td>
+                                                        <span class="badge bg-{{ 'danger' if 'Blockchain' in report.reason else 'warning' }}">
+                                                            {{ report.reason[:50] }}...
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary" onclick="viewUserBlockchain('{{ report.reported_user_id }}')">
+                                                            <i class="bi bi-eye"></i> View
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle"></i> No fraud reports found.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2" id="loadingMessage">Processing...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Result Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resultModalTitle">Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="resultModalBody">
+                <!-- Result content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showLoading(message) {
+    document.getElementById('loadingMessage').textContent = message;
+    new bootstrap.Modal(document.getElementById('loadingModal')).show();
+}
+
+function hideLoading() {
+    bootstrap.Modal.getInstance(document.getElementById('loadingModal')).hide();
+}
+
+function showResult(title, content, isSuccess = true) {
+    document.getElementById('resultModalTitle').textContent = title;
+    document.getElementById('resultModalBody').innerHTML = content;
+    
+    const modal = document.getElementById('resultModal');
+    modal.querySelector('.modal-header').className = `modal-header ${isSuccess ? 'bg-success' : 'bg-danger'} text-white`;
+    
+    new bootstrap.Modal(modal).show();
+}
+
+function verifyBlockchain() {
+    showLoading('Verifying blockchain integrity...');
+    
+    fetch('/api/blockchain/verify', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        
+        if (data.success) {
+            const isValid = data.blockchain_valid;
+            const errors = data.errors || [];
+            
+            let content = `<div class="alert alert-${isValid ? 'success' : 'danger'}">
+                <h6><i class="bi bi-${isValid ? 'check-circle' : 'exclamation-triangle'}"></i> 
+                Blockchain is ${isValid ? 'VALID' : 'INVALID'}</h6>
+            </div>`;
+            
+            if (errors.length > 0) {
+                content += '<div class="alert alert-warning"><strong>Errors Found:</strong><ul>';
+                errors.forEach(error => {
+                    content += `<li>${error}</li>`;
+                });
+                content += '</ul></div>';
+            }
+            
+            showResult('Blockchain Verification', content, isValid);
+        } else {
+            showResult('Verification Failed', `<div class="alert alert-danger">Error: ${data.error}</div>`, false);
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        showResult('Verification Failed', `<div class="alert alert-danger">Network Error: ${error}</div>`, false);
+    });
+}
+
+function detectFraud() {
+    showLoading('Running fraud detection across all users...');
+    
+    fetch('/api/blockchain/detect-fraud', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        
+        if (data.success) {
+            const fraudDetected = data.fraud_detected || [];
+            const totalUsers = data.total_users_checked;
+            
+            let content = `<div class="alert alert-info">
+                <strong>Fraud Detection Complete</strong><br>
+                Users Checked: ${totalUsers}<br>
+                Fraud Detected: ${fraudDetected.length}
+            </div>`;
+            
+            if (fraudDetected.length > 0) {
+                content += '<div class="table-responsive"><table class="table table-striped"><thead><tr><th>User</th><th>Reason</th><th>Date</th></tr></thead><tbody>';
+                fraudDetected.forEach(fraud => {
+                    content += `<tr>
+                        <td>${fraud.user_name} (${fraud.user_id})</td>
+                        <td>${fraud.reason}</td>
+                        <td>${new Date(fraud.timestamp).toLocaleString()}</td>
+                    </tr>`;
+                });
+                content += '</tbody></table></div>';
+            }
+            
+            showResult('Fraud Detection Results', content, fraudDetected.length === 0);
+        } else {
+            showResult('Fraud Detection Failed', `<div class="alert alert-danger">Error: ${data.error}</div>`, false);
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        showResult('Fraud Detection Failed', `<div class="alert alert-danger">Network Error: ${error}</div>`, false);
+    });
+}
+
+function refreshAnalytics() {
+    showLoading('Refreshing analytics...');
+    
+    // Refresh the page to get updated analytics
+    setTimeout(() => {
+        window.location.reload();
+    }, 1000);
+}
+
+function viewUserBlockchain(userId) {
+    window.location.href = `/blockchain-user/${userId}`;
+}
+</script>
+
+{% endblock %}
