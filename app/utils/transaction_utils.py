@@ -34,7 +34,8 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
                 return False, 'Cannot send money to yourself.', sender
                 
             try:
-                amount_val = float(amount)
+                # Convert amount to Decimal for consistent calculations
+                amount_val = Decimal(str(amount))
             except Exception as e:
                 print(f"Invalid amount: {amount}")
                 return False, 'Invalid amount.', sender
@@ -53,15 +54,15 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
             tx_id = str(uuid.uuid4())
             print(f"INSERT PARAMS: id={tx_id}, amount={amount_val}, payment_method={payment_method}, sender_id={sender['id']}, receiver_id={recipient['id']}, note={note}, type={tx_type}, location={location}")
             
-            # Calculate new balances
+            # Calculate new balances using Decimal arithmetic
             new_sender_balance = sender['balance'] - amount_val
             new_recipient_balance = recipient['balance'] + amount_val
             
             # Validate sender transaction with blockchain
             sender_blockchain_valid, sender_message = process_transaction_with_blockchain(
                 sender['id'], 
-                Decimal(str(-amount_val)),  # Negative amount for sender
-                Decimal(str(new_sender_balance)),
+                -amount_val,  # Negative amount for sender
+                new_sender_balance,
                 f"send_money_{payment_method}",
                 {
                     'transaction_id': tx_id,
@@ -79,8 +80,8 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
             # Validate recipient transaction with blockchain
             recipient_blockchain_valid, recipient_message = process_transaction_with_blockchain(
                 recipient['id'],
-                Decimal(str(amount_val)),   # Positive amount for recipient
-                Decimal(str(new_recipient_balance)),
+                amount_val,   # Positive amount for recipient
+                new_recipient_balance,
                 f"receive_money_{payment_method}",
                 {
                     'transaction_id': tx_id,
@@ -95,7 +96,7 @@ def send_money(sender_id, recipient_id, amount, payment_method, note, location, 
                 print(f"Recipient blockchain validation failed: {recipient_message}")
                 return False, f'Transaction blocked: {recipient_message}', sender
             
-            # Update user balances
+            # Update user balances using Decimal values
             cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (amount_val, sender['id']))
             cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (amount_val, recipient['id']))
             
@@ -157,6 +158,9 @@ def agent_add_money(agent_id, user_id, amount):
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
+            # Convert amount to Decimal for consistent calculations
+            amount_val = Decimal(str(amount))
+            
             # Get current balances
             cursor.execute('SELECT balance FROM users WHERE id = %s', (agent_id,))
             agent = cursor.fetchone()
@@ -167,14 +171,14 @@ def agent_add_money(agent_id, user_id, amount):
                 return (None, "Agent or user not found")
             
             # Calculate new balances
-            new_agent_balance = agent['balance'] - amount
-            new_user_balance = user['balance'] + amount
+            new_agent_balance = agent['balance'] - amount_val
+            new_user_balance = user['balance'] + amount_val
             
             # Validate agent transaction with blockchain
             agent_blockchain_valid, agent_message = process_transaction_with_blockchain(
                 agent_id,
-                Decimal(str(-amount)),  # Negative amount for agent
-                Decimal(str(new_agent_balance)),
+                -amount_val,  # Negative amount for agent
+                new_agent_balance,
                 "agent_add_money",
                 {
                     'recipient_id': user_id,
@@ -189,8 +193,8 @@ def agent_add_money(agent_id, user_id, amount):
             # Validate user transaction with blockchain
             user_blockchain_valid, user_message = process_transaction_with_blockchain(
                 user_id,
-                Decimal(str(amount)),   # Positive amount for user
-                Decimal(str(new_user_balance)),
+                amount_val,   # Positive amount for user
+                new_user_balance,
                 "agent_receive_money",
                 {
                     'agent_id': agent_id,
@@ -203,14 +207,14 @@ def agent_add_money(agent_id, user_id, amount):
                 return (None, f'User transaction blocked: {user_message}')
             
             # Update balances
-            cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (amount, agent_id))
-            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (amount, user_id))
+            cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (amount_val, agent_id))
+            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (amount_val, user_id))
             
             # Record transaction
             cursor.execute('''INSERT INTO transactions (id, amount, payment_method, timestamp, sender_id, receiver_id, note, type, location) VALUES (%s, %s, %s, NOW(), %s, %s, %s, %s, %s)''',
-                (str(uuid.uuid4()), amount, 'agent_add', agent_id, user_id, f'Agent {agent_id} added money', 'Deposit', None))
+                (str(uuid.uuid4()), amount_val, 'agent_add', agent_id, user_id, f'Agent {agent_id} added money', 'Deposit', None))
         conn.commit()
-        return (f"Added {amount} to user (ID: {user_id})", None)
+        return (f"Added {amount_val} to user (ID: {user_id})", None)
     except Exception as e:
         conn.rollback()
         return (None, f"Failed to add money: {str(e)}")
@@ -221,6 +225,9 @@ def agent_cash_out(agent_id, user_id, amount):
     conn = current_app.get_db_connection()
     try:
         with conn.cursor() as cursor:
+            # Convert amount to Decimal for consistent calculations
+            amount_val = Decimal(str(amount))
+            
             # Get current balances
             cursor.execute('SELECT balance FROM users WHERE id = %s', (agent_id,))
             agent = cursor.fetchone()
@@ -231,14 +238,14 @@ def agent_cash_out(agent_id, user_id, amount):
                 return (None, "Agent or user not found")
             
             # Calculate new balances
-            new_agent_balance = agent['balance'] + amount
-            new_user_balance = user['balance'] - amount
+            new_agent_balance = agent['balance'] + amount_val
+            new_user_balance = user['balance'] - amount_val
             
             # Validate user transaction with blockchain
             user_blockchain_valid, user_message = process_transaction_with_blockchain(
                 user_id,
-                Decimal(str(-amount)),  # Negative amount for user
-                Decimal(str(new_user_balance)),
+                -amount_val,  # Negative amount for user
+                new_user_balance,
                 "agent_cash_out",
                 {
                     'agent_id': agent_id,
@@ -253,8 +260,8 @@ def agent_cash_out(agent_id, user_id, amount):
             # Validate agent transaction with blockchain
             agent_blockchain_valid, agent_message = process_transaction_with_blockchain(
                 agent_id,
-                Decimal(str(amount)),   # Positive amount for agent
-                Decimal(str(new_agent_balance)),
+                amount_val,   # Positive amount for agent
+                new_agent_balance,
                 "agent_receive_cashout",
                 {
                     'user_id': user_id,
@@ -267,14 +274,14 @@ def agent_cash_out(agent_id, user_id, amount):
                 return (None, f'Agent transaction blocked: {agent_message}')
             
             # Update balances
-            cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (amount, user_id))
-            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (amount, agent_id))
+            cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (amount_val, user_id))
+            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (amount_val, agent_id))
             
             # Record transaction
             cursor.execute('''INSERT INTO transactions (id, amount, payment_method, timestamp, sender_id, receiver_id, note, type, location) VALUES (%s, %s, %s, NOW(), %s, %s, %s, %s, %s)''',
-                (str(uuid.uuid4()), amount, 'agent_cashout', user_id, agent_id, f'Agent {agent_id} cashed out', 'Withdrawal', None))
+                (str(uuid.uuid4()), amount_val, 'agent_cashout', user_id, agent_id, f'Agent {agent_id} cashed out', 'Withdrawal', None))
         conn.commit()
-        return (f"Cashed out {amount} from user (ID: {user_id})", None)
+        return (f"Cashed out {amount_val} from user (ID: {user_id})", None)
     except Exception as e:
         conn.rollback()
         return (None, f"Failed to cash out: {str(e)}")
