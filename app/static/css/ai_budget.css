@@ -93,22 +93,14 @@ select.form-select option:not([value=""]) {
 
 /* Category content styles */
 .category-amount {
-    font-size: 1.3em;
+    font-size: 1.2em;
     font-weight: bold;
     color: #2c3e50;
 }
 
 .category-percentage {
     color: #7f8c8d;
-    font-size: 0.85em;
-}
-
-.category-card h6 {
     font-size: 0.9em;
-    color: #495057;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 /* Budget summary styles */
