@@ -1,0 +1,591 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ai_budget.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+    <h2 class="text-center mb-4">🤖 AI Budget Generator</h2>
+    
+    <!-- Status Messages -->
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+    {% endif %}
+
+    <!-- AI Budget Controls -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">AI Budget Generation</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-ai">
+                <strong>🧠 How it works:</strong> Our AI analyzes your expense habits and generates a personalized budget 
+                using machine learning models trained on thousands of user patterns.
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <button type="button" class="btn ai-gradient w-100" id="generate-budget">
+                        <i class="fas fa-robot"></i> Generate AI Budget
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn preview-gradient w-100" id="preview-budget">
+                        <i class="fas fa-eye"></i> Preview Budget
+                    </button>
+                </div>
+                <!-- <div class="col-md-4">
+                    <button type="button" class="btn train-gradient w-100" id="train-models">
+                        <i class="fas fa-brain"></i> Train Models
+                    </button>
+                </div> -->
+            </div>
+
+            <!-- Progress Indicator -->
+            <div class="progress-container">
+                <div class="progress" style="display: none;" id="progress-bar">
+                    <div class="progress-bar ai-gradient" role="progressbar" style="width: 0%"></div>
+                </div>
+                <div class="loading-spinner" id="loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">AI is analyzing your data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved AI Budgets -->
+    <div class="card mb-4" id="saved-budgets-section" style="display: none;">
+        <div class="card-header">
+            <h5 class="mb-0">Your AI Generated Budgets</h5>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <label for="ai-saved-budgets" class="visually-hidden">Select an AI budget</label>
+                    <select class="form-select" id="ai-saved-budgets" aria-label="Select an AI budget">
+                        <option value="">Select a saved AI budget</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-primary w-100" id="load-ai-budget">Load Selected Budget</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Summary -->
+    <div class="budget-summary" id="budget-summary" style="display: none;">
+        <div class="row">
+            <div class="col-md-3 text-center">
+                <h6>Monthly Income</h6>
+                <h4 id="total-income">$0</h4>
+            </div>
+            <div class="col-md-3 text-center">
+                <h6>Total Budget</h6>
+                <h4 id="total-budget">$0</h4>
+            </div>
+            <div class="col-md-3 text-center">
+                <h6>Budget Utilization</h6>
+                <h4 id="budget-utilization">0%</h4>
+            </div>
+            <div class="col-md-3 text-center">
+                <h6>Remaining</h6>
+                <h4 id="remaining-income">$0</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Budget Form -->
+    <form id="ai-budget-form" class="card p-4" style="display: none;">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="ai-budget-name" class="form-label">Budget Name</label>
+                <input type="text" class="form-control" id="ai-budget-name" name="name"
+                    placeholder="e.g. AI Generated Budget - July 2025" required>
+            </div>
+            <div class="col-md-6">
+                <label for="ai-currency" class="form-label">Currency</label>
+                <input type="text" class="form-control" id="ai-currency" name="currency" 
+                    placeholder="e.g. BDT" value="BDT" required>
+            </div>
+        </div>
+
+        <h4 class="mb-3">🤖 AI Generated Expense Categories</h4>
+        <div id="ai-expense-list" class="category-grid">
+            <!-- AI generated categories will be populated here -->
+        </div>
+
+        <div class="d-flex gap-3 mt-4">
+            <button type="button" class="btn ai-gradient" id="save-ai-budget">
+                <i class="fas fa-save"></i> Save AI Budget
+            </button>
+            <button type="button" class="btn btn-secondary" id="regenerate-budget">
+                <i class="fas fa-redo"></i> Regenerate Budget
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="export-budget">
+                <i class="fas fa-download"></i> Export Budget
+            </button>
+        </div>
+    </form>
+
+    <!-- AI Insights -->
+    <div class="card mt-4" id="ai-insights" style="display: none;">
+        <div class="card-header">
+            <h5 class="mb-0">🔍 AI Insights & Recommendations</h5>
+        </div>
+        <div class="card-body">
+            <div id="insights-content">
+                <!-- AI insights will be populated here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize event listeners
+    initializeEventListeners();
+    
+    // Check model status on page load
+    checkModelStatus();
+    
+    // Load saved budgets
+    loadSavedBudgets();
+});
+
+async function checkModelStatus() {
+    try {
+        const response = await fetch('/ml-budget/model-status');
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.model_trained && data.models_count > 0) {
+                showSuccessAlert(`✅ ${data.models_count} trained ML models ready for budget generation!`);
+                console.log('Available models:', data.available_categories);
+                console.log('Model details:', data.model_details);
+            } else {
+                showErrorAlert('⚠️ No trained models found. Please train models first using the "Train Models" button.');
+            }
+        } else {
+            showErrorAlert('❌ Unable to check model status');
+        }
+    } catch (error) {
+        console.error('Error checking model status:', error);
+        showErrorAlert('Error checking model status');
+    }
+}
+
+function initializeEventListeners() {
+    // AI Budget generation buttons
+    document.getElementById('generate-budget').addEventListener('click', generateAIBudget);
+    document.getElementById('preview-budget').addEventListener('click', previewAIBudget);
+    document.getElementById('train-models').addEventListener('click', trainMLModels);
+    
+    // Budget management buttons
+    document.getElementById('load-ai-budget').addEventListener('click', loadSelectedBudget);
+    document.getElementById('save-ai-budget').addEventListener('click', saveAIBudget);
+    document.getElementById('regenerate-budget').addEventListener('click', regenerateAIBudget);
+    document.getElementById('export-budget').addEventListener('click', exportAIBudget);
+}
+
+function showLoading(show = true, message = 'AI is analyzing your data...') {
+    const spinner = document.getElementById('loading-spinner');
+    const progressBar = document.getElementById('progress-bar');
+    
+    if (show) {
+        spinner.style.display = 'block';
+        spinner.querySelector('p').textContent = message;
+        progressBar.style.display = 'block';
+    } else {
+        spinner.style.display = 'none';
+        progressBar.style.display = 'none';
+    }
+}
+
+function updateProgress(percentage, message = '') {
+    const progressBar = document.querySelector('.progress-bar');
+    progressBar.style.width = percentage + '%';
+    
+    if (message) {
+        const spinner = document.getElementById('loading-spinner');
+        spinner.querySelector('p').textContent = message;
+    }
+}
+
+async function generateAIBudget() {
+    showLoading(true, 'Generating AI Budget with your trained models...');
+    updateProgress(20, 'Loading your trained ML models...');
+    
+    try {
+        // First check model status
+        const statusResponse = await fetch('/ml-budget/model-status');
+        const statusData = await statusResponse.json();
+        
+        if (!statusData.success || !statusData.model_trained) {
+            showErrorAlert('Trained models not available. Please train models first.');
+            return;
+        }
+        
+        updateProgress(40, `Using ${statusData.models_count} trained models to analyze your patterns...`);
+        
+        const response = await fetch('/ml-budget/generate-ai-budget', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        updateProgress(60, 'Running machine learning algorithms...');
+        const data = await response.json();
+        
+        updateProgress(80, 'Formatting budget results...');
+        
+        if (data.success) {
+            updateProgress(100, 'Budget generated using your trained models!');
+            displayAIBudget(data.budget);
+            
+            // Show which models were used
+            const modelInfo = `AI Budget generated using ${statusData.models_count} trained ML models: ${statusData.available_categories.join(', ')}`;
+            showSuccessAlert(`✅ ${modelInfo}`);
+        } else {
+            showErrorAlert(data.message || 'Failed to generate AI budget');
+        }
+    } catch (error) {
+        console.error('Error generating AI budget:', error);
+        showErrorAlert('Error generating AI budget');
+    } finally {
+        setTimeout(() => showLoading(false), 1000);
+    }
+}
+
+async function previewAIBudget() {
+    showLoading(true, 'Generating budget preview...');
+    updateProgress(30, 'Preparing preview...');
+    
+    try {
+        const response = await fetch('/ml-budget/preview-ai-budget');
+        const data = await response.json();
+        
+        updateProgress(70, 'Processing preview data...');
+        
+        if (data.success) {
+            updateProgress(100, 'Preview ready!');
+            displayAIBudget(data.budget, true);
+            showSuccessAlert('Budget preview generated!');
+        } else {
+            showErrorAlert(data.message || 'Failed to generate budget preview');
+        }
+    } catch (error) {
+        console.error('Error previewing budget:', error);
+        showErrorAlert('Error generating budget preview');
+    } finally {
+        setTimeout(() => showLoading(false), 1000);
+    }
+}
+
+async function trainMLModels() {
+    showLoading(true, 'Training machine learning models...');
+    updateProgress(10, 'Initializing training process...');
+    
+    try {
+        const response = await fetch('/ml-budget/train-budget-models', {
+            method: 'POST'
+        });
+        
+        updateProgress(50, 'Training models with 10,000 data points...');
+        const data = await response.json();
+        
+        updateProgress(90, 'Saving trained models...');
+        
+        if (data.success) {
+            updateProgress(100, 'Training completed successfully!');
+            showSuccessAlert(`Models trained successfully! ${data.models_trained || 18} categories available.`);
+        } else {
+            showErrorAlert(data.message || 'Failed to train models');
+        }
+    } catch (error) {
+        console.error('Error training models:', error);
+        showErrorAlert('Error training ML models');
+    } finally {
+        setTimeout(() => showLoading(false), 2000);
+    }
+}
+
+function displayAIBudget(budget, isPreview = false) {
+    // Show the budget form
+    document.getElementById('ai-budget-form').style.display = 'block';
+    document.getElementById('budget-summary').style.display = 'block';
+    document.getElementById('ai-insights').style.display = 'block';
+    
+    // Update budget summary
+    document.getElementById('total-income').textContent = `$${budget.monthly_income?.toFixed(2) || '0.00'}`;
+    document.getElementById('total-budget').textContent = `$${budget.total_budget?.toFixed(2) || '0.00'}`;
+    
+    const utilization = budget.monthly_income > 0 ? 
+        ((budget.total_budget / budget.monthly_income) * 100).toFixed(1) : 0;
+    document.getElementById('budget-utilization').textContent = `${utilization}%`;
+    
+    const remaining = (budget.monthly_income || 0) - (budget.total_budget || 0);
+    document.getElementById('remaining-income').textContent = `$${remaining.toFixed(2)}`;
+    
+    // Populate expense categories
+    const expenseList = document.getElementById('ai-expense-list');
+    expenseList.innerHTML = '';
+    
+    if (budget.categories) {
+        Object.entries(budget.categories).forEach(([categoryName, categoryData]) => {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'category-card';
+            
+            const percentage = budget.monthly_income > 0 ? 
+                ((categoryData.amount / budget.monthly_income) * 100).toFixed(1) : 0;
+            
+            categoryDiv.innerHTML = `
+                <div class="text-center mb-2">
+                    <h6 class="mb-1 fw-bold">${categoryName}</h6>
+                    <div class="category-amount text-primary">$${categoryData.amount.toFixed(2)}</div>
+                    <small class="category-percentage text-muted">${percentage}% of income</small>
+                </div>
+                <div class="progress mb-2" style="height: 6px;">
+                    <div class="progress-bar ai-gradient" style="width: ${Math.min(percentage, 100)}%"></div>
+                </div>
+                <div class="text-center">
+                    ${categoryData.items && categoryData.items.length > 0 ? 
+                        `<small class="text-muted d-block">${categoryData.items.length} item${categoryData.items.length > 1 ? 's' : ''}</small>` :
+                        '<small class="text-muted">AI estimate</small>'
+                    }
+                </div>
+            `;
+            
+            expenseList.appendChild(categoryDiv);
+        });
+    }
+    
+    // Generate AI insights
+    generateAIInsights(budget);
+    
+    // Update budget name if preview
+    if (isPreview) {
+        document.getElementById('ai-budget-name').value = `AI Preview - ${new Date().toLocaleDateString()}`;
+    } else {
+        document.getElementById('ai-budget-name').value = `AI Budget - ${new Date().toLocaleDateString()}`;
+    }
+    
+    // Scroll to budget form
+    document.getElementById('ai-budget-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+function generateAIInsights(budget) {
+    const insightsContent = document.getElementById('insights-content');
+    const utilization = budget.monthly_income > 0 ? 
+        (budget.total_budget / budget.monthly_income) * 100 : 0;
+    
+    let insights = [];
+    
+    // Budget utilization insights
+    if (utilization > 90) {
+        insights.push('⚠️ <strong>High Budget Utilization:</strong> You\'re using over 90% of your income. Consider reducing expenses or increasing income.');
+    } else if (utilization < 50) {
+        insights.push('💰 <strong>Conservative Budget:</strong> You have significant room for savings or investments.');
+    } else {
+        insights.push('✅ <strong>Balanced Budget:</strong> Good balance between spending and saving.');
+    }
+    
+    // Category-specific insights
+    if (budget.categories) {
+        const categories = Object.entries(budget.categories);
+        const highestCategory = categories.reduce((max, current) => 
+            current[1].amount > max[1].amount ? current : max
+        );
+        
+        insights.push(`📊 <strong>Highest Expense:</strong> ${highestCategory[0]} accounts for $${highestCategory[1].amount.toFixed(2)} of your budget.`);
+        
+        // Savings check
+        const savingsCategory = categories.find(([name]) => 
+            name.toLowerCase().includes('saving') || name.toLowerCase().includes('investment')
+        );
+        
+        if (savingsCategory) {
+            const savingsPercentage = (savingsCategory[1].amount / budget.monthly_income) * 100;
+            if (savingsPercentage >= 20) {
+                insights.push('🎯 <strong>Great Savings Rate:</strong> You\'re saving 20% or more of your income!');
+            } else if (savingsPercentage >= 10) {
+                insights.push('📈 <strong>Good Savings Habit:</strong> You\'re on track with your savings goals.');
+            } else {
+                insights.push('💡 <strong>Savings Opportunity:</strong> Consider increasing your savings rate to at least 10%.');
+            }
+        }
+    }
+    
+    // AI recommendations
+    insights.push('🤖 <strong>AI Recommendation:</strong> This budget is based on machine learning analysis of similar user profiles and spending patterns.');
+    
+    insightsContent.innerHTML = insights.map(insight => 
+        `<div class="alert alert-ai mb-2">${insight}</div>`
+    ).join('');
+}
+
+async function loadSavedBudgets() {
+    try {
+        const response = await fetch('/budget/get-saved-budgets');
+        const data = await response.json();
+        
+        if (data.success && data.budgets) {
+            const select = document.getElementById('ai-saved-budgets');
+            const aiBudgets = data.budgets.filter(budget => 
+                budget.name && budget.name.toLowerCase().includes('ai')
+            );
+            
+            if (aiBudgets.length > 0) {
+                document.getElementById('saved-budgets-section').style.display = 'block';
+                
+                aiBudgets.forEach(budget => {
+                    const option = document.createElement('option');
+                    option.value = budget.id;
+                    option.textContent = `${budget.name} (${budget.created_at})`;
+                    select.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error loading saved budgets:', error);
+    }
+}
+
+async function saveAIBudget() {
+    const budgetName = document.getElementById('ai-budget-name').value;
+    const currency = document.getElementById('ai-currency').value;
+    
+    if (!budgetName.trim()) {
+        showErrorAlert('Please enter a budget name');
+        return;
+    }
+    
+    showLoading(true, 'Saving AI budget...');
+    
+    try {
+        // Collect budget data from the form
+        const budgetData = {
+            name: budgetName,
+            currency: currency,
+            income: parseFloat(document.getElementById('total-income').textContent.replace('$', '')) || 0,
+            categories: []
+        };
+        
+        // Collect category data
+        const categoryCards = document.querySelectorAll('.category-card');
+        categoryCards.forEach(card => {
+            const categoryName = card.querySelector('h6').textContent;
+            const amount = parseFloat(card.querySelector('.category-amount').textContent.replace('$', ''));
+            
+            budgetData.categories.push({
+                name: categoryName,
+                amount: amount,
+                type: 'expense'
+            });
+        });
+        
+        const response = await fetch('/budget/save-budget', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(budgetData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showSuccessAlert('AI Budget saved successfully!');
+            loadSavedBudgets(); // Refresh saved budgets list
+        } else {
+            showErrorAlert(data.message || 'Failed to save budget');
+        }
+    } catch (error) {
+        console.error('Error saving budget:', error);
+        showErrorAlert('Error saving AI budget');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function regenerateAIBudget() {
+    if (confirm('Are you sure you want to regenerate the AI budget? This will replace the current budget.')) {
+        generateAIBudget();
+    }
+}
+
+function exportAIBudget() {
+    const budgetName = document.getElementById('ai-budget-name').value || 'AI Budget';
+    const totalIncome = document.getElementById('total-income').textContent;
+    const totalBudget = document.getElementById('total-budget').textContent;
+    
+    let exportData = `${budgetName}\n`;
+    exportData += `Generated: ${new Date().toLocaleString()}\n\n`;
+    exportData += `Monthly Income: ${totalIncome}\n`;
+    exportData += `Total Budget: ${totalBudget}\n\n`;
+    exportData += `Categories:\n`;
+    
+    const categoryCards = document.querySelectorAll('.category-card');
+    categoryCards.forEach(card => {
+        const categoryName = card.querySelector('h6').textContent;
+        const amount = card.querySelector('.category-amount').textContent;
+        const percentage = card.querySelector('.category-percentage').textContent;
+        
+        exportData += `- ${categoryName}: ${amount} ${percentage}\n`;
+    });
+    
+    // Create and download file
+    const blob = new Blob([exportData], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${budgetName.replace(/[^a-z0-9]/gi, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    showSuccessAlert('Budget exported successfully!');
+}
+
+function showSuccessAlert(message) {
+    showAlert(message, 'success');
+}
+
+function showErrorAlert(message) {
+    showAlert(message, 'danger');
+}
+
+function showAlert(message, type) {
+    // Remove existing alerts
+    document.querySelectorAll('.alert:not(.alert-ai)').forEach(alert => {
+        if (!alert.id) alert.remove();
+    });
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

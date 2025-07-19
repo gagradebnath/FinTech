@@ -63,6 +63,11 @@
                     </a>
                 </li>
                 <li class="sidebar-item">
+                    <a href="{{ url_for('ml_budget.ai_budget_dashboard') }}" class="sidebar-link {% if request.endpoint == 'ml_budget.ai_budget_dashboard' %}active{% endif %}">
+                        <i class="bi bi-robot"></i> AI Budget
+                    </a>
+                </li>
+                <li class="sidebar-item">
                     <a href="{{ url_for('user.expense_habit') }}" class="sidebar-link {% if request.endpoint == 'user.expense_habit' %}active{% endif %}">
                         <i class="bi bi-graph-up"></i> Expenses
                     </a>

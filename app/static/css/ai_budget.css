@@ -1,0 +1,139 @@
+/* AI Budget Dashboard Styles */
+
+/* Form placeholder styling */
+select.form-select option[value=""] {
+    color: #e6e1e1d7 !important;
+}
+
+select.form-select option:not([value=""]) {
+    color: #000 !important;
+}
+
+/* Gradient button styles */
+.ai-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.ai-gradient:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.preview-gradient {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: none;
+}
+
+.preview-gradient:hover {
+    background: linear-gradient(135deg, #e87ff0 0%, #e8495a 100%);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.train-gradient {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    border: none;
+}
+
+.train-gradient:hover {
+    background: linear-gradient(135deg, #3d9bec 0%, #00d9ec 100%);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Category card styles */
+.category-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: white;
+    transition: all 0.3s ease;
+    height: auto;
+    min-height: 120px;
+}
+
+.category-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+/* Category grid layout */
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* Responsive grid */
+@media (max-width: 1200px) {
+    .category-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .category-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .category-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Category content styles */
+.category-amount {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.category-percentage {
+    color: #7f8c8d;
+    font-size: 0.85em;
+}
+
+.category-card h6 {
+    font-size: 0.9em;
+    color: #495057;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Budget summary styles */
+.budget-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* Loading and progress styles */
+.loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 20px;
+}
+
+.progress-container {
+    margin: 20px 0;
+}
+
+/* Alert styles */
+.alert-ai {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    color: #5a6fd8;
+}
