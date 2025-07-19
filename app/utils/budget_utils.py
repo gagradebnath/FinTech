@@ -214,4 +214,9 @@ def get_all_user_budgets_with_categories(user_id):
                     'currency': b['currency'],
                     'categories': categories
                 })
-            return result      
+            return result
+    except Exception as e:
+        print(f"Error getting user budgets with categories: {e}")
+        return []
+    finally:
+        conn.close()      
