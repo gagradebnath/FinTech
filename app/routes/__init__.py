@@ -8,6 +8,7 @@ from .chat import chat_bp
 from .analytics import analytics_bp
 from .rollback import rollback_bp
 from .blockchain import blockchain_bp
+from .ml_budget import ml_budget_bp
 
 def register_blueprints(app):
     app.register_blueprint(user_bp)
@@ -20,3 +21,4 @@ def register_blueprints(app):
     app.register_blueprint(analytics_bp)
     app.register_blueprint(rollback_bp)
     app.register_blueprint(blockchain_bp)
+    app.register_blueprint(ml_budget_bp, url_prefix='/ml-budget')
