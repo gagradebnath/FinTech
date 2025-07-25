@@ -30,7 +30,7 @@
                 </div>
                 <div class="fraud-form-footer">
                     <button type="submit" class="btn btn-danger">Submit Report</button>
-                    <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary ms-2">Back to Dashboard</a>
+                    <a href="{{ get_dashboard_url_for_user(user) }}" class="btn btn-secondary ms-2">Back to Dashboard</a>
                 </div>
             </form>
         </div>

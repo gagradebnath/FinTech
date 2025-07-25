@@ -90,7 +90,7 @@
             <input type="text" class="form-control" id="financial_goal" name="financial_goal" value="{{ habit.financial_goal if habit else '' }}">
         </div>
         <button type="submit" class="btn btn-primary">Save</button>
-        <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary ms-2">Back to Dashboard</a>
+        <a href="{{ get_dashboard_url_for_user(user) }}" class="btn btn-secondary ms-2">Back to Dashboard</a>
     </form>
 </div>
 {% endblock %}

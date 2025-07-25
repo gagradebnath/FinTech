@@ -43,10 +43,10 @@
             </div>
             <ul class="list-unstyled sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="{{ url_for('user.dashboard') }}" class="sidebar-link {% if request.endpoint == 'user.dashboard' %}active{% endif %}">
+                    <a href="{{ get_dashboard_url_for_user(user) if user else url_for('user.dashboard') }}" class="sidebar-link {% if request.endpoint in ['user.dashboard', 'admin.admin_dashboard', 'agent.agent_dashboard'] %}active{% endif %}">
                         <i class="bi bi-house-door"></i> Home
                     </a>
-                </li>
+                </li>   
                 <li class="sidebar-item">
                     <a href="{{ url_for('user.profile') }}" class="sidebar-link {% if request.endpoint == 'user.profile' %}active{% endif %}">
                         <i class="bi bi-person"></i> Profile
@@ -60,6 +60,11 @@
                 <li class="sidebar-item">
                     <a href="{{ url_for('budget.plan_budget') }}" class="sidebar-link {% if request.endpoint == 'budget.plan_budget' %}active{% endif %}">
                         <i class="bi bi-wallet2"></i> Budget
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{{ url_for('ml_budget.ai_budget_dashboard') }}" class="sidebar-link {% if request.endpoint == 'ml_budget.ai_budget_dashboard' %}active{% endif %}">
+                        <i class="bi bi-robot"></i> AI Budget
                     </a>
                 </li>
                 <li class="sidebar-item">
@@ -93,12 +98,12 @@
                             <input type="text" class="form-control border-0 shadow-none" placeholder="Search here">
                         </div>
                     </div>
-                    <div class="user-profile">
-                        <span class="user-name">{{ session.get('user_fullname', 'User') }}</span>
+                    <a href="{{ url_for('user.profile') }}" class="user-profile" style="text-decoration:none;">
+                        <span class="user-name" >{{ session.get('user_fullname', 'User') }}</span>
                         <div class="user-avatar">
                             <img src="https://ui-avatars.com/api/?name={{ session.get('user_fullname', 'U') }}" alt="User">
                         </div>
-                    </div>
+                    </a>
                 </div>
             </nav>
             {% endif %}
@@ -113,3 +118,8 @@
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
+<style>
+.user-name {
+    color: #fff !important;
+}
+</style>

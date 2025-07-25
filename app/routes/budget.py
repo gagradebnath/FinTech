@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, current_app, jsonify, ses
 import uuid
 from .user import get_current_user
 from app.utils.budget_utils import get_user_budget, save_or_update_budget, insert_full_budget, get_all_user_budgets, get_budget_by_id
+from app.utils.jwt_auth import token_required, get_current_user_from_jwt
 
 budget_bp = Blueprint('budget', __name__)
 
@@ -9,10 +10,31 @@ budget_bp = Blueprint('budget', __name__)
 def get_budget():
     return {'message': 'Budget endpoint'}
 
+@budget_bp.route('/api/budgets', methods=['GET'])
+@token_required
+def get_budgets_api():
+    """Protected API endpoint to get user budgets."""
+    user = get_current_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Get all budgets for the user
+    budgets = get_all_user_budgets(user['id'])
+    
+    return jsonify({
+        'budgets': budgets,
+        'count': len(budgets)
+    }), 200
+
 @budget_bp.route('/plan-budget', methods=['GET', 'POST'])
 def plan_budget():
-    user = get_current_user()
+    # Support both session-based and JWT-based authentication
+    user = get_current_user_from_jwt()
     if not user:
+        # Check if it's an API request
+        is_api_request = request.headers.get('Authorization') or request.args.get('token') or request.is_json
+        if is_api_request:
+            return jsonify({'error': 'Authentication required'}), 401
         return redirect(url_for('user.login'))
     
     # Get the budget ID from query parameters if provided
@@ -95,7 +117,11 @@ def save_budget():
 
 @budget_bp.route('/get_budget/<budget_id>', methods=['GET'])
 def get_budget_by_id_route(budget_id):
-    user = get_current_user()
+    # Support both session-based and JWT-based authentication
+    user = get_current_user_from_jwt()
+    if not user:
+        user = get_current_user()
+    
     if not user:
         return jsonify({'success': False, 'message': 'Not logged in'}), 401
     

@@ -130,5 +130,12 @@ def create_app():
         
         return str(datetime_obj)
     
+    # Add dashboard URL helper function for templates
+    @app.template_global()
+    def get_dashboard_url_for_user(user):
+        """Get the appropriate dashboard URL based on user role"""
+        from app.utils.user_utils import get_dashboard_url_for_user as _get_dashboard_url_for_user
+        return _get_dashboard_url_for_user(user)
+    
     register_blueprints(app)
     return app
