@@ -327,3 +327,52 @@ def log_js_message():
     message = data.get('message', '')
     print(f'[JS LOG] {message}')
     return jsonify({'status': 'ok'})
+
+@user_bp.route('/api/category-summary', methods=['GET'])
+@token_required
+def category_summary_api():
+    user = get_current_user_from_jwt()
+    if not user:
+        return jsonify({'error': 'Unauthorized'}), 401
+    user_id = user['id']
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Get all categories from budget_expense_categories for this user
+            cursor.execute('''
+                SELECT DISTINCT category_name
+                FROM budget_expense_categories
+                WHERE budget_id IN (SELECT id FROM budgets WHERE user_id = %s)
+            ''', (user_id,))
+            categories = [row['category_name'] for row in cursor.fetchall()]
+            summary = []
+            for cat in categories:
+                # Sum budget for this category (all budgets ever created by user)
+                cursor.execute('''
+                    SELECT COALESCE(SUM(amount),0) as total_budget
+                    FROM budget_expense_categories
+                    WHERE category_name = %s AND budget_id IN (SELECT id FROM budgets WHERE user_id = %s)
+                ''', (cat, user_id))
+                budget = cursor.fetchone()['total_budget']
+                # Sum expenditure for this category (only sent transactions)
+                cursor.execute('''
+                    SELECT COALESCE(SUM(amount),0) as total_expense
+                    FROM transactions
+                    WHERE sender_id = %s AND note = %s
+                ''', (user_id, cat))
+                expense = cursor.fetchone()['total_expense']
+                # Condition
+                diff = budget - expense
+                if diff >= 0:
+                    condition = f"${diff:.2f} remaining"
+                else:
+                    condition = f"${-diff:.2f} overspent"
+                summary.append({
+                    'category': cat,
+                    'budget': float(budget),
+                    'expenditure': float(expense),
+                    'condition': condition
+                })
+        return jsonify(summary)
+    finally:
+        conn.close()

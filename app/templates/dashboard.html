@@ -16,9 +16,8 @@
                         <i class="bi bi-wallet2"></i>
                     </div>
                     <div class="stats-info">
-                        <h3>${{ user.balance|default('0.00') }}</h3>
+                        <h3 class="balance-amount">${{ user.balance|default('0.00') }}</h3>
                         <p>Total Balance</p>
-                        <small>+2.1% higher than Last Month</small>
                     </div>
                 </div>
             </div>
@@ -30,9 +29,9 @@
                         <i class="bi bi-arrow-up-right"></i>
                     </div>
                     <div class="stats-info">
-                        <h3>$3,500.00</h3>
-                        <p>Debit</p>
-                        <small>+2.1% higher than Last Month</small>
+                        <h3 class="md" id="monthlyDifference">$0.00</h3>
+                        <p>Net This Month</p>
+                        <small id="monthlyEarnedSpent"></small>
                     </div>
                 </div>
             </div>
@@ -91,7 +90,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" style="position:relative; width:100%; height:350px;">
+                    <div class="chart-container" style="position:relative; width:100%; height:380px;">
                         <canvas id="transactionChart" style="width:100%;height:100%;"></canvas>
                     </div>
                 </div>
@@ -219,9 +218,18 @@
                         <h3 class="mb-0" id="expenseTotal">$0</h3>
                         <p class="text-muted">Total</p>
                     </div>
-                    <div class="expense-chart">
+                    <div class="expense-chart-scrollbox">
                         <canvas id="expenseChart"></canvas>
                     </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    Category Budget Summary
+                </div>
+                <div class="card-body p-0">
+                    <div id="category-summary-table"></div>
                 </div>
             </div>
         </div>
@@ -531,12 +539,63 @@
         }
     });
     console.log("Pie chart JS loaded");
+
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/api/category-summary')
+            .then(res => res.json())
+            .then(data => {
+                let html = `<div class="category-summary-scrollbox"><table class="category-summary-table table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Budget</th>
+                            <th>Expenditure</th>
+                            <th>Condition</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                data.forEach(row => {
+                    // Determine color for condition
+                    let condColor = row.condition.includes('remaining') ? 'text-success' : 'text-danger';
+                    html += `<tr>
+                        <td>${row.category}</td>
+                        <td>$${row.budget.toFixed(2)}</td>
+                        <td>$${row.expenditure.toFixed(2)}</td>
+                        <td><span class="${condColor}">${row.condition}</span></td>
+                    </tr>`;
+                });
+                html += `</tbody></table></div>`;
+                document.getElementById('category-summary-table').innerHTML = html;
+            });
+    });
+
+    // Fetch monthly earned and spent, then show the difference
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/api/transaction-report?period=monthly')
+            .then(res => res.json())
+            .then(data => {
+                const monthIndex = new Date().getMonth();
+                const earned = data.received[monthIndex] || 0;
+                const spent = data.spent[monthIndex] || 0;
+                const difference = earned - spent;
+
+                document.getElementById('monthlyDifference').innerText =
+                    (difference >= 0 ? '+' : '') + '$' + difference.toFixed(2);
+                document.getElementById('monthlyEarnedSpent').innerText =
+                    `Earned: $${earned.toFixed(2)} | Spent: $${spent.toFixed(2)}`;
+            });
+    });
 </script>
 <style>
+    .backgruond {
+        z-index: 0;
+    }
+
     .stats-card-budget {
         background-color: #5a67d8;
         background-image: linear-gradient(40deg, #5a67d8 0%, #7c3aed 100%);
         color: white;
+        z-index: 0;
     }
 
     .stats-card-budget .stats-icon {
@@ -556,6 +615,7 @@
     .stats-card-budget .dropdown-menu {
         max-height: 80 px;
         overflow-y: auto;
+        z-index: 3;
     }
 
     #budgetCurrency {
@@ -568,6 +628,104 @@
         font-size: 2.2rem;
         /* or any size you prefer */
         font-weight: bold;
+    }
+
+    .expense-chart-scrollbox {
+        height: 300px;
+        /* Fixed height for the chart area */
+        overflow-y: auto;
+        /* Enable vertical scrolling */
+        padding: 10px 0;
+        position: relative;
+        background: transparent;
+        /* Or your card background */
+    }
+
+    /* Make sure the canvas fills the scrollbox */
+    #expenseChart {
+        width: 100% !important;
+        height: 100% !important;
+        display: block;
+    }
+
+    /* Match the height of the recent transactions section */
+    .category-summary-scrollbox {
+        height: 485px;
+        overflow-y: auto;
+        background: transparent;
+        padding: 0;
+    }
+
+    .category-summary-table {
+        background: transparent;
+        color: #e2e8f0;
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+    }
+
+    .category-summary-table th,
+    .category-summary-table td {
+        background: transparent;
+        color: #e2e8f0;
+        border: 1px solid #353232;
+        z-index: 3;
+    }
+
+    .category-summary-table th {
+        position: sticky;
+        top: 0;
+        background: #181818;
+        z-index: 2;
+    }
+
+    .category-summary-table tr:hover {
+        background: transparent;
+    }
+
+    .text-success {
+        color: #38d39f !important;
+        font-weight: bold;
+    }
+
+    .text-danger {
+        color: #ff6384 !important;
+        font-weight: bold;
+    }
+
+    .balance-amount {
+        font-size: 3rem !important;
+        font-weight: bold !important;
+    }
+
+    .md {
+        font-size: 1.8rem !important;
+        font-weight: bold !important;
+    }
+
+    /* Make the budget dropdown always appear above other content */
+    /* Make the budget dropdown scrollable and always above other content */
+    .stats-card-budget .dropdown-menu {
+        position: absolute !important;
+        z-index: 1050 !important;
+        /* Very high, above modals and backgrounds */
+        left: 0;
+        top: 100%;
+        min-width: 100%;
+        max-height: 200px;
+        /* Set max height for scroll */
+        overflow-y: auto;
+        /* Enable vertical scrolling */
+        background: #e2e8f0;
+        color: #e2e8f0;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        border: 1px solid #353232;
+    }
+
+    /* Prevent parent from clipping dropdown */
+    .stats-card-budget {
+        overflow: visible !important;
+        position: relative;
     }
 </style>
 {% endblock %}
