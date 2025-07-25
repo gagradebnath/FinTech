@@ -220,3 +220,96 @@ def get_all_user_budgets_with_categories(user_id):
         return []
     finally:
         conn.close()      
+
+def delete_budget(budget_id, user_id, deletion_reason="User initiated deletion"):
+    """Delete a budget and all its associated data"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # First verify the budget belongs to the user
+            cursor.execute('SELECT id, name FROM budgets WHERE id = %s AND user_id = %s', (budget_id, user_id))
+            budget = cursor.fetchone()
+            
+            if not budget:
+                return False, "Budget not found or you don't have permission to delete it"
+            
+            budget_name = budget['name']
+            
+            # Update the deletion reason in the trigger by setting a session variable
+            cursor.execute('SET @deletion_reason = %s', (deletion_reason,))
+            
+            # Delete the budget (CASCADE will handle related records and trigger will log)
+            cursor.execute('DELETE FROM budgets WHERE id = %s AND user_id = %s', (budget_id, user_id))
+            conn.commit()
+            
+            if cursor.rowcount > 0:
+                return True, f"Budget '{budget_name}' deleted successfully"
+            else:
+                return False, "Failed to delete budget"
+                
+    except Exception as e:
+        print(f"Error deleting budget: {e}")
+        conn.rollback()
+        return False, f"Error deleting budget: {str(e)}"
+    finally:
+        conn.close()
+
+def get_budget_deletion_history(user_id, limit=10):
+    """Get the deletion history for a user's budgets"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('''
+                SELECT 
+                    deleted_budget_name,
+                    budget_amount,
+                    currency,
+                    deletion_timestamp,
+                    categories_count,
+                    items_count,
+                    deletion_reason
+                FROM budget_deletion_log 
+                WHERE deleted_by_user_id = %s 
+                ORDER BY deletion_timestamp DESC 
+                LIMIT %s
+            ''', (user_id, limit))
+            return cursor.fetchall()
+    except Exception as e:
+        print(f"Error getting deletion history: {e}")
+        return []
+    finally:
+        conn.close()
+
+def restore_budget_from_log(deletion_log_id, user_id):
+    """Attempt to restore a budget from deletion log (if data is available)"""
+    # This is a placeholder function - actual implementation would depend on
+    # how much data you want to store in the deletion log
+    # For now, it just returns information about what was deleted
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute('''
+                SELECT * FROM budget_deletion_log 
+                WHERE id = %s AND deleted_by_user_id = %s
+            ''', (deletion_log_id, user_id))
+            log_entry = cursor.fetchone()
+            
+            if log_entry:
+                return {
+                    'status': 'info_available',
+                    'message': 'Budget information found in deletion log',
+                    'data': dict(log_entry)
+                }
+            else:
+                return {
+                    'status': 'not_found',
+                    'message': 'No deletion record found'
+                }
+    except Exception as e:
+        print(f"Error checking deletion log: {e}")
+        return {
+            'status': 'error',
+            'message': f"Error accessing deletion log: {str(e)}"
+        }
+    finally:
+        conn.close()

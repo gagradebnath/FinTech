@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, current_app, jsonify, session, redirect, url_for
 import uuid
 from .user import get_current_user
-from app.utils.budget_utils import get_user_budget, save_or_update_budget, insert_full_budget, get_all_user_budgets, get_budget_by_id
+from app.utils.budget_utils import get_user_budget, save_or_update_budget, insert_full_budget, get_all_user_budgets, get_budget_by_id, delete_budget, get_budget_deletion_history
 from app.utils.jwt_auth import token_required, get_current_user_from_jwt
 
 budget_bp = Blueprint('budget', __name__)
@@ -145,6 +145,60 @@ def get_budget_by_id_route(budget_id):
                 print(f"  - Item: {item['name']}, Amount: {item['amount']}")
     
     return jsonify({'success': True, 'budget': budget})
+
+@budget_bp.route('/delete_budget/<budget_id>', methods=['DELETE'])
+def delete_budget_route(budget_id):
+    # Support both session-based and JWT-based authentication
+    user = get_current_user_from_jwt()
+    if not user:
+        user = get_current_user()
+    
+    if not user:
+        return jsonify({'success': False, 'message': 'Not logged in'}), 401
+    
+    # Get deletion reason from request body if provided
+    deletion_reason = "User initiated deletion"
+    if request.is_json:
+        data = request.get_json()
+        deletion_reason = data.get('reason', deletion_reason)
+    
+    success, message = delete_budget(budget_id, user['id'], deletion_reason)
+    
+    if success:
+        return jsonify({
+            'success': True, 
+            'message': message,
+            'timestamp': str(current_app.utcnow()) if hasattr(current_app, 'utcnow') else None
+        }), 200
+    else:
+        return jsonify({'success': False, 'message': message}), 400
+
+@budget_bp.route('/budget_deletion_history', methods=['GET'])
+def get_deletion_history():
+    # Support both session-based and JWT-based authentication
+    user = get_current_user_from_jwt()
+    if not user:
+        user = get_current_user()
+    
+    if not user:
+        return jsonify({'success': False, 'message': 'Not logged in'}), 401
+    
+    limit = request.args.get('limit', 10, type=int)
+    history = get_budget_deletion_history(user['id'], limit)
+    
+    # Convert to serializable format
+    history_list = []
+    for entry in history:
+        if hasattr(entry, 'keys'):
+            history_list.append(dict(entry))
+        else:
+            history_list.append(entry)
+    
+    return jsonify({
+        'success': True,
+        'history': history_list,
+        'count': len(history_list)
+    }), 200
 
 # Function to handle JSON serialization of SQLite row objects
 def serialize_budget(budget):
