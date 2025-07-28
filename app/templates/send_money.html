@@ -11,7 +11,7 @@
     }
 
     .modern-transaction-section {
-        height: 600px;
+        height: 540px;
         /* Adjust this value as needed */
         display: flex;
         flex-direction: column;
@@ -29,7 +29,7 @@
     .table-responsive {
         flex: 1;
         overflow-y: auto;
-        position:  relative;
+        position: relative;
         /* For Firefox */
         scrollbar-width: thin;
         scrollbar-color: #888 #f1f1f1;
@@ -57,15 +57,16 @@
         position: sticky;
         top: 0;
         background: #1d1c1c;
-        z-index: 0  ;
+        z-index: 0;
     }
-    .dropdown- menu{
+
+    .dropdown- menu {
         z-index: 2;
     }
 </style>
 
 <div class="container py-4">
-    <div class="row">
+    <div class="row v ">
         <div class="col-lg-5">
             <div class="card mb-4">
                 <div class="card-header">
@@ -131,11 +132,8 @@
                     </form>
                 </div>
             </div>
-            <a href="{{ get_dashboard_url_for_user(user) }}" class="btn btn-outline-secondary mb-4">
-                <i class="bi bi-arrow-left"></i> Back to Dashboard
-            </a>
+           
         </div>
-
         <div class="col-lg-7">
             <div class="card">
                 <div class="modern-transaction-section">
@@ -245,6 +243,47 @@
                     </div>
                     {% endif %}
                 </div>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header">Cash Out (Request Money from Agent)</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('user.cashout_request') }}">
+                    <div class="mb-3 position-relative" style="position:relative;">
+                        <label for="agent_search" class="form-label">Search Agent</label>
+                        <input type="text" class="form-control" id="agent_search" name="agent_search"
+                            placeholder="Type agent name, ID, email, or number..." autocomplete="off" required>
+                        <input type="hidden" name="agent_id" id="agent_id" required>
+                        <div class="list-group position-absolute w-100 d-none" id="agentDropdown"
+                            style="z-index: 1000; max-height: 200px; overflow-y: auto; ">
+                            {% for a in agents %}
+                            <div type="button" class="list-group-item list-group-item-action"
+                                data-agent-id="{{ a.id }}"
+                                data-agent-name="{{ a.first_name }} {{ a.last_name }}"
+                                data-agent-email="{{ a.email }}"
+                                data-agent-phone="{{ a.phone }}">
+                                {{ a.first_name }} {{ a.last_name }} ({{ a.id }}) - {{ a.email }} - {{ a.phone }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cashout_amount" class="form-label">Amount</label>
+                        <input type="number" class="form-control" id="cashout_amount" name="amount" min="1" max="30000"
+                            required placeholder="Enter amount (max 30000)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="note" class="form-label">Note (optional)</label>
+                        <input type="text" class="form-control" id="note" name="note" maxlength="255">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Request Cash Out</button>
+                </form>
+                {% if cashout_success %}
+                <div class="alert alert-success mt-3">{{ cashout_success }}</div>
+                {% endif %}
+                {% if cashout_error %}
+                <div class="alert alert-danger mt-3">{{ cashout_error }}</div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -598,4 +637,52 @@
         form.submit();
     }
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const agentSearch = document.getElementById('agent_search');
+    const agentDropdown = document.getElementById('agentDropdown');
+    const agentIdInput = document.getElementById('agent_id');
+    const agentOptions = Array.from(agentDropdown.querySelectorAll('.list-group-item'));
+
+    function filterAgents() {
+        const query = agentSearch.value.toLowerCase();
+        let anyVisible = false;
+        agentOptions.forEach(option => {
+            const text = option.textContent.toLowerCase();
+            if (text.includes(query)) {
+                option.style.display = '';
+                anyVisible = true;
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        agentDropdown.classList.toggle('d-none', !anyVisible);
+    }
+
+    agentSearch.addEventListener('focus', function() {
+        agentOptions.forEach(option => option.style.display = '');
+        agentDropdown.classList.remove('d-none');
+    });
+    agentSearch.addEventListener('input', filterAgents);
+
+    agentOptions.forEach(option => {
+        option.addEventListener('click', function () {
+            agentIdInput.value = option.getAttribute('data-agent-id');
+            agentSearch.value = option.getAttribute('data-agent-name') + ' (' + option.getAttribute('data-agent-id') + ')';
+            agentDropdown.classList.add('d-none');
+        });
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!agentSearch.contains(e.target) && !agentDropdown.contains(e.target)) {
+            agentDropdown.classList.add('d-none');
+        }
+    });
+});
+</script>
+{% if agents %}
+    <!-- Agents loaded: {{ agents|length }} -->
+{% else %}
+    <div class="alert alert-danger">No agents found!</div>
+{% endif %}
 {% endblock %}
