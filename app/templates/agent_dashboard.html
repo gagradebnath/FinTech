@@ -6,139 +6,198 @@
         <div class="card-body">
             <h5 class="card-title">Welcome, {{ user.first_name }} {{ user.last_name }} (Agent)!</h5>
             <p class="card-text">User ID: <strong>{{ user.id }}</strong></p>
-            <p class="card-text">Balance: <strong>{{ user.balance }}</strong></p>
-            <a href="{{ url_for('user.profile') }}" class="btn btn-outline-primary btn-sm">View Profile</a>
-            <a href="{{ url_for('user.expense_habit') }}" class="btn btn-outline-secondary btn-sm ms-2">Expense Habit</a>
-            <a href="{{ url_for('budget.plan_budget') }}" class="btn btn-outline-success btn-sm ms-2">Plan Budget</a>
-            <a href="{{ url_for('transaction.send_money_route') }}" class="btn btn-outline-warning btn-sm ms-2">Send Money</a>
-            <a href="{{ url_for('fraud.report_fraud') }}" class="btn btn-outline-danger btn-sm ms-2">Report Fraud</a>
+            <p class="card-text" >Balance: <strong style="font-size: 1.2rem;">{{ user.balance }}</strong></p>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">Budgets</div>
-                <div class="card-body bg-dark text-white">
-                    {% if budgets %}
-                        <ul class="list-group bg-dark">
-                        {% for budget in budgets %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
-                                {{ budget.name if budget.name else 'N/A' }} ({{ budget.currency if budget.currency else '' }})
-                                <span class="badge bg-primary">{{ budget.amount }}</span>
-                            </li>
-                        {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p>No budgets found.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">Recent Expenses</div>
-                <div class="card-body bg-dark">
-                    {% if expenses %}
-                        <ul class="list-group bg-dark">
-                        {% for exp in expenses %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
-                                {{ exp.note if exp.note else 'Expense' }} ({{ exp.location if exp.location else '' }})
-                                <span class="badge bg-danger">{{ exp.amount }}</span>
-                            </li>
-                        {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p>No expenses found.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+    
     <div class="row">
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header">Recent Transactions</div>
                 <div class="card-body">
                     {% if transactions %}
-                        <ul class="list-group">{% for tx in transactions %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
-                                <div>
-                                    <span class="fw-bold">{{ tx.type|capitalize }}</span>
-                                    {% if tx.sender_id == user.id %}
-                                        <span class="text-danger">Sent</span>
-                                        {% if tx.receiver_id %} to <span class="fw-bold">{{ tx.receiver_id }}</span>{% endif %}
-                                    {% elif tx.receiver_id == user.id %}
-                                        <span class="text-success">Received</span>
-                                        {% if tx.sender_id %} from <span class="fw-bold">{{ tx.sender_id }}</span>{% endif %}
-                                    {% endif %}
-                                    {% if tx.note %}<span class="text-muted">- {{ tx.note }}</span>{% endif %}
-                                    {% if tx.location %}<span class="text-muted"> ({{ tx.location }})</span>{% endif %}
-                                </div>
-                                <span class="badge bg-primary">{{ tx.amount }}</span>
-                            </li>{% endfor %}
-                        </ul>
+                    <ul class="list-group">{% for tx in transactions %}
+                        <li
+                            class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
+                            <div>
+                                <span class="fw-bold">{{ tx.type|capitalize }}</span>
+                                {% if tx.sender_id == user.id %}
+                                <span class="text-danger">Sent</span>
+                                {% if tx.receiver_id %} to <span class="fw-bold">{{ tx.receiver_id }}</span>{% endif %}
+                                {% elif tx.receiver_id == user.id %}
+                                <span class="text-success">Received</span>
+                                {% if tx.sender_id %} from <span class="fw-bold">{{ tx.sender_id }}</span>{% endif %}
+                                {% endif %}
+                                {% if tx.note %}<span class="text-muted">- {{ tx.note }}</span>{% endif %}
+                                {% if tx.location %}<span class="text-muted"> ({{ tx.location }})</span>{% endif %}
+                            </div>
+                            <span class="badge bg-primary">{{ tx.amount }}</span>
+                        </li>{% endfor %}
+                    </ul>
                     {% else %}
-                        <p>No transactions found.</p>
+                    <p>No transactions found.</p>
                     {% endif %}
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">Add Money or Cash Out for User Account</div>
-                <div class="card-body">
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label for="target_identifier" class="form-label">User (User ID, Email, or Phone)</label>
-                            <input type="text" class="form-control" id="userSearch" autocomplete="off" placeholder="Search user..." required>
-                            <input type="hidden" name="target_identifier" id="target_identifier" required>
-                            <div class="list-group position-absolute w-100 d-none" id="userDropdown" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
-                                {% for u in users %}
-                                <button type="button" class="list-group-item list-group-item-action"
-                                    data-user-id="{{ u.id }}"
-                                    data-user-name="{{ u.first_name }} {{ u.last_name }}"
-                                    data-user-email="{{ u.email }}"
-                                    data-user-phone="{{ u.phone }}">
-                                    {{ u.first_name }} {{ u.last_name }} ({{ u.id }}) - {{ u.email }} - {{ u.phone }}
-                                </button>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="amount" class="form-label">Amount</label>
-                            <input type="number" class="form-control" id="amount" name="amount" min="0.01" step="0.01" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="operation" class="form-label">Operation</label>
-                            <select class="form-select" id="operation" name="operation" required>
-                                <option value="add">Add Money</option>
-                                <option value="cashout">Cash Out</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-success">Submit</button>
-                    </form>
-                    {% if add_money_success %}
-                    <div class="alert alert-success mt-3">{{ add_money_success }}</div>
-                    {% endif %}
-                    {% if add_money_error %}
-                    <div class="alert alert-danger mt-3">{{ add_money_error }}</div>
-                    {% endif %}
+        
+    </div>
+
+    <!-- Add Money from Admin Section -->
+    <div class="card mb-4">
+        <div class="card-header">Add Money from Admin</div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('agent.agent_request_money') }}">
+                <div class="mb-3">
+                    <label for="admin_search" class="form-label">Search Admin</label>
+                    <input type="text" class="form-control" id="admin_search" name="admin_search" placeholder="Type admin name, ID, email, or number..." autocomplete="off" required>
+                    <input type="hidden" name="admin_id" id="admin_id" required>
+                    <div class="list-group position-absolute w-100 d-none" id="adminDropdown" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+                        {% for a in admins %}
+                        <button type="button" class="list-group-item list-group-item-action"
+                            data-admin-id="{{ a.id }}"
+                            data-admin-name="{{ a.first_name }} {{ a.last_name }}"
+                            data-admin-email="{{ a.email }}"
+                            data-admin-phone="{{ a.phone }}">
+                            {{ a.first_name }} {{ a.last_name }} ({{ a.id }}) - {{ a.email }} - {{ a.phone }}
+                        </button>
+                        {% endfor %}
+                    </div>
                 </div>
+                <div class="mb-3">
+                    <label for="amount" class="form-label">Amount</label>
+                    <select class="form-select" id="amount" name="amount" required>
+                        {% for amt in range(5000, 50001, 5000) %}
+                        <option value="{{ amt }}">{{ amt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="note" class="form-label">Note (optional)</label>
+                    <input type="text" class="form-control" id="note" name="note" maxlength="255">
+                </div>
+                <button type="submit" class="btn btn-primary">Request Money</button>
+            </form>
+            {% if request_success %}
+            <div class="alert alert-success mt-3">{{ request_success }}</div>
+            {% endif %}
+            {% if request_error %}
+            <div class="alert alert-danger mt-3">{{ request_error }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Cash Out Requests from Users Table -->
+    <div class="card mb-4" id="cashout-requests">
+        <div class="card-header">Cash Out Requests from Users</div>
+        <div class="card-body">
+            {% if cashout_success %}
+            <div class="alert alert-success">{{ cashout_success }}</div>
+            {% endif %}
+            {% if cashout_error %}
+            <div class="alert alert-danger">{{ cashout_error }}</div>
+            {% endif %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-dark">
+                    <thead>
+                        <tr>
+                            <th>User Name</th>
+                            <th>User ID</th>
+                            <th>Phone</th>
+                            <th>Amount</th>
+                            <th>Note</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in cashout_requests %}
+                        <tr>
+                            <td>{{ req.first_name }} {{ req.last_name }}</td>
+                            <td>{{ req.user_id }}</td>
+                            <td>{{ req.phone }}</td>
+                            <td>{{ req.amount }}</td>
+                            <td>{{ req.note or '' }}</td>
+                            <td>
+                                {% if req.status == 'approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif req.status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.status == 'pending' %}
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="cashout_request_id" value="{{ req.id }}">
+                                    <input type="text" name="note" class="form-control mb-1" placeholder="Optional note" style="width:120px;display:inline-block;">
+                                    <button type="submit" name="action" value="approved" class="btn btn-success btn-sm">Approve</button>
+                                    <button type="submit" name="action" value="rejected" class="btn btn-danger btn-sm">Reject</button>
+                                </form>
+                                {% else %}
+                                    <em>No action</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const userSearch = document.getElementById('userSearch');
-    const userDropdown = document.getElementById('userDropdown');
-    const targetIdentifier = document.getElementById('target_identifier');
-    const userButtons = Array.from(userDropdown.querySelectorAll('button'));
+    document.addEventListener('DOMContentLoaded', function () {
+        const userSearch = document.getElementById('userSearch');
+        const userDropdown = document.getElementById('userDropdown');
+        const targetIdentifier = document.getElementById('target_identifier');
+        const userButtons = Array.from(userDropdown.querySelectorAll('button'));
 
-    function filterUsers() {
-        const query = userSearch.value.toLowerCase();
-        let anyVisible = false;
+        function filterUsers() {
+            const query = userSearch.value.toLowerCase();
+            let anyVisible = false;
+            userButtons.forEach(btn => {
+                const text = btn.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    btn.style.display = '';
+                    anyVisible = true;
+                } else {
+                    btn.style.display = 'none';
+                }
+            });
+            userDropdown.classList.toggle('d-none', !anyVisible);
+        }
+
+        userSearch.addEventListener('focus', filterUsers);
+        userSearch.addEventListener('input', filterUsers);
+
         userButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                targetIdentifier.value = btn.getAttribute('data-user-id');
+                userSearch.value = btn.getAttribute('data-user-name') + ' (' + btn.getAttribute('data-user-id') + ')';
+                userDropdown.classList.add('d-none');
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!userSearch.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.add('d-none');
+            }
+        });
+    });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const adminSearch = document.getElementById('admin_search');
+    const adminDropdown = document.getElementById('adminDropdown');
+    const adminIdInput = document.getElementById('admin_id');
+    const adminButtons = Array.from(adminDropdown.querySelectorAll('button'));
+
+    function filterAdmins() {
+        const query = adminSearch.value.toLowerCase();
+        let anyVisible = false;
+        adminButtons.forEach(btn => {
             const text = btn.textContent.toLowerCase();
             if (text.includes(query)) {
                 btn.style.display = '';
@@ -147,25 +206,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 btn.style.display = 'none';
             }
         });
-        userDropdown.classList.toggle('d-none', !anyVisible);
+        adminDropdown.classList.toggle('d-none', !anyVisible);
     }
 
-    userSearch.addEventListener('focus', filterUsers);
-    userSearch.addEventListener('input', filterUsers);
+    adminSearch.addEventListener('focus', filterAdmins);
+    adminSearch.addEventListener('input', filterAdmins);
 
-    userButtons.forEach(btn => {
+    adminButtons.forEach(btn => {
         btn.addEventListener('click', function () {
-            targetIdentifier.value = btn.getAttribute('data-user-id');
-            userSearch.value = btn.getAttribute('data-user-name') + ' (' + btn.getAttribute('data-user-id') + ')';
-            userDropdown.classList.add('d-none');
+            adminIdInput.value = btn.getAttribute('data-admin-id');
+            adminSearch.value = btn.getAttribute('data-admin-name') + ' (' + btn.getAttribute('data-admin-id') + ')';
+            adminDropdown.classList.add('d-none');
         });
     });
 
     document.addEventListener('click', function (e) {
-        if (!userSearch.contains(e.target) && !userDropdown.contains(e.target)) {
-            userDropdown.classList.add('d-none');
+        if (!adminSearch.contains(e.target) && !adminDropdown.contains(e.target)) {
+            adminDropdown.classList.add('d-none');
         }
     });
 });
 </script>
+
+<style> 
+     select.form-select option[value=""] {
+        color: #888 !important;
+    }
+
+    select.form-select option:not([value=""]) {
+        color: #000 !important;
+    }
+
+</style>
 {% endblock %}

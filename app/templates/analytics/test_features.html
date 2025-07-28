@@ -125,42 +125,7 @@
             </div>
             
             <!-- User Transaction Summary -->
-            <div class="section">
-                <h2>📊 Top Users by Transaction Volume</h2>
-                {% if results.user_summary %}
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Balance</th>
-                                <th>Sent</th>
-                                <th>Received</th>
-                                <th>Total Volume</th>
-                                <th>Risk Score</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in results.user_summary %}
-                            <tr>
-                                <td>{{ user.first_name }} {{ user.last_name }}</td>
-                                <td>${{ "%.2f"|format(user.balance) }}</td>
-                                <td>${{ "%.2f"|format(user.total_sent) }}</td>
-                                <td>${{ "%.2f"|format(user.total_received) }}</td>
-                                <td>${{ "%.2f"|format(user.total_sent + user.total_received) }}</td>
-                                <td>
-                                    <span class="{% if user.risk_score > 70 %}risk-high{% elif user.risk_score > 30 %}risk-medium{% else %}risk-low{% endif %}">
-                                        {{ "%.1f"|format(user.risk_score) }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                {% else %}
-                    <div class="no-data">No user data available</div>
-                {% endif %}
-            </div>
-
+            
             <!-- Daily Analytics -->
             <div class="section">
                 <h2>📈 Recent Daily Analytics</h2>
@@ -182,39 +147,6 @@
             </div>
 
             <!-- High Risk Users -->
-            <div class="section">
-                <h2>⚠️ High Risk Users</h2>
-                {% if results.high_risk_users %}
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Risk Score</th>
-                                <th>Fraud Reports</th>
-                                <th>Weekly Velocity</th>
-                                <th>Account Age (days)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in results.high_risk_users %}
-                            <tr>
-                                <td>{{ user.first_name }} {{ user.last_name }}</td>
-                                <td>
-                                    <span class="{% if user.risk_score > 70 %}risk-high{% elif user.risk_score > 30 %}risk-medium{% else %}risk-low{% endif %}">
-                                        {{ "%.1f"|format(user.risk_score) }}
-                                    </span>
-                                </td>
-                                <td>{{ user.fraud_reports }}</td>
-                                <td>{{ "%.2f"|format(user.weekly_velocity) }}</td>
-                                <td>{{ user.account_age_days }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                {% else %}
-                    <div class="no-data">No high risk users found (this is good!)</div>
-                {% endif %}
-            </div>
 
             <!-- Fraud Detection Insights -->
             <div class="section">
@@ -278,47 +210,8 @@
             <p><em>These API endpoints return JSON data that can be used by frontend applications.</em></p>
         </div>
 
-        <!-- Features Summary -->
-        <div class="section">
-            <h2>✨ Advanced SQL Features Implemented</h2>
-            <div class="grid">
-                <div class="card">
-                    <h3>Stored Procedures</h3>
-                    <ul>
-                        <li>ProcessMoneyTransfer</li>
-                        <li>GetUserTransactionHistory</li>
-                        <li>CalculateUserStatistics</li>
-                        <li>BulkBalanceUpdate</li>
-                    </ul>
-                </div>
-                <div class="card">
-                    <h3>Functions</h3>
-                    <ul>
-                        <li>CalculateAccountAge</li>
-                        <li>CalculateTransactionVelocity</li>
-                        <li>GetUserRiskScore</li>
-                    </ul>
-                </div>
-                <div class="card">
-                    <h3>Triggers</h3>
-                    <ul>
-                        <li>Auto admin logging</li>
-                        <li>Transaction validation</li>
-                        <li>Blockchain integration</li>
-                        <li>User activity tracking</li>
-                    </ul>
-                </div>
-                <div class="card">
-                    <h3>Views & Complex Queries</h3>
-                    <ul>
-                        <li>User transaction summaries</li>
-                        <li>Daily analytics</li>
-                        <li>High risk user monitoring</li>
-                        <li>Fraud detection patterns</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+       
+       
     </div>
 </body>
 </html>
