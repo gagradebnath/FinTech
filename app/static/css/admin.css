@@ -5,6 +5,8 @@
     padding: 2rem;
     min-height: 100vh;
     background: transparent;
+    width: 100%;
+    max-width: none;
 }
 
 /* ===== ADMIN HEADER CARD ===== */

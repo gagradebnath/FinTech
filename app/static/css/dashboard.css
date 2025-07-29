@@ -1,5 +1,110 @@
 /* Dashboard-specific styles */
 
+/* ===== ROLE-SPECIFIC SIDEBAR STYLING ===== */
+/* Admin Sidebar Accent */
+.sidebar[data-role="admin"] {
+    border-right: 3px solid rgba(220, 53, 69, 0.5);
+    background: linear-gradient(180deg, rgba(220, 53, 69, 0.05) 0%, rgba(108, 117, 125, 0.05) 100%);
+}
+
+.sidebar[data-role="admin"] .sidebar-header {
+    border-bottom: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.sidebar[data-role="admin"] .sidebar-link:hover,
+.sidebar[data-role="admin"] .sidebar-link.active {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.1) 100%);
+    border-left: 4px solid #dc3545;
+    transform: translateX(4px);
+}
+
+/* Agent Sidebar Accent */
+.sidebar[data-role="agent"] {
+    border-right: 3px solid rgba(40, 167, 69, 0.5);
+    background: linear-gradient(180deg, rgba(40, 167, 69, 0.05) 0%, rgba(108, 117, 125, 0.05) 100%);
+}
+
+.sidebar[data-role="agent"] .sidebar-header {
+    border-bottom: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.sidebar[data-role="agent"] .sidebar-link:hover,
+.sidebar[data-role="agent"] .sidebar-link.active {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(40, 167, 69, 0.1) 100%);
+    border-left: 4px solid #28a745;
+    transform: translateX(4px);
+}
+
+/* User Sidebar Accent */
+.sidebar[data-role="user"] {
+    border-right: 3px solid rgba(0, 123, 255, 0.5);
+    background: linear-gradient(180deg, rgba(0, 123, 255, 0.05) 0%, rgba(108, 117, 125, 0.05) 100%);
+}
+
+.sidebar[data-role="user"] .sidebar-header {
+    border-bottom: 1px solid rgba(0, 123, 255, 0.2);
+}
+
+.sidebar[data-role="user"] .sidebar-link:hover,
+.sidebar[data-role="user"] .sidebar-link.active {
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.2) 0%, rgba(0, 123, 255, 0.1) 100%);
+    border-left: 4px solid #007bff;
+    transform: translateX(4px);
+}
+
+/* Role Badge in Sidebar */
+.sidebar-role-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-role-badge.admin {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.sidebar-role-badge.agent {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.sidebar-role-badge.user {
+    background: rgba(0, 123, 255, 0.2);
+    color: #007bff;
+    border: 1px solid rgba(0, 123, 255, 0.3);
+}
+
+/* Enhanced Sidebar Link Animations */
+.sidebar-link {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.sidebar-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.sidebar-link:hover::before {
+    left: 100%;
+}
+
 /* Redesigned Balance Cards */
 .balance-card {
     position: relative;
