@@ -3,6 +3,16 @@
 // Load saved budget when clicking the load button
 document.addEventListener('DOMContentLoaded', function() {
     const loadBudgetBtn = document.getElementById('load-budget');
+    const deleteBudgetBtn = document.getElementById('delete-budget');
+    const savedBudgetsSelect = document.getElementById('saved-budgets');
+    
+    // Enable/disable delete button based on selection
+    if (savedBudgetsSelect && deleteBudgetBtn) {
+        savedBudgetsSelect.addEventListener('change', function() {
+            deleteBudgetBtn.disabled = !this.value;
+        });
+    }
+    
     if (loadBudgetBtn) {
         loadBudgetBtn.addEventListener('click', async function() {
             const budgetId = document.getElementById('saved-budgets').value;
@@ -27,6 +37,86 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('Error loading budget:', error);
                 alert('Error: Could not load the selected budget. Please try again.');
+            }
+        });
+    }
+    
+    // Delete budget functionality
+    if (deleteBudgetBtn) {
+        deleteBudgetBtn.addEventListener('click', async function() {
+            const budgetId = document.getElementById('saved-budgets').value;
+            if (!budgetId) {
+                alert('Please select a budget to delete');
+                return;
+            }
+            
+            // Get the selected budget name for confirmation
+            const selectedOption = document.querySelector(`#saved-budgets option[value="${budgetId}"]`);
+            const budgetName = selectedOption ? selectedOption.textContent.split(' (')[0] : 'this budget';
+            
+            // Confirm deletion with reason
+            const deleteConfirmed = confirm(`Are you sure you want to delete "${budgetName}"? This action cannot be undone.`);
+            if (!deleteConfirmed) {
+                return;
+            }
+            
+            // Ask for deletion reason (optional)
+            const deletionReason = prompt("Optional: Please provide a reason for deletion:", "User requested deletion");
+            
+            try {
+                // Send delete request to the server
+                const requestBody = deletionReason ? JSON.stringify({ reason: deletionReason }) : undefined;
+                const headers = {
+                    'Content-Type': 'application/json',
+                };
+                
+                const response = await fetch(`/delete_budget/${budgetId}`, {
+                    method: 'DELETE',
+                    headers: headers,
+                    body: requestBody
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Remove the option from the dropdown
+                    selectedOption.remove();
+                    
+                    // Reset the form if the deleted budget was currently loaded
+                    const currentBudgetId = new URLSearchParams(window.location.search).get('budget_id');
+                    if (currentBudgetId === budgetId) {
+                        // Clear the form
+                        document.getElementById('budget-name').value = '';
+                        document.getElementById('currency').value = '';
+                        clearFormData();
+                        // Update URL to remove budget_id parameter
+                        history.pushState(null, '', '/plan-budget');
+                    }
+                    
+                    // Disable delete button since no budget is selected
+                    deleteBudgetBtn.disabled = true;
+                    savedBudgetsSelect.value = '';
+                    
+                    // Show success message with timestamp if available
+                    let successMessage = data.message || 'Budget deleted successfully!';
+                    if (data.timestamp) {
+                        successMessage += `\nDeleted at: ${new Date(data.timestamp).toLocaleString()}`;
+                    }
+                    alert(successMessage);
+                    
+                    // Log the deletion for debugging
+                    console.log('Budget deleted:', {
+                        budgetId: budgetId,
+                        budgetName: budgetName,
+                        reason: deletionReason,
+                        timestamp: data.timestamp
+                    });
+                } else {
+                    throw new Error(data.message || 'Failed to delete budget');
+                }
+            } catch (error) {
+                console.error('Error deleting budget:', error);
+                alert('Error: Could not delete the selected budget. Please try again.\n\nError details: ' + error.message);
             }
         });
     }
@@ -296,4 +386,27 @@ function collectFormData() {
     }).filter(cat => cat.items.length > 0);
     
     return { budgetName, currency, income, expenses };
+}
+
+// Clear form data function
+function clearFormData() {
+    // Clear existing income items (keep only the first one and reset its values)
+    const incomeList = document.getElementById('income-list');
+    while (incomeList.children.length > 1) {
+        incomeList.removeChild(incomeList.lastChild);
+    }
+    
+    // Reset the first income item
+    if (incomeList.children.length > 0) {
+        const firstIncomeItem = incomeList.children[0];
+        const sourceInput = firstIncomeItem.querySelector('input[type="text"]');
+        const amountInput = firstIncomeItem.querySelector('input[type="number"]');
+        
+        if (sourceInput) sourceInput.value = '';
+        if (amountInput) amountInput.value = '';
+    }
+    
+    // Clear all expense categories
+    const expenseList = document.getElementById('expense-list');
+    expenseList.innerHTML = '';
 }
