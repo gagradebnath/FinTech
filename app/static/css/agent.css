@@ -1,295 +1,282 @@
-/* Agent Dashboard - Modern Design System */
+/* Agent Dashboard Styles - Complete Redesign */
 
-/* Remove legacy styles */
+/* Remove old styles that conflict */
 .agent-info {
     display: none;
 }
 
-/* Modern Agent Stats Cards */
-.agent-stats-card {
+/* Agent-specific overrides and enhancements */
+.agent-dashboard {
+    background: var(--bg-dark);
+    min-height: 100vh;
+}
+
+/* ===== AGENT CARDS - COMPLETE REDESIGN ===== */
+
+/* Base Agent Card Styling */
+.agent-card {
     position: relative;
-    height: 180px;
+    height: 240px;
     border-radius: 24px;
-    padding: 0;
-    border: none;
     overflow: hidden;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     cursor: pointer;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.agent-stats-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+.agent-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
 }
 
-/* Card Glow Effects */
-.card-glow-effect {
+/* Card Gradient Backgrounds */
+.agent-card-blue {
+    background: linear-gradient(135deg, 
+        #0066FF 0%, 
+        #3385FF 50%, 
+        #6699FF 100%);
+    box-shadow: 0 20px 40px rgba(0, 102, 255, 0.4);
+}
+
+.agent-card-red {
+    background: linear-gradient(135deg, 
+        #EF4444 0%, 
+        #FF6B6B 50%, 
+        #FF8E53 100%);
+    box-shadow: 0 20px 40px rgba(239, 68, 68, 0.4);
+}
+
+.agent-card-purple {
+    background: linear-gradient(135deg, 
+        #8B5CF6 0%, 
+        #A855F7 50%, 
+        #C483F8 100%);
+    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.4);
+}
+
+/* Card Overlay for Glass Effect */
+.agent-card-overlay {
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    opacity: 0;
-    transition: opacity 0.4s ease;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
     pointer-events: none;
-    z-index: 1;
 }
 
-.agent-stats-card:hover .card-glow-effect {
-    opacity: 0.6;
-}
-
-/* Blue Balance Card */
-.agent-balance-card {
-    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
-    color: white;
-}
-
-.agent-balance-card .card-glow-effect {
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%);
-}
-
-/* Orange Requests Card */
-.agent-requests-card {
-    background: linear-gradient(135deg, #dc2626 0%, #ef4444 30%, #f97316 70%, #fb923c 100%);
-    color: white;
-}
-
-.agent-requests-card .card-glow-effect {
-    background: radial-gradient(circle, rgba(239, 68, 68, 0.4) 0%, transparent 70%);
-}
-
-/* Purple Processed Card */
-.agent-processed-card {
-    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%);
-    color: white;
-}
-
-.agent-processed-card .card-glow-effect {
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
-}
-
-/* Card Content Layout */
-.card-content-wrapper {
+/* Card Content Container */
+.agent-card-content {
     position: relative;
-    height: 100%;
+    z-index: 2;
     padding: 24px;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    z-index: 2;
+    color: white;
 }
 
-/* Header Section */
-.card-header-section {
+/* Card Header */
+.agent-card-header {
     display: flex;
     align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 12px;
+    justify-content: space-between;
+    margin-bottom: 16px;
 }
 
-.icon-container {
-    flex-shrink: 0;
-}
-
-.card-icon-bg {
+.agent-card-icon {
     width: 48px;
     height: 48px;
-    border-radius: 16px;
     background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 24px;
     color: white;
-    transition: all 0.3s ease;
+    margin-right: 16px;
+    flex-shrink: 0;
 }
 
-.agent-stats-card:hover .card-icon-bg {
-    background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.1);
-}
-
-.card-title-area {
+.agent-card-info {
     flex: 1;
-    min-width: 0;
 }
 
-.card-title {
+.agent-card-title {
     font-size: 16px;
     font-weight: 600;
     margin: 0 0 8px 0;
     color: white;
-    line-height: 1.2;
+    opacity: 0.9;
 }
 
-.status-indicator {
+.agent-card-status {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.status-dot {
+.status-indicator {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    animation: pulse-glow 2s infinite;
+    animation: pulse 2s infinite;
+}
+
+.status-available {
+    background-color: #00ff9f;
+    box-shadow: 0 0 8px rgba(0, 255, 159, 0.6);
 }
 
 .status-active {
-    background: #10b981;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
-}
-
-.status-processing {
-    background: #f59e0b;
-    box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+    background-color: #fbbf24;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
 }
 
 .status-complete {
-    background: #8b5cf6;
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.6);
+    background-color: #a78bfa;
+    box-shadow: 0 0 8px rgba(167, 139, 250, 0.6);
 }
 
 .status-text {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
     font-weight: 500;
 }
 
-/* Amount Display */
-.amount-display-section {
-    margin: 16px 0;
+/* Card Dropdown (for Budget card) */
+.card-dropdown {
+    margin-left: auto;
 }
 
-.currency-display {
+.dropdown-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: white;
+    padding: 8px 12px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.dropdown-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+/* Amount Display */
+.agent-card-amount {
     display: flex;
     align-items: baseline;
-    gap: 4px;
-}
-
-.currency {
-    font-size: 24px;
+    margin: 12px 0;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.8);
-    line-height: 1;
 }
 
-.amount-number {
-    font-size: 32px;
-    font-weight: 800;
+.currency-sign {
+    font-size: 20px;
+    margin-right: 4px;
+    opacity: 0.9;
     color: white;
+}
+
+.amount-digits {
+    font-size: 32px;
     line-height: 1;
     letter-spacing: -0.02em;
-    font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+    color: white;
+    font-weight: 700;
 }
 
-/* Footer Section */
-.card-footer-section {
-    position: relative;
+/* Progress Bar (for Budget card) */
+.agent-card-progress {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    margin: 16px 0 8px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #00ff9f;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+}
+
+/* Card Footer */
+.agent-card-footer {
     margin-top: auto;
+    position: relative;
 }
 
-.decorative-pattern {
+.agent-card-trend,
+.agent-card-details {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.trend-icon {
+    font-size: 16px;
+    color: #00ff9f;
+}
+
+.trend-info,
+.details-text {
+    font-weight: 500;
+}
+
+/* Card Decoration */
+.card-decoration {
     position: absolute;
-    bottom: -12px;
-    right: -12px;
+    bottom: -20px;
+    right: -20px;
     width: 80px;
     height: 80px;
     background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 2px, transparent 2px);
     background-size: 12px 12px;
     border-radius: 50%;
     opacity: 0.3;
-    transition: all 0.4s ease;
 }
 
-.agent-stats-card:hover .decorative-pattern {
-    opacity: 0.5;
-    transform: rotate(15deg) scale(1.1);
-}
-
-.info-display {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.85);
-    font-weight: 500;
-}
-
-.info-icon {
-    font-size: 16px;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.info-text {
-    line-height: 1.3;
-}
-
-/* Animations */
-@keyframes pulse-glow {
+/* Pulse Animation */
+@keyframes pulse {
     0%, 100% { 
-        opacity: 1; 
+        opacity: 1;
         transform: scale(1);
     }
     50% { 
-        opacity: 0.7; 
+        opacity: 0.7;
         transform: scale(1.1);
     }
 }
 
-/* Responsive Design */
-@media (max-width: 992px) {
-    .agent-stats-card {
-        height: 160px;
+/* Responsive Design for Agent Cards */
+@media (max-width: 768px) {
+    .agent-card {
+        height: 220px;
     }
     
-    .card-content-wrapper {
+    .agent-card-content {
         padding: 20px;
     }
     
-    .amount-number {
-        font-size: 28px;
-    }
-    
-    .currency {
-        font-size: 20px;
-    }
-}
-
-@media (max-width: 768px) {
-    .agent-stats-card {
-        height: 140px;
-        margin-bottom: 16px;
-    }
-    
-    .card-content-wrapper {
-        padding: 16px;
-    }
-    
-    .card-header-section {
-        gap: 12px;
-        margin-bottom: 8px;
-    }
-    
-    .card-icon-bg {
+    .agent-card-icon {
         width: 40px;
         height: 40px;
-        font-size: 18px;
+        font-size: 20px;
     }
     
-    .card-title {
-        font-size: 14px;
-    }
-    
-    .amount-number {
-        font-size: 24px;
-    }
-    
-    .currency {
-        font-size: 18px;
+    .amount-digits {
+        font-size: 28px;
     }
 }
 

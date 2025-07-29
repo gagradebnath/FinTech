@@ -7,124 +7,128 @@
         </div>
     </div>
 
-    <!-- Agent Modern Stats Cards -->
+    <!-- Agent Stats Cards -->
     <div class="row mb-5 g-4">
-        <!-- Agent Balance Card - Modern Blue Design -->
-        <div class="col-lg-4">
-            <div class="agent-stats-card agent-balance-card">
-                <div class="card-glow-effect"></div>
-                <div class="card-content-wrapper">
-                    <!-- Header Section -->
-                    <div class="card-header-section">
-                        <div class="icon-container">
-                            <div class="card-icon-bg">
-                                <i class="bi bi-wallet2"></i>
-                            </div>
+        <!-- Agent Balance Card - Blue Gradient -->
+        <div class="col-md-4">
+            <div class="agent-card agent-card-blue">
+                <div class="agent-card-overlay"></div>
+                <div class="agent-card-content">
+                    <!-- Card Header -->
+                    <div class="agent-card-header">
+                        <div class="agent-card-icon">
+                            <i class="bi bi-wallet-fill"></i>
                         </div>
-                        <div class="card-title-area">
-                            <h3 class="card-title">Agent Balance</h3>
-                            <div class="status-indicator">
-                                <span class="status-dot status-active"></span>
+                        <div class="agent-card-info">
+                            <h6 class="agent-card-title">Agent Balance</h6>
+                            <div class="agent-card-status">
+                                <span class="status-indicator status-available"></span>
                                 <span class="status-text">Available</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Amount Display -->
-                    <div class="amount-display-section">
-                        <div class="currency-display">
-                            <span class="currency">$</span>
-                            <span class="amount-number">${{ user.balance|default('0.00') }}</span>
-                        </div>
+                    <div class="agent-card-amount">
+                        <span class="currency-sign">$</span>
+                        <span class="amount-digits">${{ user.balance|default('0.00') }}</span>
                     </div>
 
-                    <!-- Footer Info -->
-                    <div class="card-footer-section">
-                        <div class="decorative-pattern"></div>
-                        <div class="info-display">
-                            <i class="bi bi-person-badge info-icon"></i>
-                            <span class="info-text">ID: {{ user.id }} • {{ user.first_name }} {{ user.last_name }}</span>
+                    <!-- Card Footer -->
+                    <div class="agent-card-footer">
+                        <div class="agent-card-trend">
+                            <i class="bi bi-person-badge trend-icon"></i>
+                            <span class="trend-info">ID: {{ user.id }} • {{ user.first_name }} {{ user.last_name }}</span>
                         </div>
+                        <div class="card-decoration"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Pending Requests Card - Modern Orange Design -->
-        <div class="col-lg-4">
-            <div class="agent-stats-card agent-requests-card">
-                <div class="card-glow-effect"></div>
-                <div class="card-content-wrapper">
-                    <!-- Header Section -->
-                    <div class="card-header-section">
-                        <div class="icon-container">
-                            <div class="card-icon-bg">
-                                <i class="bi bi-arrow-up-right"></i>
-                            </div>
+        <!-- Pending Requests Card - Red Gradient -->
+        <div class="col-md-4">
+            <div class="agent-card agent-card-red">
+                <div class="agent-card-overlay"></div>
+                <div class="agent-card-content">
+                    <!-- Card Header -->
+                    <div class="agent-card-header">
+                        <div class="agent-card-icon">
+                            <i class="bi bi-arrow-up-right-circle-fill"></i>
                         </div>
-                        <div class="card-title-area">
-                            <h3 class="card-title">Pending Requests</h3>
-                            <div class="status-indicator">
-                                <span class="status-dot status-processing"></span>
+                        <div class="agent-card-info">
+                            <h6 class="agent-card-title">Pending Requests</h6>
+                            <div class="agent-card-status">
+                                <span class="status-indicator status-active"></span>
                                 <span class="status-text">Active</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Amount Display -->
-                    <div class="amount-display-section">
-                        <div class="currency-display">
-                            <span class="currency">#</span>
-                            <span class="amount-number">{{ cashout_requests|selectattr('status', 'equalto', 'pending')|list|length }}</span>
-                        </div>
+                    <div class="agent-card-amount">
+                        <span class="currency-sign">#</span>
+                        <span class="amount-digits">{{ cashout_requests|selectattr('status', 'equalto', 'pending')|list|length }}</span>
                     </div>
 
-                    <!-- Footer Info -->
-                    <div class="card-footer-section">
-                        <div class="decorative-pattern"></div>
-                        <div class="info-display">
-                            <span class="info-text">{{ cashout_requests|length }} total requests</span>
+                    <!-- Card Footer -->
+                    <div class="agent-card-footer">
+                        <div class="agent-card-details">
+                            <span class="details-text">{{ cashout_requests|length }} total requests</span>
                         </div>
+                        <div class="card-decoration"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Processed Today Card - Modern Purple Design -->
-        <div class="col-lg-4">
-            <div class="agent-stats-card agent-processed-card">
-                <div class="card-glow-effect"></div>
-                <div class="card-content-wrapper">
-                    <!-- Header Section -->
-                    <div class="card-header-section">
-                        <div class="icon-container">
-                            <div class="card-icon-bg">
-                                <i class="bi bi-check-circle-fill"></i>
-                            </div>
+        <!-- Processed Today Card - Purple Gradient -->
+        <div class="col-md-4">
+            <div class="agent-card agent-card-purple">
+                <div class="agent-card-overlay"></div>
+                <div class="agent-card-content">
+                    <!-- Card Header -->
+                    <div class="agent-card-header">
+                        <div class="agent-card-icon">
+                            <i class="bi bi-check-circle-fill"></i>
                         </div>
-                        <div class="card-title-area">
-                            <h3 class="card-title">Processed Today</h3>
-                            <div class="status-indicator">
-                                <span class="status-dot status-complete"></span>
+                        <div class="agent-card-info">
+                            <h6 class="agent-card-title">Processed Today</h6>
+                            <div class="agent-card-status">
+                                <span class="status-indicator status-complete"></span>
                                 <span class="status-text">Complete</span>
                             </div>
+                        </div>
+                        <div class="card-dropdown">
+                            <button class="dropdown-btn" type="button" data-bs-toggle="dropdown">
+                                <span>Budget 1</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">Budget 1</a></li>
+                                <li><a class="dropdown-item" href="#">Budget 2</a></li>
+                                <li><a class="dropdown-item" href="#">Budget 3</a></li>
+                            </ul>
                         </div>
                     </div>
 
                     <!-- Amount Display -->
-                    <div class="amount-display-section">
-                        <div class="currency-display">
-                            <span class="currency">#</span>
-                            <span class="amount-number">{{ cashout_requests|selectattr('status', 'equalto', 'approved')|list|length }}</span>
-                        </div>
+                    <div class="agent-card-amount">
+                        <span class="currency-sign">#</span>
+                        <span class="amount-digits">{{ cashout_requests|selectattr('status', 'equalto', 'approved')|list|length }}</span>
                     </div>
 
-                    <!-- Footer Info -->
-                    <div class="card-footer-section">
-                        <div class="decorative-pattern"></div>
-                        <div class="info-display">
-                            <span class="info-text">{{ cashout_requests|selectattr('status', 'equalto', 'rejected')|list|length }} rejected</span>
+                    <!-- Progress Bar -->
+                    <div class="agent-card-progress">
+                        <div class="progress-bar" style="width: 52%"></div>
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="agent-card-footer">
+                        <div class="agent-card-details">
+                            <span class="details-text">{{ cashout_requests|selectattr('status', 'equalto', 'rejected')|list|length }} rejected • 52% used</span>
                         </div>
+                        <div class="card-decoration"></div>
                     </div>
                 </div>
             </div>
