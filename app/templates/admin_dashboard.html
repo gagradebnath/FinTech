@@ -1,81 +1,386 @@
-//{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% block content %}
-
-<div class="admin-sidebar">
-    <div class="sidebar-header" style="text-align:center; margin-bottom: 24px;">
-        <img src="{{ url_for('static', filename='assets/image-removebg-preview (1).png') }}" alt="FinGuard"
-            class="sidebar-logo" style="max-width:120px; height:auto;">
-    </div>
-    <a href="#add-money" class="admin-link">Add Money</a>
-    <a href="#transactions" class="admin-link">All Transactions</a>
-    <a href="#fraud-list" class="admin-link">Fraud List Management</a>
-    <a href="#fraud-reports" class="admin-link">Fraud Reports</a>
-    <a href="#admin-logs" class="admin-link">Admin Logs</a>
-    <a href="#role-permissions" class="admin-link">Role Permissions</a>
-    <a href="#user-management" class="admin-link">User Management</a>
-    <a href="#agent-money-requests" class="admin-link">Agent Money Requests</a>
-    <a href="#analytics" class="admin-link">Analytics</a>
-    <a href="{{ url_for('user.login') }}" class="admin-link text-danger mt-auto" style="margin-top:auto;">
-        <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
-</div>
-
-
-<div class="container py-4" style="background-color: transparent;">
-    <h2>Admin Dashboard</h2>
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Welcome, {{ user.first_name }} {{ user.last_name }} (Admin)!</h5>
-            <p class="card-text">User ID: <strong>{{ user.id }}</strong></p>
-            <a href="{{ url_for('analytics.test_features') }}" class="btn btn-info mt-2">View Advanced SQL Features Test
-                Page</a>
-        </div>
-    </div>
-
-    <div class="card mt-4 mb-4" id="add-money" style="background-color: transparent;">
-        <div class="card-header" style="background-color: transparent; z-index: 1000;">Add Money to Agent Account</div>
-        <div class="card-body">
-            <form method="POST">
-                <div class="mb-3">
-                    <label for="agent_search" class="form-label">Search Agent</label>
-                    <input type="text" class="form-control" id="agent_search" placeholder="Type agent name or ID...">
-                    <div id="agent_list" class="list-group mt-1 d-none" style="max-height:200px; overflow-y:auto;">
-                        {% for agent in agents %}
-                        <button type="button" class="list-group-item list-group-item-action"
-                            data-agent-id="{{ agent.id }}"
-                            data-agent-name="{{ agent.first_name }} {{ agent.last_name }}">
-                            {{ agent.first_name }} {{ agent.last_name }} (ID: {{ agent.id }}, Balance: {{ agent.balance
-                            }})
-                        </button>
-                        {% endfor %}
+<div class="container-fluid p-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="admin-header-card">
+                <div class="admin-header-content">
+                    <div class="admin-welcome">
+                        <h2 class="admin-title">Admin Dashboard</h2>
+                        <p class="admin-subtitle">Welcome, {{ user.first_name }} {{ user.last_name }}</p>
+                        <span class="admin-badge">Admin ID: {{ user.id }}</span>
                     </div>
-                    <input type="hidden" name="agent_id" id="agent_id" required>
+                    <div class="admin-actions">
+                        <a href="{{ url_for('analytics.test_features') }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-graph-up-arrow me-2"></i>Advanced Analytics
+                        </a>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="amount" class="form-label">Amount</label>
-                    <input type="number" class="form-control" id="amount" name="amount" min="0.01" step="0.01" required>
-                </div>
-                <button type="submit" class="btn btn-success">Add Money</button>
-            </form>
-            {% if add_money_success %}
-            <div class="alert alert-success mt-3">{{ add_money_success }}</div>
-            {% endif %}
-            {% if add_money_error %}
-            <div class="alert alert-danger mt-3">{{ add_money_error }}</div>
-            {% endif %}
+            </div>
         </div>
     </div>
 
-    <!-- All Transactions -->
-    <div class="card mb-4" id="transactions" >
-        <div class="card-header" >All Transactions</div>
-        <div class="card-body " >
-            <div class="mb-3 p-3">
-                <input type="text" id="transaction_search" class="form-control"
-                    placeholder="Search by ID, name, or date...">
+    <!-- Quick Stats Cards -->
+    <div class="row mb-5 g-4">
+        <!-- Total Users Card -->
+        <div class="col-md-3">
+            <div class="admin-stat-card admin-card-blue">
+                <div class="stat-card-overlay"></div>
+                <div class="stat-card-content">
+                    <div class="stat-card-icon">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <h6 class="stat-card-title">Total Users</h6>
+                        <div class="stat-card-value">{{ users|length }}</div>
+                        <div class="stat-card-trend">
+                            <i class="bi bi-arrow-up"></i>
+                            <span>Active</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="fixed-table-scrollbox" style="background-color: transparent;">
-                <table class="table  table-bordered table-dark ">
+        </div>
+
+        <!-- Total Agents Card -->
+        <div class="col-md-3">
+            <div class="admin-stat-card admin-card-green">
+                <div class="stat-card-overlay"></div>
+                <div class="stat-card-content">
+                    <div class="stat-card-icon">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <h6 class="stat-card-title">Total Agents</h6>
+                        <div class="stat-card-value">{{ agents|length }}</div>
+                        <div class="stat-card-trend">
+                            <i class="bi bi-check-circle"></i>
+                            <span>Verified</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Requests Card -->
+        <div class="col-md-3">
+            <div class="admin-stat-card admin-card-orange">
+                <div class="stat-card-overlay"></div>
+                <div class="stat-card-content">
+                    <div class="stat-card-icon">
+                        <i class="bi bi-clock-fill"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <h6 class="stat-card-title">Pending Requests</h6>
+                        <div class="stat-card-value">{{ agent_money_requests|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+                        <div class="stat-card-trend">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <span>Review Needed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Transactions Card -->
+        <div class="col-md-3">
+            <div class="admin-stat-card admin-card-purple">
+                <div class="stat-card-overlay"></div>
+                <div class="stat-card-content">
+                    <div class="stat-card-icon">
+                        <i class="bi bi-credit-card-fill"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <h6 class="stat-card-title">Total Transactions</h6>
+                        <div class="stat-card-value">{{ transactions|length }}</div>
+                        <div class="stat-card-trend">
+                            <i class="bi bi-graph-up"></i>
+                            <span>Processing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row">
+        <!-- Left Column - Primary Actions -->
+        <div class="col-lg-8">
+            <!-- Add Money to Agent -->
+            <div class="admin-content-card mb-4" id="add-money">
+                <div class="admin-card-header">
+                    <div class="card-header-title">
+                        <i class="bi bi-plus-circle-fill me-2"></i>
+                        <span>Add Money to Agent Account</span>
+                    </div>
+                </div>
+                <div class="admin-card-body">
+                    {% if add_money_success %}
+                    <div class="custom-alert custom-alert-success">
+                        <i class="bi bi-check-circle me-2"></i>{{ add_money_success }}
+                    </div>
+                    {% endif %}
+                    {% if add_money_error %}
+                    <div class="custom-alert custom-alert-error">
+                        <i class="bi bi-exclamation-triangle me-2"></i>{{ add_money_error }}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="POST" class="admin-form">
+                        <div class="form-group-modern">
+                            <label for="agent_search" class="form-label-modern">
+                                <i class="bi bi-search me-2"></i>Search Agent
+                            </label>
+                            <div class="search-input-wrapper">
+                                <input type="text" class="form-control-modern" id="agent_search" 
+                                       placeholder="Type agent name or ID..." autocomplete="off">
+                                <div id="agent_list" class="dropdown-results d-none">
+                                    {% for agent in agents %}
+                                    <button type="button" class="dropdown-item-modern"
+                                        data-agent-id="{{ agent.id }}"
+                                        data-agent-name="{{ agent.first_name }} {{ agent.last_name }}">
+                                        <div class="dropdown-item-content">
+                                            <div class="dropdown-item-icon">
+                                                <i class="bi bi-person-badge"></i>
+                                            </div>
+                                            <div class="dropdown-item-info">
+                                                <div class="dropdown-item-name">{{ agent.first_name }} {{ agent.last_name }}</div>
+                                                <div class="dropdown-item-details">ID: {{ agent.id }} • Balance: ${{ agent.balance }}</div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                                <input type="hidden" name="agent_id" id="agent_id" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group-modern">
+                            <label for="amount" class="form-label-modern">
+                                <i class="bi bi-currency-dollar me-2"></i>Amount
+                            </label>
+                            <input type="number" class="form-control-modern" id="amount" name="amount" 
+                                   min="0.01" step="0.01" placeholder="Enter amount" required>
+                        </div>
+                        
+                        <button type="submit" class="btn-modern btn-modern-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Add Money
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Agent Money Requests -->
+            <div class="admin-content-card mb-4" id="agent-money-requests">
+                <div class="admin-card-header">
+                    <div class="card-header-title">
+                        <i class="bi bi-cash-stack me-2"></i>
+                        <span>Agent Money Requests</span>
+                    </div>
+                    <div class="card-header-badge">
+                        <span class="badge-modern badge-modern-warning">
+                            {{ agent_money_requests|selectattr('status', 'equalto', 'pending')|list|length }} Pending
+                        </span>
+                    </div>
+                </div>
+                <div class="admin-card-body">
+                    <div class="table-modern-wrapper">
+                        <table class="table-modern">
+                            <thead>
+                                <tr>
+                                    <th><i class="bi bi-person me-1"></i>Agent</th>
+                                    <th><i class="bi bi-telephone me-1"></i>Contact</th>
+                                    <th><i class="bi bi-currency-dollar me-1"></i>Amount</th>
+                                    <th><i class="bi bi-chat-text me-1"></i>Note</th>
+                                    <th><i class="bi bi-flag me-1"></i>Status</th>
+                                    <th><i class="bi bi-gear me-1"></i>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in agent_money_requests %}
+                                <tr class="table-row-modern">
+                                    <td>
+                                        <div class="user-info-modern">
+                                            <div class="user-avatar-modern">
+                                                <i class="bi bi-person-badge"></i>
+                                            </div>
+                                            <div class="user-details-modern">
+                                                <div class="user-name-modern">{{ req.first_name }} {{ req.last_name }}</div>
+                                                <div class="user-id-modern">ID: {{ req.agent_id }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="contact-info-modern">
+                                            <i class="bi bi-telephone me-1"></i>{{ req.phone }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="amount-modern">${{ req.amount }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="note-modern">
+                                            {% if req.note %}
+                                            <span class="note-text">{{ req.note }}</span>
+                                            {% else %}
+                                            <span class="note-empty">No note</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'approved' %}
+                                            <span class="status-badge status-success">
+                                                <i class="bi bi-check-circle me-1"></i>Approved
+                                            </span>
+                                        {% elif req.status == 'rejected' %}
+                                            <span class="status-badge status-error">
+                                                <i class="bi bi-x-circle me-1"></i>Rejected
+                                            </span>
+                                        {% else %}
+                                            <span class="status-badge status-warning">
+                                                <i class="bi bi-clock me-1"></i>Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'pending' %}
+                                        <div class="action-buttons-modern">
+                                            <form method="POST" class="d-inline">
+                                                <input type="hidden" name="request_id" value="{{ req.id }}">
+                                                <div class="action-note-input">
+                                                    <input type="text" name="note" class="form-control-small" 
+                                                           placeholder="Optional note" maxlength="100">
+                                                </div>
+                                                <div class="action-buttons-group">
+                                                    <button type="submit" name="action" value="approved" 
+                                                            class="btn-action btn-action-success">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                    <button type="submit" name="action" value="rejected" 
+                                                            class="btn-action btn-action-danger">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        {% else %}
+                                            <span class="action-processed">
+                                                <i class="bi bi-check-all me-1"></i>Processed
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Secondary Actions -->
+        <div class="col-lg-4">
+            <!-- Quick Navigation -->
+            <div class="admin-content-card mb-4">
+                <div class="admin-card-header">
+                    <div class="card-header-title">
+                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>
+                        <span>Quick Navigation</span>
+                    </div>
+                </div>
+                <div class="admin-card-body">
+                    <div class="quick-nav-grid">
+                        <a href="#transactions" class="quick-nav-item">
+                            <div class="quick-nav-icon">
+                                <i class="bi bi-credit-card"></i>
+                            </div>
+                            <span class="quick-nav-text">Transactions</span>
+                        </a>
+                        <a href="#fraud-list" class="quick-nav-item">
+                            <div class="quick-nav-icon">
+                                <i class="bi bi-shield-exclamation"></i>
+                            </div>
+                            <span class="quick-nav-text">Fraud List</span>
+                        </a>
+                        <a href="#fraud-reports" class="quick-nav-item">
+                            <div class="quick-nav-icon">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <span class="quick-nav-text">Fraud Reports</span>
+                        </a>
+                        <a href="#user-management" class="quick-nav-item">
+                            <div class="quick-nav-icon">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <span class="quick-nav-text">Users</span>
+                        </a>
+                        <a href="#role-permissions" class="quick-nav-item">
+                            <div class="quick-nav-icon">
+                                <i class="bi bi-key"></i>
+                            </div>
+                            <span class="quick-nav-text">Permissions</span>
+                        </a>
+                        <a href="#analytics" class="quick-nav-item">
+                            <div class="quick-nav-icon">
+                                <i class="bi bi-graph-up"></i>
+                            </div>
+                            <span class="quick-nav-text">Analytics</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="admin-content-card mb-4">
+                <div class="admin-card-header">
+                    <div class="card-header-title">
+                        <i class="bi bi-cpu-fill me-2"></i>
+                        <span>System Status</span>
+                    </div>
+                </div>
+                <div class="admin-card-body">
+                    <div class="status-items">
+                        <div class="status-item">
+                            <div class="status-indicator status-online"></div>
+                            <div class="status-text">Database Connection</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-indicator status-online"></div>
+                            <div class="status-text">Payment Gateway</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-indicator status-online"></div>
+                            <div class="status-text">Fraud Detection</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-indicator status-warning"></div>
+                            <div class="status-text">Email Service</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- All Transactions Section -->
+    <div class="admin-section-card mb-4" id="transactions">
+        <div class="section-card-header">
+            <div class="section-header-title">
+                <i class="bi bi-credit-card-2-front-fill me-2"></i>
+                <span>All Transactions</span>
+            </div>
+            <div class="section-header-actions">
+                <div class="search-box-modern">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" id="transaction_search" class="search-input-modern" 
+                           placeholder="Search by ID, name, or date...">
+                </div>
+            </div>
+        </div>
+        <div class="section-card-body">
+            <div class="table-modern-wrapper">
+                <table class="table-modern table-modern-striped">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -89,14 +394,43 @@
                     </thead>
                     <tbody id="transaction_table_body">
                         {% for t in transactions[:10] %}
-                        <tr>
-                            <td>{{ t.id }}</td>
-                            <td>{{ t.amount }}</td>
-                            <td>{{ t.type }}</td>
-                            <td>{{ t.sender_first }} {{ t.sender_last }} ({{ t.sender_id }})</td>
-                            <td>{{ t.receiver_first }} {{ t.receiver_last }} ({{ t.receiver_id }})</td>
-                            <td>{{ t.note }}</td>
-                            <td>{{ t.timestamp|format_datetime }}</td>
+                        <tr class="table-row-modern">
+                            <td><span class="id-badge">#{{ t.id }}</span></td>
+                            <td><span class="amount-modern">${{ t.amount }}</span></td>
+                            <td>
+                                <span class="type-badge type-{{ t.type|lower }}">
+                                    {% if t.type|lower == 'payment' %}
+                                        <i class="bi bi-credit-card me-1"></i>
+                                    {% elif t.type|lower == 'transfer' %}
+                                        <i class="bi bi-arrow-left-right me-1"></i>
+                                    {% elif t.type|lower == 'withdrawal' %}
+                                        <i class="bi bi-cash me-1"></i>
+                                    {% endif %}
+                                    {{ t.type }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="user-mini-info">
+                                    <span class="user-name">{{ t.sender_first }} {{ t.sender_last }}</span>
+                                    <span class="user-id-mini">({{ t.sender_id }})</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="user-mini-info">
+                                    <span class="user-name">{{ t.receiver_first }} {{ t.receiver_last }}</span>
+                                    <span class="user-id-mini">({{ t.receiver_id }})</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="note-cell">
+                                    {% if t.note %}
+                                        <span class="note-text">{{ t.note }}</span>
+                                    {% else %}
+                                        <span class="note-empty">—</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td><span class="timestamp-modern">{{ t.timestamp|format_datetime }}</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -105,53 +439,98 @@
         </div>
     </div>
 
-    <div class="card mb-4" id="fraud-list">
-        <div class="card-header" style="background-color: transparent;">Fraud List Management</div>
-        <div class="card-body">
-            <form method="POST" class="row g-3">
-                <div class="col-md-4">
-                    <label for="fraud_user_search" class="form-label">Search User</label>
-                    <input type="text" class="form-control" id="fraud_user_search"
-                        placeholder="Type user name or ID...">
-                    <div id="fraud_user_list" class="list-group mt-1 d-none" style="max-height:200px; overflow-y:auto;">
-                        {% for u in users %}
-                        <button type="button" class="list-group-item list-group-item-action" data-user-id="{{ u.id }}"
-                            data-user-name="{{ u.first_name }} {{ u.last_name }}">
-                            {{ u.first_name }} {{ u.last_name }} (ID: {{ u.id }})
-                        </button>
-                        {% endfor %}
-                    </div>
-                    <input type="hidden" name="fraud_user_id" id="fraud_user_id" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="fraud_reason" class="form-label">Reason (for add)</label>
-                    <input type="text" class="form-control" id="fraud_reason" name="fraud_reason">
-                </div>
-                <div class="col-md-4 d-flex align-items-end gap-2">
-                    <button type="submit" name="fraud_action" value="add" class="btn btn-danger">Add to Fraud
-                        List</button>
-                    <button type="submit" name="fraud_action" value="remove" class="btn btn-warning">Remove from Fraud
-                        List</button>
-                </div>
-            </form>
+    <!-- Fraud List Management Section -->
+    <div class="admin-section-card mb-4" id="fraud-list">
+        <div class="section-card-header">
+            <div class="section-header-title">
+                <i class="bi bi-shield-exclamation me-2"></i>
+                <span>Fraud List Management</span>
+            </div>
+        </div>
+        <div class="section-card-body">
             {% if fraud_action_success %}
-            <div class="alert alert-success mt-3">{{ fraud_action_success }}</div>
+            <div class="custom-alert custom-alert-success mb-3">
+                <i class="bi bi-check-circle me-2"></i>{{ fraud_action_success }}
+            </div>
             {% endif %}
             {% if fraud_action_error %}
-            <div class="alert alert-danger mt-3">{{ fraud_action_error }}</div>
+            <div class="custom-alert custom-alert-error mb-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ fraud_action_error }}
+            </div>
             {% endif %}
+            
+            <form method="POST" class="fraud-management-form">
+                <div class="form-row-modern">
+                    <div class="form-group-modern flex-1">
+                        <label for="fraud_user_search" class="form-label-modern">
+                            <i class="bi bi-person-search me-2"></i>Search User
+                        </label>
+                        <div class="search-input-wrapper">
+                            <input type="text" class="form-control-modern" id="fraud_user_search" 
+                                   placeholder="Type user name or ID..." autocomplete="off">
+                            <div id="fraud_user_list" class="dropdown-results d-none">
+                                {% for u in users %}
+                                <button type="button" class="dropdown-item-modern" 
+                                        data-user-id="{{ u.id }}" data-user-name="{{ u.first_name }} {{ u.last_name }}">
+                                    <div class="dropdown-item-content">
+                                        <div class="dropdown-item-icon">
+                                            <i class="bi bi-person"></i>
+                                        </div>
+                                        <div class="dropdown-item-info">
+                                            <div class="dropdown-item-name">{{ u.first_name }} {{ u.last_name }}</div>
+                                            <div class="dropdown-item-details">ID: {{ u.id }}</div>
+                                        </div>
+                                    </div>
+                                </button>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="fraud_user_id" id="fraud_user_id" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group-modern flex-1">
+                        <label for="fraud_reason" class="form-label-modern">
+                            <i class="bi bi-chat-text me-2"></i>Reason (for add)
+                        </label>
+                        <input type="text" class="form-control-modern" id="fraud_reason" name="fraud_reason" 
+                               placeholder="Enter reason for fraud listing">
+                    </div>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern invisible">Actions</label>
+                        <div class="button-group-modern">
+                            <button type="submit" name="fraud_action" value="add" class="btn-modern btn-modern-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Add to Fraud List
+                            </button>
+                            <button type="submit" name="fraud_action" value="remove" class="btn-modern btn-modern-warning">
+                                <i class="bi bi-shield-check me-2"></i>Remove from List
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
-    <!-- Fraud Reports -->
-    <div class="card mb-4" id="fraud-reports">
-        <div class="card-header" >Fraud Reports</div>
-        <div class="card-body ">
-            <div class="mb-3 p-3" >
-                <input type="text" id="fraud_search" class="form-control" placeholder="Search by any column..." >
+
+    <!-- Fraud Reports Section -->
+    <div class="admin-section-card mb-4" id="fraud-reports">
+        <div class="section-card-header">
+            <div class="section-header-title">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span>Fraud Reports</span>
             </div>
-            <div class="fixed-table-scrollbox" style="background-color: transparent;">
-                <table class="table table-bordered table-dark">
-                    <thead      >
+            <div class="section-header-actions">
+                <div class="search-box-modern">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" id="fraud_search" class="search-input-modern" 
+                           placeholder="Search fraud reports...">
+                </div>
+            </div>
+        </div>
+        <div class="section-card-body">
+            <div class="table-modern-wrapper">
+                <table class="table-modern table-modern-striped">
+                    <thead>
                         <tr>
                             <th>ID</th>
                             <th>Reporter</th>
@@ -161,11 +540,25 @@
                     </thead>
                     <tbody id="fraud_table_body">
                         {% for f in frauds %}
-                        <tr>
-                            <td>{{ f.id }}</td>
-                            <td>{{ f.reporter_first }} {{ f.reporter_last }} ({{ f.user_id }})</td>
-                            <td>{{ f.reported_first }} {{ f.reported_last }} ({{ f.reported_user_id }})</td>
-                            <td>{{ f.reason }}</td>
+                        <tr class="table-row-modern">
+                            <td><span class="id-badge">#{{ f.id }}</span></td>
+                            <td>
+                                <div class="user-mini-info">
+                                    <span class="user-name">{{ f.reporter_first }} {{ f.reporter_last }}</span>
+                                    <span class="user-id-mini">({{ f.user_id }})</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="user-mini-info">
+                                    <span class="user-name">{{ f.reported_first }} {{ f.reported_last }}</span>
+                                    <span class="user-id-mini">({{ f.reported_user_id }})</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="reason-cell">
+                                    <span class="reason-text">{{ f.reason }}</span>
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -173,17 +566,25 @@
             </div>
         </div>
     </div>
-
-    <!-- Admin Logs -->
-    <div class="card mb-4" id="admin-logs">
-        <div class="card-header">Admin Logs</div>
-        <div class="card-body ">
-            <div class="mb-3 p-3">
-                <input type="text" id="adminlog_search" class="form-control" placeholder="Search by any column...">
+    <!-- Admin Logs Section -->
+    <div class="admin-section-card mb-4" id="admin-logs">
+        <div class="section-card-header">
+            <div class="section-header-title">
+                <i class="bi bi-journal-text me-2"></i>
+                <span>Admin Logs</span>
             </div>
-            <div class="fixed-table-scrollbox">
-                <table class="table  table-bordered table-dark mb-0">
-                    <thead >
+            <div class="section-header-actions">
+                <div class="search-box-modern">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" id="adminlog_search" class="search-input-modern" 
+                           placeholder="Search admin logs...">
+                </div>
+            </div>
+        </div>
+        <div class="section-card-body">
+            <div class="table-modern-wrapper">
+                <table class="table-modern table-modern-striped">
+                    <thead>
                         <tr>
                             <th>ID</th>
                             <th>Admin</th>
@@ -194,12 +595,22 @@
                     </thead>
                     <tbody id="adminlog_table_body">
                         {% for log in admin_logs %}
-                        <tr>
-                            <td>{{ log.id }}</td>
-                            <td>{{ log.admin_first }} {{ log.admin_last }} ({{ log.admin_id }})(Admin!)</td>
-                            <td>{{ log.ip_address }}</td>
-                            <td>{{ log.timestamp|format_datetime }}</td>
-                            <td>{{ log.details }}</td>
+                        <tr class="table-row-modern">
+                            <td><span class="id-badge">#{{ log.id }}</span></td>
+                            <td>
+                                <div class="admin-info">
+                                    <span class="admin-name">{{ log.admin_first }} {{ log.admin_last }}</span>
+                                    <span class="admin-badge-small">Admin</span>
+                                    <span class="user-id-mini">({{ log.admin_id }})</span>
+                                </div>
+                            </td>
+                            <td><span class="ip-address">{{ log.ip_address }}</span></td>
+                            <td><span class="timestamp-modern">{{ log.timestamp|format_datetime }}</span></td>
+                            <td>
+                                <div class="details-cell">
+                                    <span class="details-text">{{ log.details }}</span>
+                                </div>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -207,261 +618,343 @@
             </div>
         </div>
     </div>
-    <div class="card mb-4" id="role-permissions">
-        <div class="card-header">Role Permissions Management</div>
-        <div class="card-body">
-            <form method="POST" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label for="perm_role_id" class="form-label">Role</label>
-                    <select class="form-select" id="perm_role_id" name="perm_role_id" required>
-                        <option value="">Choose...</option>
-                        {% for role in roles %}
-                        <option value="{{ role.id }}">{{ role.name|capitalize }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="perm_permission_id" class="form-label">Permission</label>
-                    <select class="form-select" id="perm_permission_id" name="perm_permission_id" required>
-                        <option value="">Choose...</option>
-                        {% for perm in permissions %}
-                        <option value="{{ perm.id }}">{{ perm.name }} - {{ perm.description }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" name="perm_action" value="add" class="btn btn-success w-100">Add</button>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" name="perm_action" value="remove" class="btn btn-danger w-100">Remove</button>
-                </div>
-            </form>
+
+    <!-- Role Permissions Section -->
+    <div class="admin-section-card mb-4" id="role-permissions">
+        <div class="section-card-header">
+            <div class="section-header-title">
+                <i class="bi bi-key-fill me-2"></i>
+                <span>Role Permissions Management</span>
+            </div>
+        </div>
+        <div class="section-card-body">
             {% if perm_action_success %}
-            <div class="alert alert-success mt-3">{{ perm_action_success }}</div>
+            <div class="custom-alert custom-alert-success mb-3">
+                <i class="bi bi-check-circle me-2"></i>{{ perm_action_success }}
+            </div>
             {% endif %}
             {% if perm_action_error %}
-            <div class="alert alert-danger mt-3">{{ perm_action_error }}</div>
-            {% endif %}
-            <hr>
-            <h5>Current Role Permissions</h5>
-            <div class="table-responsive">
-                <table class="table table-bordered table-dark">
-                    <thead>
-                        <tr>
-                            <th>Role</th>
-                            <th>Permissions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for role in roles %}
-                        <tr>
-                            <td>{{ role.name|capitalize }}</td>
-                            <td>
-                                {% set perms = role_permissions_map[role.id] %}
-                                {% for perm in permissions if perm.id in perms %}
-                                <span class="badge bg-primary">{{ perm.name }}</span>
-                                {% else %}
-                                <span class="text-muted">No permissions assigned</span>
-                                {% endfor %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="custom-alert custom-alert-error mb-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ perm_action_error }}
             </div>
-        </div>
-    </div>
-    <div class="card mb-4" id="user-management">
-        <div class="card-header">User Management</div>
-        <div class="card-body">
-            <form method="POST" class="row g-3">
-
-                <div class="col-md-5">
-                    <label for="role_user_search" class="form-label">Search User</label>
-                    <input type="text" class="form-control" id="role_user_search" placeholder="Type user name or ID...">
-                    <div id="role_user_list" class="list-group mt-1 d-none" style="max-height:200px; overflow-y:auto;">
-                        {% for u in users %}
-                        <button type="button" class="list-group-item list-group-item-action" data-user-id="{{ u.id }}"
-                            data-user-name="{{ u.first_name }} {{ u.last_name }}"
-                            data-user-type="{{ u.role_name|lower }}">
-                            {{ u.first_name }} {{ u.last_name }} (ID: {{ u.id }}, {{ u.role_name|capitalize }})
-                        </button>
-                        {% endfor %}
+            {% endif %}
+            
+            <form method="POST" class="permissions-form">
+                <div class="form-row-modern">
+                    <div class="form-group-modern">
+                        <label for="perm_role_id" class="form-label-modern">
+                            <i class="bi bi-shield me-2"></i>Role
+                        </label>
+                        <select class="form-select-modern" id="perm_role_id" name="perm_role_id" required>
+                            <option value="">Choose role...</option>
+                            {% for role in roles %}
+                            <option value="{{ role.id }}">{{ role.name|capitalize }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <input type="hidden" name="role_user_id" id="role_user_id" required>
-                </div>
-                <div class="col-md-3">
-                    <label for="user_type" class="form-label">Role</label>
-                    <select class="form-select" id="user_type">
-                        <option value="user">User</option>
-                        <option value="agent">Agent</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div class="col-md-4 d-flex align-items-end gap-2">
-                    <button type="submit" name="role_action" value="change" class="btn btn-primary w-100">Change
-                        Role</button>
+                    
+                    <div class="form-group-modern">
+                        <label for="perm_permission_id" class="form-label-modern">
+                            <i class="bi bi-unlock me-2"></i>Permission
+                        </label>
+                        <select class="form-select-modern" id="perm_permission_id" name="perm_permission_id" required>
+                            <option value="">Choose permission...</option>
+                            {% for perm in permissions %}
+                            <option value="{{ perm.id }}">{{ perm.name }} - {{ perm.description }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern invisible">Actions</label>
+                        <div class="button-group-modern">
+                            <button type="submit" name="perm_action" value="add" class="btn-modern btn-modern-success">
+                                <i class="bi bi-plus-circle me-2"></i>Add
+                            </button>
+                            <button type="submit" name="perm_action" value="remove" class="btn-modern btn-modern-danger">
+                                <i class="bi bi-dash-circle me-2"></i>Remove
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </form>
-            {% if role_action_success %}
-            <div class="alert alert-success mt-3">{{ role_action_success }}</div>
-            {% endif %}
-            {% if role_action_error %}
-            <div class="alert alert-danger mt-3">{{ role_action_error }}</div>
-            {% endif %}
-        </div>
-    </div>
-    <div class="card mb-4" id="agent-money-requests">
-        <div class="card-header">Agent Money Requests</div>
-        <div class="card-body">
-            <div class="table-responsive" style="max-height:400px; overflow-y:auto;">
-                <table class="table table-bordered table-dark">
-                    <thead style="z-index: 500;">
-                        <tr>
-                            <th>Agent Name</th>
-                            <th>Agent ID</th>
-                            <th>Phone</th>
-                            <th>Amount</th>
-                            <th>Note</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody style="z-index: 400;">
-                        {% for req in agent_money_requests %}
-                        <tr>
-                            <td>{{ req.first_name }} {{ req.last_name }}</td>
-                            <td>{{ req.agent_id }}</td>
-                            <td>{{ req.phone }}</td>
-                            <td>{{ req.amount }}</td>
-                            <td>{{ req.note or '' }}</td>
-                            <td>
-                                {% if req.status == 'approved' %}
-                                <span class="badge bg-success">Approved</span>
-                                {% elif req.status == 'rejected' %}
-                                <span class="badge bg-danger">Rejected</span>
-                                {% else %}
-                                <span class="badge bg-warning text-dark">Pending</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if req.status == 'pending' %}
-                                <form method="POST" style="display:inline;">
-                                    <input type="hidden" name="request_id" value="{{ req.id }}">
-                                    <input type="text" name="note" class="form-control mb-1" placeholder="Optional note"
-                                        style="width:120px;display:inline-block;">
-                                    <button type="submit" name="action" value="approved"
-                                        class="btn btn-success btn-sm">Approve</button>
-                                    <button type="submit" name="action" value="rejected"
-                                        class="btn btn-danger btn-sm">Reject</button>
-                                </form>
-                                {% else %}
-                                <em>No action</em>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            
+            <div class="permissions-overview mt-4">
+                <h6 class="section-subtitle">Current Role Permissions</h6>
+                <div class="table-modern-wrapper">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>Permissions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for role in roles %}
+                            <tr class="table-row-modern">
+                                <td>
+                                    <span class="role-badge role-{{ role.name|lower }}">{{ role.name|capitalize }}</span>
+                                </td>
+                                <td>
+                                    <div class="permissions-list">
+                                        {% set perms = role_permissions_map[role.id] %}
+                                        {% for perm in permissions if perm.id in perms %}
+                                        <span class="permission-badge">{{ perm.name }}</span>
+                                        {% else %}
+                                        <span class="no-permissions">No permissions assigned</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-    <div class="card mb-4" id="analytics">
-        <div class="card-header">Analytics</div>
-        <div class="card-body">
 
-
-            <!-- User Transaction Summary -->
-
+    <!-- User Management Section -->
+    <div class="admin-section-card mb-4" id="user-management">
+        <div class="section-card-header">
+            <div class="section-header-title">
+                <i class="bi bi-people-fill me-2"></i>
+                <span>User Management</span>
+            </div>
+        </div>
+        <div class="section-card-body">
+            {% if role_action_success %}
+            <div class="custom-alert custom-alert-success mb-3">
+                <i class="bi bi-check-circle me-2"></i>{{ role_action_success }}
+            </div>
+            {% endif %}
+            {% if role_action_error %}
+            <div class="custom-alert custom-alert-error mb-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ role_action_error }}
+            </div>
+            {% endif %}
+            
+            <form method="POST" class="user-management-form">
+                <div class="form-row-modern">
+                    <div class="form-group-modern flex-2">
+                        <label for="role_user_search" class="form-label-modern">
+                            <i class="bi bi-person-search me-2"></i>Search User
+                        </label>
+                        <div class="search-input-wrapper">
+                            <input type="text" class="form-control-modern" id="role_user_search" 
+                                   placeholder="Type user name or ID..." autocomplete="off">
+                            <div id="role_user_list" class="dropdown-results d-none">
+                                {% for u in users %}
+                                <button type="button" class="dropdown-item-modern" 
+                                        data-user-id="{{ u.id }}" data-user-name="{{ u.first_name }} {{ u.last_name }}"
+                                        data-user-type="{{ u.role_name|lower }}">
+                                    <div class="dropdown-item-content">
+                                        <div class="dropdown-item-icon">
+                                            <i class="bi bi-person"></i>
+                                        </div>
+                                        <div class="dropdown-item-info">
+                                            <div class="dropdown-item-name">{{ u.first_name }} {{ u.last_name }}</div>
+                                            <div class="dropdown-item-details">ID: {{ u.id }} • {{ u.role_name|capitalize }}</div>
+                                        </div>
+                                    </div>
+                                </button>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="role_user_id" id="role_user_id" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group-modern">
+                        <label for="user_type" class="form-label-modern">
+                            <i class="bi bi-shield-check me-2"></i>New Role
+                        </label>
+                        <select class="form-select-modern" id="user_type">
+                            <option value="user">User</option>
+                            <option value="agent">Agent</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern invisible">Action</label>
+                        <button type="submit" name="role_action" value="change" class="btn-modern btn-modern-primary full-width">
+                            <i class="bi bi-arrow-repeat me-2"></i>Change Role
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Analytics Section -->
+    <div class="admin-section-card mb-4" id="analytics">
+        <div class="section-card-header">
+            <div class="section-header-title">
+                <i class="bi bi-graph-up-arrow me-2"></i>
+                <span>Analytics Dashboard</span>
+            </div>
+        </div>
+        <div class="section-card-body">
             <!-- Daily Analytics -->
-            <div class="section">
-                <h2>📈 Recent Daily Analytics</h2>
+            <div class="analytics-subsection">
+                <h6 class="analytics-subtitle">
+                    <i class="bi bi-calendar-day me-2"></i>Recent Daily Analytics
+                </h6>
                 {% if results.daily_analytics %}
-                <div class="grid">
+                <div class="analytics-grid">
                     {% for day in results.daily_analytics %}
-                    <div class="card">
-                        <h3>{{ day.transaction_date }}</h3>
-                        <p><span class="stat">{{ day.total_transactions }}</span> transactions</p>
-                        <p>Volume: ${{ "%.2f"|format(day.total_volume) }}</p>
-                        <p>Avg: ${{ "%.2f"|format(day.avg_transaction_amount) }}</p>
-                        <p>Unique Users: {{ day.unique_senders }} senders, {{ day.unique_receivers }} receivers</p>
+                    <div class="analytics-card">
+                        <div class="analytics-card-header">
+                            <h6 class="analytics-card-title">{{ day.transaction_date }}</h6>
+                        </div>
+                        <div class="analytics-card-body">
+                            <div class="analytics-stat">
+                                <span class="stat-number">{{ day.total_transactions }}</span>
+                                <span class="stat-label">Transactions</span>
+                            </div>
+                            <div class="analytics-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Volume:</span>
+                                    <span class="detail-value">${{ "%.2f"|format(day.total_volume) }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Average:</span>
+                                    <span class="detail-value">${{ "%.2f"|format(day.avg_transaction_amount) }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Unique Users:</span>
+                                    <span class="detail-value">{{ day.unique_senders }} senders, {{ day.unique_receivers }} receivers</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="no-data">No daily analytics data available</div>
+                <div class="no-data-message">
+                    <i class="bi bi-exclamation-circle me-2"></i>No daily analytics data available
+                </div>
                 {% endif %}
             </div>
 
             <!-- Fraud Detection Insights -->
-            <div class="section">
-                <h2>🔍 Fraud Detection Insights</h2>
+            <div class="analytics-subsection">
+                <h6 class="analytics-subtitle">
+                    <i class="bi bi-shield-exclamation me-2"></i>Fraud Detection Insights
+                </h6>
                 {% if results.fraud_insights %}
-                <div class="grid">
-                    <div class="card">
-                        <h3>High Velocity Users</h3>
-                        <p class="stat">{{ results.fraud_insights.high_velocity_users or 0 }}</p>
-                        <p>Users with >5 transactions/day</p>
+                <div class="fraud-insights-grid">
+                    <div class="insight-card insight-card-warning">
+                        <div class="insight-icon">
+                            <i class="bi bi-speedometer2"></i>
+                        </div>
+                        <div class="insight-content">
+                            <div class="insight-number">{{ results.fraud_insights.high_velocity_users or 0 }}</div>
+                            <div class="insight-label">High Velocity Users</div>
+                            <div class="insight-description">Users with >5 transactions/day</div>
+                        </div>
                     </div>
-                    <div class="card">
-                        <h3>Round Amount Transactions</h3>
-                        <p class="stat">{{ results.fraud_insights.round_amount_transactions or 0 }}</p>
-                        <p>Transactions with round amounts >$1000</p>
+                    
+                    <div class="insight-card insight-card-danger">
+                        <div class="insight-icon">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                        <div class="insight-content">
+                            <div class="insight-number">{{ results.fraud_insights.round_amount_transactions or 0 }}</div>
+                            <div class="insight-label">Round Amount Transactions</div>
+                            <div class="insight-description">Round amounts >$1000</div>
+                        </div>
                     </div>
-                    <div class="card">
-                        <h3>Off-Hours Transactions</h3>
-                        <p class="stat">{{ results.fraud_insights.off_hours_transactions or 0 }}</p>
-                        <p>High-value transactions outside business hours</p>
+                    
+                    <div class="insight-card insight-card-info">
+                        <div class="insight-icon">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                        <div class="insight-content">
+                            <div class="insight-number">{{ results.fraud_insights.off_hours_transactions or 0 }}</div>
+                            <div class="insight-label">Off-Hours Transactions</div>
+                            <div class="insight-description">High-value outside business hours</div>
+                        </div>
                     </div>
-                    <div class="card">
-                        <h3>Rapid Sequences</h3>
-                        <p class="stat">{{ results.fraud_insights.rapid_sequence_transactions or 0 }}</p>
-                        <p>Transactions within 2 minutes of each other</p>
+                    
+                    <div class="insight-card insight-card-warning">
+                        <div class="insight-icon">
+                            <i class="bi bi-lightning"></i>
+                        </div>
+                        <div class="insight-content">
+                            <div class="insight-number">{{ results.fraud_insights.rapid_sequence_transactions or 0 }}</div>
+                            <div class="insight-label">Rapid Sequences</div>
+                            <div class="insight-description">Transactions within 2 minutes</div>
+                        </div>
                     </div>
                 </div>
                 {% else %}
-                <div class="no-data">No fraud insights data available</div>
+                <div class="no-data-message">
+                    <i class="bi bi-exclamation-circle me-2"></i>No fraud insights data available
+                </div>
                 {% endif %}
             </div>
 
             <!-- Monthly Report -->
-            <div class="section">
-                <h2>📅 Monthly Report</h2>
+            <div class="analytics-subsection">
+                <h6 class="analytics-subtitle">
+                    <i class="bi bi-calendar-month me-2"></i>Monthly Report
+                </h6>
                 {% set month_names = {
-                '1': 'January', '2': 'February', '3': 'March', '4': 'April',
-                '5': 'May', '6': 'June', '7': 'July', '8': 'August',
-                '9': 'September', '10': 'October', '11': 'November', '12': 'December'
+                    '1': 'January', '2': 'February', '3': 'March', '4': 'April',
+                    '5': 'May', '6': 'June', '7': 'July', '8': 'August',
+                    '9': 'September', '10': 'October', '11': 'November', '12': 'December'
                 } %}
                 {% if results.monthly_report %}
-                <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="monthly-report-grid">
                     {% for month in results.monthly_report[:12] %}
-                    <div class="card">
-                        <h3>
-                            {{ month_names[month.month|string] if month.month|string in month_names else month.month }}
-                            {{ month.year }}
-                        </h3>
-                        <p><span class="stat">{{ month.total_transactions }}</span> transactions</p>
-                        <p>Volume: ${{ "%.2f"|format(month.total_volume) }}</p>
-                        <p>Avg: ${{ "%.2f"|format(month.avg_transaction_amount if month.avg_transaction_amount is
-                            defined else 0) }}</p>
-                        <p>Unique Senders: {{ month.unique_senders }}</p>
-                        <p>Unique Receivers: {{ month.unique_receivers }}</p>
-                        {% if month.fraud_count is defined %}
-                        <p>Fraud Cases: <span class="risk-high">{{ month.fraud_count }}</span></p>
-                        {% endif %}
+                    <div class="monthly-card">
+                        <div class="monthly-card-header">
+                            <h6 class="monthly-title">
+                                {{ month_names[month.month|string] if month.month|string in month_names else month.month }} {{ month.year }}
+                            </h6>
+                        </div>
+                        <div class="monthly-card-body">
+                            <div class="monthly-stat-main">
+                                <span class="stat-number-large">{{ month.total_transactions }}</span>
+                                <span class="stat-label">Transactions</span>
+                            </div>
+                            <div class="monthly-details">
+                                <div class="monthly-detail-item">
+                                    <span class="detail-label">Volume:</span>
+                                    <span class="detail-value">${{ "%.2f"|format(month.total_volume) }}</span>
+                                </div>
+                                <div class="monthly-detail-item">
+                                    <span class="detail-label">Average:</span>
+                                    <span class="detail-value">${{ "%.2f"|format(month.avg_transaction_amount if month.avg_transaction_amount is defined else 0) }}</span>
+                                </div>
+                                <div class="monthly-detail-item">
+                                    <span class="detail-label">Senders:</span>
+                                    <span class="detail-value">{{ month.unique_senders }}</span>
+                                </div>
+                                <div class="monthly-detail-item">
+                                    <span class="detail-label">Receivers:</span>
+                                    <span class="detail-value">{{ month.unique_receivers }}</span>
+                                </div>
+                                {% if month.fraud_count is defined %}
+                                <div class="monthly-detail-item fraud-highlight">
+                                    <span class="detail-label">Fraud Cases:</span>
+                                    <span class="detail-value fraud-number">{{ month.fraud_count }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="no-data">No monthly report data available</div>
+                <div class="no-data-message">
+                    <i class="bi bi-exclamation-circle me-2"></i>No monthly report data available
+                </div>
                 {% endif %}
             </div>
-
-
         </div>
     </div>
 </div>
-<!-- Agent Money Requests Table -->
 
 {% endblock %}
 {% block extra_scripts %}
