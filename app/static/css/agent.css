@@ -1,214 +1,770 @@
-/* Agent dashboard specific styles */
+/* Agent Dashboard - Modern Design System */
 
-.agent-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+/* Remove legacy styles */
+.agent-info {
+    display: none;
 }
 
-.agent-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-}
-
-.agent-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-}
-
-.agent-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.agent-btn {
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+/* Modern Agent Stats Cards */
+.agent-stats-card {
+    position: relative;
+    height: 180px;
+    border-radius: 24px;
+    padding: 0;
     border: none;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.agent-btn-primary {
-    background-color: var(--primary-color);
+.agent-stats-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+/* Card Glow Effects */
+.card-glow-effect {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.agent-stats-card:hover .card-glow-effect {
+    opacity: 0.6;
+}
+
+/* Blue Balance Card */
+.agent-balance-card {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
     color: white;
 }
 
-.agent-btn-outline {
-    background-color: transparent;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
+.agent-balance-card .card-glow-effect {
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%);
 }
 
-.agent-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+/* Orange Requests Card */
+.agent-requests-card {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 30%, #f97316 70%, #fb923c 100%);
+    color: white;
 }
 
-.agent-stat-card {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    padding: 20px;
+.agent-requests-card .card-glow-effect {
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.4) 0%, transparent 70%);
+}
+
+/* Purple Processed Card */
+.agent-processed-card {
+    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%);
+    color: white;
+}
+
+.agent-processed-card .card-glow-effect {
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
+}
+
+/* Card Content Layout */
+.card-content-wrapper {
+    position: relative;
+    height: 100%;
+    padding: 24px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 2;
 }
 
-.agent-stat-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    background-color: rgba(0, 102, 255, 0.1);
+/* Header Section */
+.card-header-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.icon-container {
+    flex-shrink: 0;
+}
+
+.card-icon-bg {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 15px;
-    color: var(--primary-color);
-    font-size: 1.5rem;
-}
-
-.agent-stat-info {
-    flex-grow: 1;
-}
-
-.agent-stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 5px;
-}
-
-.agent-stat-label {
-    color: #666;
-    font-size: 14px;
-}
-
-.agent-chart {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    padding: 20px;
-    margin-bottom: 30px;
-}
-
-.agent-chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.agent-chart-title {
-    font-size: 16px;
-    font-weight: 700;
-}
-
-.agent-chart-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.agent-chart-btn {
-    padding: 6px 12px;
-    font-size: 14px;
-    border-radius: 4px;
-    background-color: #f8f9fa;
-    border: 1px solid #ddd;
-    cursor: pointer;
-}
-
-.agent-chart-btn.active {
-    background-color: var(--primary-color);
+    font-size: 20px;
     color: white;
-    border-color: var(--primary-color);
+    transition: all 0.3s ease;
 }
 
-.agent-chart-body {
-    height: 300px;
+.agent-stats-card:hover .card-icon-bg {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.card-title-area {
+    flex: 1;
+    min-width: 0;
+}
+
+.card-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: white;
+    line-height: 1.2;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse-glow 2s infinite;
+}
+
+.status-active {
+    background: #10b981;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+}
+
+.status-processing {
+    background: #f59e0b;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
+
+.status-complete {
+    background: #8b5cf6;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.6);
+}
+
+.status-text {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+/* Amount Display */
+.amount-display-section {
+    margin: 16px 0;
+}
+
+.currency-display {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.currency {
+    font-size: 24px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1;
+}
+
+.amount-number {
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif;
+}
+
+/* Footer Section */
+.card-footer-section {
+    position: relative;
+    margin-top: auto;
+}
+
+.decorative-pattern {
+    position: absolute;
+    bottom: -12px;
+    right: -12px;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 2px, transparent 2px);
+    background-size: 12px 12px;
+    border-radius: 50%;
+    opacity: 0.3;
+    transition: all 0.4s ease;
+}
+
+.agent-stats-card:hover .decorative-pattern {
+    opacity: 0.5;
+    transform: rotate(15deg) scale(1.1);
+}
+
+.info-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+}
+
+.info-icon {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.info-text {
+    line-height: 1.3;
+}
+
+/* Animations */
+@keyframes pulse-glow {
+    0%, 100% { 
+        opacity: 1; 
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 0.7; 
+        transform: scale(1.1);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .agent-stats-card {
+        height: 160px;
+    }
+    
+    .card-content-wrapper {
+        padding: 20px;
+    }
+    
+    .amount-number {
+        font-size: 28px;
+    }
+    
+    .currency {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .agent-stats-card {
+        height: 140px;
+        margin-bottom: 16px;
+    }
+    
+    .card-content-wrapper {
+        padding: 16px;
+    }
+    
+    .card-header-section {
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .card-icon-bg {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .card-title {
+        font-size: 14px;
+    }
+    
+    .amount-number {
+        font-size: 24px;
+    }
+    
+    .currency {
+        font-size: 18px;
+    }
+}
+
+/* Search functionality styling */
+.search-container {
     position: relative;
 }
 
-.agent-recent-transactions {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+.search-dropdown {
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(33, 37, 41, 0.95) !important;
+}
+
+.search-item {
+    border: none;
+    background: rgba(33, 37, 41, 0.95) !important;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    color: #ffffff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.search-item:hover {
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.2), rgba(0, 123, 255, 0.1)) !important;
+    transform: translateX(8px);
+    border-left: 4px solid #007bff;
+    color: #ffffff !important;
+}
+
+.search-item:focus {
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.3), rgba(0, 123, 255, 0.2)) !important;
+    color: #ffffff !important;
+}
+
+.search-item:last-child {
+    border-bottom: none;
+}
+
+.search-item .fw-bold,
+.search-item .text-muted,
+.search-item small {
+    color: #ffffff !important;
+}
+
+.search-item:hover .fw-bold,
+.search-item:hover .text-muted,
+.search-item:hover small {
+    color: #ffffff !important;
+}
+
+/* Admin avatar styling */
+.admin-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Agent request form styling */
+.agent-request-form {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border-radius: 1.25rem;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.agent-request-form .form-label {
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.75rem;
+}
+
+.agent-request-form .form-control,
+.agent-request-form .form-select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.agent-request-form .form-control:focus,
+.agent-request-form .form-select:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    color: #ffffff;
+}
+
+.agent-request-form .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.agent-request-form .form-select option {
+    background: #2c3e50;
+    color: #ffffff;
+}
+
+/* Dark table theme for cashout requests */
+.table-dark {
+    --bs-table-bg: #212529;
+    --bs-table-striped-bg: #2c3034;
+    --bs-table-striped-color: #fff;
+    --bs-table-active-bg: #373b3e;
+    --bs-table-active-color: #fff;
+    --bs-table-hover-bg: #323539;
+    --bs-table-hover-color: #fff;
+    color: #fff;
+    border-color: #454d55;
+}
+
+.agent-table-row {
+    background-color: rgba(33, 37, 41, 0.8) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.table-warning-dark {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+    border-left: 4px solid #ffc107;
+}
+
+.table-success-dark {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+    border-left: 4px solid #198754;
+}
+
+.table-danger-dark {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    border-left: 4px solid #dc3545;
+}
+
+.form-control-dark {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+.form-control-dark:focus {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: #007bff !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+}
+
+.form-control-dark::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* User avatar in cashout table */
+.user-avatar {
+    color: #007bff;
+    font-size: 1.5rem;
+}
+
+/* Contact info styling */
+.contact-info {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.contact-info i {
+    color: #007bff;
+}
+
+/* Amount display styling */
+.amount-display .fw-bold {
+    font-family: 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Note display styling */
+.note-display .badge {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+}
+
+/* Enhanced action buttons */
+.action-buttons .btn-group {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 0.75rem;
     overflow: hidden;
 }
 
-.agent-transaction-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid #f0f0f0;
+.action-buttons .btn {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.action-buttons .btn-success:hover {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.action-buttons .btn-danger:hover {
+    background: linear-gradient(135deg, #dc3545, #e74c3c);
+}
+
+/* Empty states styling */
+.no-requests, .no-transactions {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.08));
+    border-radius: 1.5rem;
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.no-requests i, .no-transactions i {
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 1rem;
+}
+
+/* Stats grid styling */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.stat-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    backdrop-filter: blur(10px);
 }
 
-.agent-transaction-title {
-    font-size: 16px;
+.stat-item:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.75rem;
     font-weight: 700;
-    margin: 0;
+    color: #007bff;
+    font-family: 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
 }
 
-.agent-transaction-body {
-    padding: 0;
+.stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: 500;
+    margin-top: 0.25rem;
 }
 
-.agent-transaction-table {
-    width: 100%;
-    border-collapse: collapse;
+/* Enhanced table styling */
+.table-hover tbody tr {
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
 }
 
-.agent-transaction-table th, .agent-transaction-table td {
-    padding: 12px 15px;
-    text-align: left;
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.08);
+    transform: scale(1.01);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.agent-transaction-table th {
-    background-color: #f8f9fa;
+.table th {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+    border: none;
+    padding: 1rem;
     font-weight: 600;
+    color: #ffffff;
 }
 
-.agent-transaction-table tr:not(:last-child) {
-    border-bottom: 1px solid #f0f0f0;
+.table td {
+    padding: 1rem;
+    border: none;
+    vertical-align: middle;
 }
 
-.agent-transaction-status {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
+/* Status badges enhancement */
+.badge {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
     font-weight: 600;
+    font-size: 0.8rem;
 }
 
-.agent-transaction-status.success {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: var(--success-color);
+/* Form validation styles */
+.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
 }
 
-.agent-transaction-status.pending {
-    background-color: rgba(255, 193, 7, 0.1);
-    color: var(--warning-color);
+.is-valid {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
 }
 
-.agent-transaction-status.failed {
-    background-color: rgba(220, 53, 69, 0.1);
-    color: var(--danger-color);
+/* Alert styling */
+.alert {
+    border-radius: 0.75rem;
+    border: none;
+    padding: 1rem 1.25rem;
+    backdrop-filter: blur(10px);
 }
 
-.agent-transaction-amount {
-    font-weight: 600;
+.alert-success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.9), rgba(72, 187, 120, 0.8));
+    color: white;
 }
 
-.agent-transaction-amount.positive {
-    color: var(--success-color);
+.alert-danger {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.9), rgba(231, 76, 60, 0.8));
+    color: white;
 }
 
-.agent-transaction-amount.negative {
-    color: var(--danger-color);
+/* Responsive design */
+@media (max-width: 992px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .balance-card-content {
+        padding: 1.5rem;
+    }
+    
+    .agent-request-form {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+    
+    .row.g-4 > * {
+        margin-bottom: 1rem;
+    }
+    
+    .balance-card {
+        height: auto;
+        min-height: 160px;
+    }
+    
+    .stat-item {
+        padding: 1rem;
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .agent-request-form {
+        padding: 1rem;
+    }
+}
+
+/* Animation keyframes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Apply animations */
+.card {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.balance-card {
+    animation: slideInRight 0.8s ease forwards;
+}
+
+/* Custom scrollbar */
+.search-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-dropdown::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.search-dropdown::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border-radius: 3px;
+}
+
+.search-dropdown::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #0056b3, #004085);
+}
+
+/* Loading states */
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }

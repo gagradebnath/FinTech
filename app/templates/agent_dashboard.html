@@ -1,194 +1,495 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container py-4">
-    <h2>Agent Dashboard</h2>
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Welcome, {{ user.first_name }} {{ user.last_name }} (Agent)!</h5>
-            <p class="card-text">User ID: <strong>{{ user.id }}</strong></p>
-            <p class="card-text" >Balance: <strong style="font-size: 1.2rem;">{{ user.balance }}</strong></p>
+<div class="container-fluid p-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-4">Agent Dashboard</h2>
         </div>
     </div>
-    
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">Recent Transactions</div>
-                <div class="card-body">
-                    {% if transactions %}
-                    <ul class="list-group">{% for tx in transactions %}
-                        <li
-                            class="list-group-item d-flex justify-content-between align-items-center bg-dark text-white">
-                            <div>
-                                <span class="fw-bold">{{ tx.type|capitalize }}</span>
-                                {% if tx.sender_id == user.id %}
-                                <span class="text-danger">Sent</span>
-                                {% if tx.receiver_id %} to <span class="fw-bold">{{ tx.receiver_id }}</span>{% endif %}
-                                {% elif tx.receiver_id == user.id %}
-                                <span class="text-success">Received</span>
-                                {% if tx.sender_id %} from <span class="fw-bold">{{ tx.sender_id }}</span>{% endif %}
-                                {% endif %}
-                                {% if tx.note %}<span class="text-muted">- {{ tx.note }}</span>{% endif %}
-                                {% if tx.location %}<span class="text-muted"> ({{ tx.location }})</span>{% endif %}
+
+    <!-- Agent Modern Stats Cards -->
+    <div class="row mb-5 g-4">
+        <!-- Agent Balance Card - Modern Blue Design -->
+        <div class="col-lg-4">
+            <div class="agent-stats-card agent-balance-card">
+                <div class="card-glow-effect"></div>
+                <div class="card-content-wrapper">
+                    <!-- Header Section -->
+                    <div class="card-header-section">
+                        <div class="icon-container">
+                            <div class="card-icon-bg">
+                                <i class="bi bi-wallet2"></i>
                             </div>
-                            <span class="badge bg-primary">{{ tx.amount }}</span>
-                        </li>{% endfor %}
-                    </ul>
+                        </div>
+                        <div class="card-title-area">
+                            <h3 class="card-title">Agent Balance</h3>
+                            <div class="status-indicator">
+                                <span class="status-dot status-active"></span>
+                                <span class="status-text">Available</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Amount Display -->
+                    <div class="amount-display-section">
+                        <div class="currency-display">
+                            <span class="currency">$</span>
+                            <span class="amount-number">${{ user.balance|default('0.00') }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Info -->
+                    <div class="card-footer-section">
+                        <div class="decorative-pattern"></div>
+                        <div class="info-display">
+                            <i class="bi bi-person-badge info-icon"></i>
+                            <span class="info-text">ID: {{ user.id }} • {{ user.first_name }} {{ user.last_name }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Requests Card - Modern Orange Design -->
+        <div class="col-lg-4">
+            <div class="agent-stats-card agent-requests-card">
+                <div class="card-glow-effect"></div>
+                <div class="card-content-wrapper">
+                    <!-- Header Section -->
+                    <div class="card-header-section">
+                        <div class="icon-container">
+                            <div class="card-icon-bg">
+                                <i class="bi bi-arrow-up-right"></i>
+                            </div>
+                        </div>
+                        <div class="card-title-area">
+                            <h3 class="card-title">Pending Requests</h3>
+                            <div class="status-indicator">
+                                <span class="status-dot status-processing"></span>
+                                <span class="status-text">Active</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Amount Display -->
+                    <div class="amount-display-section">
+                        <div class="currency-display">
+                            <span class="currency">#</span>
+                            <span class="amount-number">{{ cashout_requests|selectattr('status', 'equalto', 'pending')|list|length }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Info -->
+                    <div class="card-footer-section">
+                        <div class="decorative-pattern"></div>
+                        <div class="info-display">
+                            <span class="info-text">{{ cashout_requests|length }} total requests</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processed Today Card - Modern Purple Design -->
+        <div class="col-lg-4">
+            <div class="agent-stats-card agent-processed-card">
+                <div class="card-glow-effect"></div>
+                <div class="card-content-wrapper">
+                    <!-- Header Section -->
+                    <div class="card-header-section">
+                        <div class="icon-container">
+                            <div class="card-icon-bg">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                        </div>
+                        <div class="card-title-area">
+                            <h3 class="card-title">Processed Today</h3>
+                            <div class="status-indicator">
+                                <span class="status-dot status-complete"></span>
+                                <span class="status-text">Complete</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Amount Display -->
+                    <div class="amount-display-section">
+                        <div class="currency-display">
+                            <span class="currency">#</span>
+                            <span class="amount-number">{{ cashout_requests|selectattr('status', 'equalto', 'approved')|list|length }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Info -->
+                    <div class="card-footer-section">
+                        <div class="decorative-pattern"></div>
+                        <div class="info-display">
+                            <span class="info-text">{{ cashout_requests|selectattr('status', 'equalto', 'rejected')|list|length }} rejected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Recent Transactions Card -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>Recent Transactions</div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Today
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Today</a></li>
+                            <li><a class="dropdown-item" href="#">Yesterday</a></li>
+                            <li><a class="dropdown-item" href="#">This Week</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if transactions %}
+                    <div class="table-responsive">
+                        <table class="transaction-table dashboard-transaction-table">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tx in transactions %}
+                                <tr>
+                                    <td>
+                                        <div class="transaction-account">
+                                            <div class="transaction-icon">
+                                                {% if tx.type|lower == 'payment' %}
+                                                <i class="bi bi-credit-card text-primary"></i>
+                                                {% elif tx.type|lower == 'transfer' %}
+                                                <i class="bi bi-arrow-left-right text-success"></i>
+                                                {% elif tx.type|lower == 'withdrawal' %}
+                                                <i class="bi bi-cash text-danger"></i>
+                                                {% else %}
+                                                <i class="bi bi-currency-exchange text-warning"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="transaction-vendor">{{ tx.type|capitalize }}</div>
+                                                <div class="transaction-category">
+                                                    {% if tx.sender_id == user.id %}
+                                                    Sent{% if tx.receiver_id %} to {{ tx.receiver_id }}{% endif %}
+                                                    {% elif tx.receiver_id == user.id %}
+                                                    Received{% if tx.sender_id %} from {{ tx.sender_id }}{% endif %}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="transaction-amount {{ 'amount-negative' if tx.sender_id == user.id else 'amount-positive' }}">
+                                            {{ '-' if tx.sender_id == user.id else '+' }}${{ tx.amount }}
+                                        </div>
+                                    </td>
+                                    <td>{{ tx.timestamp|format_date }}</td>
+                                    <td>
+                                        <span class="transaction-status
+                {% if tx.status|lower == 'completed' %}
+                    success
+                {% elif tx.status|lower == 'pending' %}
+                    pending
+                {% else %}
+                    canceled
+                {% endif %}">
+                                            {{ tx.status|default('Completed')|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td class="transaction-time">{{ tx.timestamp|format_time }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                    <p>No transactions found.</p>
+                    <div class="no-transactions">
+                        <i class="bi bi-credit-card"></i>
+                        <h5>No transactions yet</h5>
+                        <p>Your recent agent transactions will appear here</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Cash Out Requests Management -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-cash-stack me-2"></i>
+                        Cash Out Requests Management
+                    </div>
+                    <div class="badge bg-primary">{{ cashout_requests|length }} total</div>
+                </div>
+                <div class="card-body">
+                    {% if cashout_success %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle me-2"></i>{{ cashout_success }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+                    {% if cashout_error %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>{{ cashout_error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+                    
+                    {% if cashout_requests %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-dark">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th><i class="bi bi-person me-1"></i>User</th>
+                                    <th><i class="bi bi-telephone me-1"></i>Contact</th>
+                                    <th><i class="bi bi-currency-dollar me-1"></i>Amount</th>
+                                    <th><i class="bi bi-chat-text me-1"></i>Note</th>
+                                    <th><i class="bi bi-flag me-1"></i>Status</th>
+                                    <th><i class="bi bi-gear me-1"></i>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in cashout_requests %}
+                                <tr class="agent-table-row {% if req.status == 'pending' %}table-warning-dark{% elif req.status == 'approved' %}table-success-dark{% else %}table-danger-dark{% endif %}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="user-avatar me-2">
+                                                <i class="bi bi-person-circle fs-4 text-light"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-light">{{ req.first_name }} {{ req.last_name }}</div>
+                                                <small class="text-light opacity-75">ID: {{ req.user_id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="contact-info">
+                                            <div class="text-light"><i class="bi bi-telephone me-1 text-primary"></i>{{ req.phone }}</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="amount-display">
+                                            <span class="fw-bold fs-5 text-success">${{ req.amount }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="note-display">
+                                            {% if req.note %}
+                                            <span class="badge bg-info">{{ req.note }}</span>
+                                            {% else %}
+                                            <span class="text-light opacity-75">No note</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'approved' %}
+                                            <span class="badge bg-success fs-6">
+                                                <i class="bi bi-check-circle me-1"></i>Approved
+                                            </span>
+                                        {% elif req.status == 'rejected' %}
+                                            <span class="badge bg-danger fs-6">
+                                                <i class="bi bi-x-circle me-1"></i>Rejected
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark fs-6">
+                                                <i class="bi bi-clock me-1"></i>Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'pending' %}
+                                        <div class="action-buttons">
+                                            <form method="POST" class="d-inline">
+                                                <input type="hidden" name="cashout_request_id" value="{{ req.id }}">
+                                                <div class="input-group input-group-sm mb-2" style="max-width: 200px;">
+                                                    <input type="text" name="note" class="form-control form-control-dark" placeholder="Optional note" maxlength="100">
+                                                </div>
+                                                <div class="btn-group" role="group">
+                                                    <button type="submit" name="action" value="approved" 
+                                                            class="btn btn-success btn-sm" 
+                                                            onclick="return confirm('Approve this cash out request for ${{ req.amount }}?')">
+                                                        <i class="bi bi-check me-1"></i>Approve
+                                                    </button>
+                                                    <button type="submit" name="action" value="rejected" 
+                                                            class="btn btn-danger btn-sm"
+                                                            onclick="return confirm('Reject this cash out request?')">
+                                                        <i class="bi bi-x me-1"></i>Reject
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        {% else %}
+                                            <span class="text-light opacity-75">
+                                                <i class="bi bi-check-all me-1"></i>Processed
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="no-requests text-center py-5">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <h5 class="mt-3">No Cash Out Requests</h5>
+                        <p class="text-muted">Cash out requests from users will appear here</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
-    </div>
 
-    <!-- Add Money from Admin Section -->
-    <div class="card mb-4">
-        <div class="card-header">Add Money from Admin</div>
-        <div class="card-body">
-            <form method="POST" action="{{ url_for('agent.agent_request_money') }}">
-                <div class="mb-3">
-                    <label for="admin_search" class="form-label">Search Admin</label>
-                    <input type="text" class="form-control" id="admin_search" name="admin_search" placeholder="Type admin name, ID, email, or number..." autocomplete="off" required>
-                    <input type="hidden" name="admin_id" id="admin_id" required>
-                    <div class="list-group position-absolute w-100 d-none" id="adminDropdown" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
-                        {% for a in admins %}
-                        <button type="button" class="list-group-item list-group-item-action"
-                            data-admin-id="{{ a.id }}"
-                            data-admin-name="{{ a.first_name }} {{ a.last_name }}"
-                            data-admin-email="{{ a.email }}"
-                            data-admin-phone="{{ a.phone }}">
-                            {{ a.first_name }} {{ a.last_name }} ({{ a.id }}) - {{ a.email }} - {{ a.phone }}
+        <!-- Right Column: Agent Actions -->
+        <div class="col-lg-4">
+            <!-- Request Money from Admin -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Request Money from Admin
+                </div>
+                <div class="card-body">
+                    {% if request_success %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle me-2"></i>{{ request_success }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+                    {% if request_error %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>{{ request_error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" action="{{ url_for('agent.agent_request_money') }}" class="agent-request-form">
+                        <div class="mb-3">
+                            <label for="admin_search" class="form-label">
+                                <i class="bi bi-search me-1"></i>Search Admin
+                            </label>
+                            <div class="search-container">
+                                <input type="text" class="form-control" id="admin_search" name="admin_search" 
+                                       placeholder="Type admin name, ID, email, or number..." autocomplete="off" required>
+                                <input type="hidden" name="admin_id" id="admin_id" required>
+                                <div class="list-group position-absolute w-100 d-none search-dropdown" id="adminDropdown">
+                                    {% for a in admins %}
+                                    <button type="button" class="list-group-item list-group-item-action search-item"
+                                        data-admin-id="{{ a.id }}"
+                                        data-admin-name="{{ a.first_name }} {{ a.last_name }}"
+                                        data-admin-email="{{ a.email }}"
+                                        data-admin-phone="{{ a.phone }}">
+                                        <div class="d-flex align-items-center">
+                                            <div class="admin-avatar me-2">
+                                                <i class="bi bi-shield-check"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ a.first_name }} {{ a.last_name }}</div>
+                                                <small class="text-muted">ID: {{ a.id }} • {{ a.email }}</small>
+                                            </div>
+                                        </div>
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">
+                                <i class="bi bi-currency-dollar me-1"></i>Amount
+                            </label>
+                            <select class="form-select" id="amount" name="amount" required>
+                                <option value="">Select amount...</option>
+                                {% for amt in range(5000, 50001, 5000) %}
+                                <option value="{{ amt }}">${{ amt }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="note" class="form-label">
+                                <i class="bi bi-chat-text me-1"></i>Note (optional)
+                            </label>
+                            <textarea class="form-control" id="note" name="note" maxlength="255" rows="3" 
+                                      placeholder="Add a note for this request..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-send me-2"></i>Send Request
                         </button>
-                        {% endfor %}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Quick Stats
+                </div>
+                <div class="card-body">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">{{ cashout_requests|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+                                <div class="stat-label">Pending Requests</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">{{ cashout_requests|selectattr('status', 'equalto', 'approved')|list|length }}</div>
+                                <div class="stat-label">Approved Today</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="bi bi-x-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">{{ cashout_requests|selectattr('status', 'equalto', 'rejected')|list|length }}</div>
+                                <div class="stat-label">Rejected</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">{{ transactions|length }}</div>
+                                <div class="stat-label">Recent Transactions</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label for="amount" class="form-label">Amount</label>
-                    <select class="form-select" id="amount" name="amount" required>
-                        {% for amt in range(5000, 50001, 5000) %}
-                        <option value="{{ amt }}">{{ amt }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="note" class="form-label">Note (optional)</label>
-                    <input type="text" class="form-control" id="note" name="note" maxlength="255">
-                </div>
-                <button type="submit" class="btn btn-primary">Request Money</button>
-            </form>
-            {% if request_success %}
-            <div class="alert alert-success mt-3">{{ request_success }}</div>
-            {% endif %}
-            {% if request_error %}
-            <div class="alert alert-danger mt-3">{{ request_error }}</div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Cash Out Requests from Users Table -->
-    <div class="card mb-4" id="cashout-requests">
-        <div class="card-header">Cash Out Requests from Users</div>
-        <div class="card-body">
-            {% if cashout_success %}
-            <div class="alert alert-success">{{ cashout_success }}</div>
-            {% endif %}
-            {% if cashout_error %}
-            <div class="alert alert-danger">{{ cashout_error }}</div>
-            {% endif %}
-            <div class="table-responsive">
-                <table class="table table-bordered table-dark">
-                    <thead>
-                        <tr>
-                            <th>User Name</th>
-                            <th>User ID</th>
-                            <th>Phone</th>
-                            <th>Amount</th>
-                            <th>Note</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for req in cashout_requests %}
-                        <tr>
-                            <td>{{ req.first_name }} {{ req.last_name }}</td>
-                            <td>{{ req.user_id }}</td>
-                            <td>{{ req.phone }}</td>
-                            <td>{{ req.amount }}</td>
-                            <td>{{ req.note or '' }}</td>
-                            <td>
-                                {% if req.status == 'approved' %}
-                                    <span class="badge bg-success">Approved</span>
-                                {% elif req.status == 'rejected' %}
-                                    <span class="badge bg-danger">Rejected</span>
-                                {% else %}
-                                    <span class="badge bg-warning text-dark">Pending</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if req.status == 'pending' %}
-                                <form method="POST" style="display:inline;">
-                                    <input type="hidden" name="cashout_request_id" value="{{ req.id }}">
-                                    <input type="text" name="note" class="form-control mb-1" placeholder="Optional note" style="width:120px;display:inline-block;">
-                                    <button type="submit" name="action" value="approved" class="btn btn-success btn-sm">Approve</button>
-                                    <button type="submit" name="action" value="rejected" class="btn btn-danger btn-sm">Reject</button>
-                                </form>
-                                {% else %}
-                                    <em>No action</em>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 </div>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const userSearch = document.getElementById('userSearch');
-        const userDropdown = document.getElementById('userDropdown');
-        const targetIdentifier = document.getElementById('target_identifier');
-        const userButtons = Array.from(userDropdown.querySelectorAll('button'));
-
-        function filterUsers() {
-            const query = userSearch.value.toLowerCase();
-            let anyVisible = false;
-            userButtons.forEach(btn => {
-                const text = btn.textContent.toLowerCase();
-                if (text.includes(query)) {
-                    btn.style.display = '';
-                    anyVisible = true;
-                } else {
-                    btn.style.display = 'none';
-                }
-            });
-            userDropdown.classList.toggle('d-none', !anyVisible);
-        }
-
-        userSearch.addEventListener('focus', filterUsers);
-        userSearch.addEventListener('input', filterUsers);
-
-        userButtons.forEach(btn => {
-            btn.addEventListener('click', function () {
-                targetIdentifier.value = btn.getAttribute('data-user-id');
-                userSearch.value = btn.getAttribute('data-user-name') + ' (' + btn.getAttribute('data-user-id') + ')';
-                userDropdown.classList.add('d-none');
-            });
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!userSearch.contains(e.target) && !userDropdown.contains(e.target)) {
-                userDropdown.classList.add('d-none');
-            }
-        });
-    });
-</script>
+<!-- Enhanced JavaScript for Agent Dashboard -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Admin search functionality
     const adminSearch = document.getElementById('admin_search');
     const adminDropdown = document.getElementById('adminDropdown');
     const adminIdInput = document.getElementById('admin_id');
@@ -215,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function () {
     adminButtons.forEach(btn => {
         btn.addEventListener('click', function () {
             adminIdInput.value = btn.getAttribute('data-admin-id');
-            adminSearch.value = btn.getAttribute('data-admin-name') + ' (' + btn.getAttribute('data-admin-id') + ')';
+            adminSearch.value = btn.getAttribute('data-admin-name') + ' (ID: ' + btn.getAttribute('data-admin-id') + ')';
             adminDropdown.classList.add('d-none');
         });
     });
@@ -225,17 +526,329 @@ document.addEventListener('DOMContentLoaded', function () {
             adminDropdown.classList.add('d-none');
         }
     });
+
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 5000);
+    });
+
+    // Add loading states to buttons
+    const actionButtons = document.querySelectorAll('button[type="submit"]');
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Processing...';
+            
+            // Re-enable button after form submission
+            setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }, 3000);
+        });
+    });
+
+    // Animate balance cards on load
+    const balanceCards = document.querySelectorAll('.balance-card');
+    balanceCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 200);
+    });
+
+    // Real-time search for better UX
+    let searchTimeout;
+    adminSearch.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(filterAdmins, 150);
+    });
+});
+
+// Enhanced form validation
+function validateAmount() {
+    const amountSelect = document.getElementById('amount');
+    const selectedAmount = amountSelect.value;
+    
+    if (!selectedAmount) {
+        amountSelect.classList.add('is-invalid');
+        return false;
+    }
+    
+    amountSelect.classList.remove('is-invalid');
+    amountSelect.classList.add('is-valid');
+    return true;
+}
+
+function validateAdminSelection() {
+    const adminIdInput = document.getElementById('admin_id');
+    const adminSearch = document.getElementById('admin_search');
+    
+    if (!adminIdInput.value) {
+        adminSearch.classList.add('is-invalid');
+        return false;
+    }
+    
+    adminSearch.classList.remove('is-invalid');
+    adminSearch.classList.add('is-valid');
+    return true;
+}
+
+// Form submission validation
+document.querySelector('.agent-request-form').addEventListener('submit', function(e) {
+    const isValidAmount = validateAmount();
+    const isValidAdmin = validateAdminSelection();
+    
+    if (!isValidAmount || !isValidAdmin) {
+        e.preventDefault();
+        
+        // Show error message
+        const errorAlert = document.createElement('div');
+        errorAlert.className = 'alert alert-danger alert-dismissible fade show mt-3';
+        errorAlert.innerHTML = `
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Please fill in all required fields correctly.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        this.appendChild(errorAlert);
+        
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            const bsAlert = new bootstrap.Alert(errorAlert);
+            bsAlert.close();
+        }, 3000);
+    }
 });
 </script>
 
-<style> 
-     select.form-select option[value=""] {
-        color: #888 !important;
-    }
+<!-- Enhanced CSS for Agent Dashboard -->
+<style>
+/* Agent-specific card styling */
+.agent-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
 
-    select.form-select option:not([value=""]) {
-        color: #000 !important;
-    }
+.agent-id {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
 
+.agent-name {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Search dropdown styling */
+.search-container {
+    position: relative;
+}
+
+.search-dropdown {
+    z-index: 1000;
+    max-height: 300px;
+    overflow-y: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+.search-item {
+    border: none;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.search-item:hover {
+    background: rgba(0, 123, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.admin-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+/* Request form styling */
+.agent-request-form {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* User avatar in table */
+.user-avatar {
+    color: #007bff;
+}
+
+/* Contact info styling */
+.contact-info {
+    font-size: 0.9rem;
+}
+
+/* Amount display styling */
+.amount-display .fw-bold {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Note display styling */
+.note-display .badge {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Action buttons styling */
+.action-buttons .btn-group {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-buttons .btn {
+    transition: all 0.3s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* No requests styling */
+.no-requests {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.05));
+    border-radius: 1rem;
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* Stats grid styling */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* Table enhancements */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    transform: scale(1.01);
+    transition: all 0.3s ease;
+}
+
+/* Form validation styles */
+.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.is-valid {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .balance-card-content {
+        padding: 1rem;
+    }
+    
+    .agent-request-form {
+        padding: 1rem;
+    }
+}
+
+/* Animation for cards */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+/* Custom scrollbar for dropdown */
+.search-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-dropdown::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.search-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(0, 123, 255, 0.5);
+    border-radius: 3px;
+}
+
+.search-dropdown::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 123, 255, 0.7);
+}
 </style>
 {% endblock %}
