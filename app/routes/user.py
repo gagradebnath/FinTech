@@ -7,13 +7,15 @@ import string
 import json
 from app.utils.auth import get_user_by_login_id, check_password
 from app.utils.register import is_email_unique, is_phone_unique, get_role_id, create_user_and_contact
-from app.utils.user_utils import get_current_user, get_role_name_by_id
+from app.utils.user_utils import get_current_user, get_role_name_by_id, get_all_agents
 from app.utils.dashboard import get_user_budgets, get_recent_transactions
 from app.utils.expense_habit import get_expense_habit, upsert_expense_habit
 from app.utils.profile import get_user_and_contact, update_user_and_contact
 from app.utils.permissions_utils import has_permission
 from app.utils.budget_utils import get_all_user_budgets_with_categories
 from app.utils.jwt_auth import generate_jwt_token, token_required, get_current_user_from_jwt
+from app.utils.money_request_utils import create_user_cashout_request
+from app.utils.notification_utils import get_unread_notifications, get_recent_notifications, mark_notifications_read
 
 
 user_bp = Blueprint('user', __name__)
@@ -217,7 +219,11 @@ def dashboard():
         if tx.get('timestamp'):
             print(f"DEBUG: Transaction timestamp type: {type(tx['timestamp'])}, value: {tx['timestamp']}")
     
-    return render_template('dashboard.html', user=user, budgets=budgets, transactions=transactions)
+    notifications = get_unread_notifications(user['id'])
+    recent_notifications = get_recent_notifications(user['id'], limit=10)
+    notification_count = sum(1 for n in recent_notifications if not n['is_read'])
+    
+    return render_template('dashboard.html', user=user, budgets=budgets, transactions=transactions, notifications=notifications, notification_count=notification_count)
 
 @user_bp.route('/expense-habit', methods=['GET', 'POST'])
 def expense_habit():
@@ -376,3 +382,47 @@ def category_summary_api():
         return jsonify(summary)
     finally:
         conn.close()
+
+@user_bp.route('/user/cashout-request', methods=['POST'])
+def cashout_request():
+    user_id = session.get('user_id')
+    agent_id = request.form.get('agent_id')
+    amount = request.form.get('amount')
+    note = request.form.get('note')
+    cashout_success = None
+    cashout_error = None
+    if not agent_id or not amount:
+        cashout_error = 'Agent and amount are required.'
+    elif int(amount) > 30000:
+        cashout_error = 'Maximum cash out amount is 30000.'
+    else:
+        try:
+            create_user_cashout_request(user_id, agent_id, amount, note)
+            cashout_success = 'Cash out request sent to agent!'
+        except Exception as e:
+            cashout_error = 'Failed to send request: ' + str(e)
+    # Re-render the send_money.html with agents and messages
+        agents = get_all_agents()
+    return render_template('send_money.html', agents=agents, cashout_success=cashout_success, cashout_error=cashout_error)
+
+@user_bp.route('/notifications/mark-read', methods=['POST'])
+def mark_notifications_read_route():
+    user_id = session.get('user_id')
+    mark_notifications_read(user_id)
+    return redirect(request.referrer or url_for('user.dashboard'))
+
+def get_recent_notifications(user_id, limit=10):
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            sql = "SELECT * FROM notifications WHERE user_id = %s ORDER BY created_at DESC LIMIT %s"
+            cursor.execute(sql, (user_id, limit))
+            return cursor.fetchall()
+    finally:
+        conn.close()
+
+@user_bp.route('/send-money', methods=['GET'])
+def send_money_page():
+    agents = get_all_agents()
+    # You can also pass other context variables if needed
+    return render_template('send_money.html', agents=agents)

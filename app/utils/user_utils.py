@@ -1,5 +1,6 @@
 # Utility functions for user operations (session, fetch by id)
 from flask import current_app, session, url_for
+import pymysql
 
 def get_current_user():
     user_id = session.get('user_id')
@@ -54,5 +55,22 @@ def get_all_users():
             ''')
             users = cursor.fetchall()
         return users
+    finally:
+        conn.close()
+def get_all_admins():
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            sql = "SELECT * FROM users WHERE role_id = (SELECT id FROM roles WHERE name = 'admin')"
+            cursor.execute(sql)
+            return cursor.fetchall()
+    finally:
+        conn.close()
+def get_all_agents():
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+            cursor.execute("SELECT * FROM users WHERE role_id = (SELECT id FROM roles WHERE name = 'agent')")
+            return cursor.fetchall()
     finally:
         conn.close()

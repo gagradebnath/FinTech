@@ -8,9 +8,9 @@
     </div>
 
     <!-- Balance Cards -->
-    <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card">
+    <div class="row mb-4 align-items-stretch">
+        <div class="col-md-4 mb-3 d-flex">
+            <div class="card flex-fill" style="height:130px;">
                 <div class="card-body stats-card">
                     <div class="stats-icon">
                         <i class="bi bi-wallet2"></i>
@@ -22,8 +22,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card">
+        <div class="col-md-4 mb-3 d-flex">
+            <div class="card flex-fill" style="height:130px;">
                 <div class="card-body stats-card stats-card-debit">
                     <div class="stats-icon">
                         <i class="bi bi-arrow-up-right"></i>
@@ -36,8 +36,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card">
+        <div class="col-md-4 mb-3 d-flex">
+            <div class="card flex-fill" style="height:130px;">
                 <div class="card-body stats-card stats-card-budget">
                     <div class="stats-icon">
                         <i class="bi bi-wallet"></i>
@@ -694,7 +694,7 @@
     }
 
     .balance-amount {
-        font-size: 3rem !important;
+        font-size: 2.5rem !important;
         font-weight: bold !important;
     }
 
@@ -712,7 +712,7 @@
         left: 0;
         top: 100%;
         min-width: 100%;
-        max-height: 200px;
+        max-height: 199px;
         /* Set max height for scroll */
         overflow-y: auto;
         /* Enable vertical scrolling */
@@ -727,5 +727,6 @@
         overflow: visible !important;
         position: relative;
     }
+    
 </style>
 {% endblock %}
