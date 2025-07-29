@@ -7,8 +7,14 @@
     <title>FinGuard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Base styles for all pages -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Chat styles (always include if user is logged in) -->
+    {% if session.get('user_id') and request.endpoint not in ['user.index', 'user.login', 'user.register'] %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+    {% endif %}
 
     <!-- Page-specific styles -->
     {% if request.endpoint == 'user.index' %}
@@ -35,9 +41,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/agent.css') }}">
     {% endif %}
 </head>
-
-<body>
-    <div class="d-flex wrapper">
+<body {% if session.get('user_id') %}data-user-logged-in="true"{% else %}data-user-logged-in="false"{% endif %}>    <div class="d-flex wrapper">
         {% if session.get('user_id') and request.endpoint not in ['user.index', 'user.login', 'user.register'] %}
         <!-- Sidebar -->
         <div class="sidebar">
@@ -176,6 +180,12 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Chat functionality (only if user is logged in) -->
+    {% if session.get('user_id') and request.endpoint not in ['user.index', 'user.login', 'user.register'] %}
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    {% endif %}
+    
     {% block extra_scripts %}{% endblock %}
 </body>
 

@@ -34,7 +34,7 @@
         </div>
         <div class="card-body">
             <div class="row align-items-center">
-                <div class="col-md-8">
+                <div class="col-md-6">
                     <label for="saved-budgets" class="visually-hidden">Select a saved budget</label>
                     <select class="form-select" id="saved-budgets" aria-label="Select a saved budget">
                         <option value="">Select a saved budget</option>
@@ -44,8 +44,11 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <button type="button" class="btn btn-primary w-100" id="load-budget">Load Selected Budget</button>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-danger w-100" id="delete-budget" disabled>Delete Selected Budget</button>
                 </div>
             </div>
         </div>
