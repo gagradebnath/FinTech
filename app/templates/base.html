@@ -35,6 +35,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/budget.css') }}">
     {% elif request.endpoint == 'transaction.send_money_route' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/transaction.css') }}">
+    {% elif request.endpoint == 'receipt.receipt_upload_page' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/receipt_upload.css') }}">
     {% elif request.endpoint == 'fraud.report_fraud' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/fraud.css') }}">
     {% elif request.endpoint == 'admin.admin_dashboard' %}
@@ -91,8 +93,12 @@
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="{{ url_for('fraud.report_fraud') }}"
-                        class="sidebar-link {% if request.endpoint == 'fraud.report_fraud' %}active{% endif %}">
+                    <a href="{{ url_for('receipt.receipt_upload_page') }}" class="sidebar-link {% if request.endpoint == 'receipt.receipt_upload_page' %}active{% endif %}">
+                        <i class="bi bi-receipt"></i> Upload Receipt
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{{ url_for('fraud.report_fraud') }}" class="sidebar-link {% if request.endpoint == 'fraud.report_fraud' %}active{% endif %}">
                         <i class="bi bi-shield-exclamation"></i> Report Fraud
                     </a>
                 </li>

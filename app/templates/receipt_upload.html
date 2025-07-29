@@ -1,0 +1,650 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="receipt-upload-container">
+    <!-- Header -->
+    <div class="header-section">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="page-title">
+                        <i class="bi bi-receipt-cutoff"></i>
+                        Smart Receipt Processing
+                    </h1>
+                    <p class="page-subtitle">Upload a receipt image and let AI extract transaction details automatically</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div id="service-status" class="d-flex gap-2 justify-content-end">
+                        <div class="status-indicator">
+                            <i class="bi bi-eye" id="ocr-status-icon"></i>
+                            <span id="ocr-status-text">OCR</span>
+                        </div>
+                        <div class="status-indicator">
+                            <i class="bi bi-robot" id="ai-status-icon"></i>
+                            <span id="ai-status-text">AI</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="row g-4">
+                <!-- Left Column - Upload & Preview -->
+                <div class="col-lg-6">
+                    <div class="upload-section">
+                        <div class="section-header">
+                            <h3><i class="bi bi-cloud-upload"></i> Upload Receipt</h3>
+                        </div>
+                        
+                        <form id="receipt-upload-form" enctype="multipart/form-data">
+                            <div class="upload-area" id="upload-area">
+                                <div class="upload-content">
+                                    <div class="upload-icon-wrapper">
+                                        <i class="bi bi-cloud-upload upload-icon"></i>
+                                    </div>
+                                    <h4 class="upload-title">Drop your receipt here</h4>
+                                    <p class="upload-subtitle">or click to browse files</p>
+                                    <div class="supported-formats">
+                                        <span class="format-tag">PNG</span>
+                                        <span class="format-tag">JPG</span>
+                                        <span class="format-tag">JPEG</span>
+                                        <span class="format-tag">GIF</span>
+                                        <span class="format-tag">BMP</span>
+                                        <span class="format-tag">TIFF</span>
+                                    </div>
+                                    <input type="file" id="receipt-file" name="receipt" accept="image/*" hidden>
+                                    <button type="button" class="btn btn-primary upload-btn" onclick="document.getElementById('receipt-file').click()">
+                                        <i class="bi bi-plus-circle"></i> Choose File
+                                    </button>
+                                </div>
+                                <div class="upload-preview" id="upload-preview" style="display: none;">
+                                    <div class="preview-image-container">
+                                        <img id="preview-image" src="" alt="Receipt Preview">
+                                        <div class="image-overlay">
+                                            <button type="button" class="btn btn-outline-light btn-sm" onclick="clearUpload()">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="preview-info">
+                                        <div class="file-details">
+                                            <i class="bi bi-file-earmark-image"></i>
+                                            <span id="file-name"></span>
+                                        </div>
+                                        <button type="submit" class="btn btn-accent" id="process-btn" disabled>
+                                            <i class="bi bi-magic"></i> Process with AI
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Processing Steps -->
+                        <div class="processing-section" id="processing-section" style="display: none;">
+                            <div class="section-header">
+                                <h4><i class="bi bi-gear"></i> Processing Receipt</h4>
+                            </div>
+                            <div class="processing-steps">
+                                <div class="processing-step" id="step-upload">
+                                    <div class="step-icon">
+                                        <i class="bi bi-upload"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <span class="step-title">Uploading Image</span>
+                                        <div class="step-progress"></div>
+                                    </div>
+                                    <div class="step-status"></div>
+                                </div>
+                                <div class="processing-step" id="step-ocr">
+                                    <div class="step-icon">
+                                        <i class="bi bi-eye"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <span class="step-title">Extracting Text (OCR)</span>
+                                        <div class="step-progress"></div>
+                                    </div>
+                                    <div class="step-status"></div>
+                                </div>
+                                <div class="processing-step" id="step-ai">
+                                    <div class="step-icon">
+                                        <i class="bi bi-robot"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <span class="step-title">AI Analysis</span>
+                                        <div class="step-progress"></div>
+                                    </div>
+                                    <div class="step-status"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Results & Edit -->
+                <div class="col-lg-6">
+                    <div class="results-section" id="results-section" style="display: none;">
+                        <div class="section-header">
+                            <h3><i class="bi bi-pencil-square"></i> Review & Edit Transaction</h3>
+                            <div class="confidence-badge">
+                                <i class="bi bi-check-circle"></i>
+                                <span>AI Extracted</span>
+                            </div>
+                        </div>
+                        
+                        <form id="transaction-edit-form">
+                            <div class="edit-form-content">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="edit-amount">Amount <span class="required">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="edit-amount" step="0.01" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="edit-category">Category</label>
+                                        <select class="form-select" id="edit-category">
+                                            <option value="Food">🍔 Food</option>
+                                            <option value="Groceries">🛒 Groceries</option>
+                                            <option value="Transportation">🚗 Transportation</option>
+                                            <option value="Shopping">🛍️ Shopping</option>
+                                            <option value="Entertainment">🎬 Entertainment</option>
+                                            <option value="Healthcare">🏥 Healthcare</option>
+                                            <option value="Utilities">⚡ Utilities</option>
+                                            <option value="Other">📦 Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="edit-merchant">Merchant Name</label>
+                                    <input type="text" class="form-control" id="edit-merchant" placeholder="Store or business name">
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="edit-payment-method">Payment Method</label>
+                                        <select class="form-select" id="edit-payment-method">
+                                            <option value="Credit Card">💳 Credit Card</option>
+                                            <option value="Debit Card">💳 Debit Card</option>
+                                            <option value="Cash">💵 Cash</option>
+                                            <option value="Mobile Payment">📱 Mobile Payment</option>
+                                            <option value="Unknown">❓ Unknown</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="edit-date">Date</label>
+                                        <input type="date" class="form-control" id="edit-date">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="edit-location">Location</label>
+                                    <input type="text" class="form-control" id="edit-location" placeholder="Store address or location">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="edit-note">Additional Notes</label>
+                                    <textarea class="form-control" id="edit-note" rows="3" placeholder="Any additional details about this transaction..."></textarea>
+                                </div>
+                                
+                                <!-- Items Section -->
+                                <div class="items-section" id="items-section" style="display: none;">
+                                    <div class="items-header">
+                                        <h5><i class="bi bi-list-ul"></i> Items Purchased</h5>
+                                        <button type="button" class="btn btn-sm btn-outline-accent" onclick="addItem()">
+                                            <i class="bi bi-plus"></i> Add Item
+                                        </button>
+                                    </div>
+                                    <div class="items-list" id="items-list"></div>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-success btn-lg" onclick="saveTransaction()">
+                                        <i class="bi bi-check-circle"></i> Save Transaction
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                                        <i class="bi bi-arrow-clockwise"></i> Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Success Section -->
+                    <div class="success-section" id="success-section" style="display: none;">
+                        <div class="success-content">
+                            <div class="success-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <h3>Transaction Saved Successfully!</h3>
+                            <p>Your receipt has been processed and the transaction has been added to your account.</p>
+                            <div class="success-actions">
+                                <button type="button" class="btn btn-primary" onclick="goToDashboard()">
+                                    <i class="bi bi-house"></i> Back to Dashboard
+                                </button>
+                                <button type="button" class="btn btn-outline-accent" onclick="uploadAnother()">
+                                    <i class="bi bi-plus-circle"></i> Upload Another
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Section -->
+                    <div class="error-section" id="error-section" style="display: none;">
+                        <div class="error-content">
+                            <div class="error-icon">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <h4>Processing Error</h4>
+                            <div id="error-message"></div>
+                            <button type="button" class="btn btn-outline-accent" onclick="resetForm()">
+                                <i class="bi bi-arrow-clockwise"></i> Try Again
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Debug Section -->
+                     <div style="display:none;">
+
+                        <div class="debug-section" id="debug-section" style="display: none;">
+                        <div class="debug-header">
+                            <h5><i class="bi bi-bug"></i> Extracted Text (Debug)</h5>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleDebug()">
+                                <i class="bi bi-eye-slash"></i> Hide
+                            </button>
+                        </div>
+                        <div class="debug-content">
+                            <pre id="ocr-text"></pre>
+                        </div>
+                    </div>
+
+                     </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let extractedData = null;
+let currentItems = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    checkServiceStatus();
+    setupUpload();
+});
+
+function checkServiceStatus() {
+    fetch('/api/receipt/health')
+        .then(response => response.json())
+        .then(data => {
+            updateServiceStatus('ocr', data.ocr_available);
+            updateServiceStatus('ai', data.ollama_available && data.model_available);
+        })
+        .catch(error => {
+            console.error('Service status check failed:', error);
+            updateServiceStatus('ocr', false);
+            updateServiceStatus('ai', false);
+        });
+}
+
+function updateServiceStatus(service, available) {
+    const icon = document.getElementById(`${service}-status-icon`);
+    const text = document.getElementById(`${service}-status-text`);
+    
+    if (available) {
+        icon.className = `bi ${service === 'ocr' ? 'bi-eye' : 'bi-robot'} text-success`;
+        text.textContent = service.toUpperCase();
+        text.parentElement.classList.add('status-ready');
+    } else {
+        icon.className = `bi ${service === 'ocr' ? 'bi-eye-slash' : 'bi-robot'} text-danger`;
+        text.textContent = `${service.toUpperCase()} Error`;
+        text.parentElement.classList.add('status-error');
+    }
+}
+
+function setupUpload() {
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('receipt-file');
+
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect();
+        }
+    });
+
+    uploadArea.addEventListener('click', (e) => {
+        if (!e.target.closest('.upload-preview')) {
+            fileInput.click();
+        }
+    });
+
+    fileInput.addEventListener('change', handleFileSelect);
+    document.getElementById('receipt-upload-form').addEventListener('submit', handleSubmit);
+}
+
+function handleFileSelect() {
+    const fileInput = document.getElementById('receipt-file');
+    const uploadContent = document.querySelector('.upload-content');
+    const uploadPreview = document.getElementById('upload-preview');
+    const processBtn = document.getElementById('process-btn');
+
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size too large. Please select a file under 10MB.');
+            return;
+        }
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-image').src = e.target.result;
+            document.getElementById('file-name').textContent = file.name;
+            
+            uploadContent.style.display = 'none';
+            uploadPreview.style.display = 'block';
+            processBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearUpload() {
+    const fileInput = document.getElementById('receipt-file');
+    const uploadContent = document.querySelector('.upload-content');
+    const uploadPreview = document.getElementById('upload-preview');
+    const processBtn = document.getElementById('process-btn');
+
+    fileInput.value = '';
+    uploadContent.style.display = 'block';
+    uploadPreview.style.display = 'none';
+    processBtn.disabled = true;
+    
+    // Hide results if showing
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('success-section').style.display = 'none';
+    document.getElementById('error-section').style.display = 'none';
+}
+
+function handleSubmit(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('receipt-file');
+    if (!fileInput.files.length) {
+        alert('Please select a file first.');
+        return;
+    }
+
+    showProcessing();
+    
+    const formData = new FormData();
+    formData.append('receipt', fileInput.files[0]);
+
+    updateProcessingStep('upload', 'active');
+
+    fetch('/api/receipt/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        updateProcessingStep('upload', 'completed');
+        updateProcessingStep('ocr', 'active');
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            updateProcessingStep('ocr', 'completed');
+            updateProcessingStep('ai', 'completed');
+            extractedData = data.transaction_data;
+            showResults(data);
+        } else {
+            throw new Error(data.error || 'Unknown error occurred');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showError(error.message);
+        
+        // Mark current step as error
+        const activeStep = document.querySelector('.processing-step.active');
+        if (activeStep) {
+            activeStep.classList.remove('active');
+            activeStep.classList.add('error');
+        }
+    });
+}
+
+function showProcessing() {
+    document.getElementById('processing-section').style.display = 'block';
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('error-section').style.display = 'none';
+    
+    // Reset all steps
+    document.querySelectorAll('.processing-step').forEach(step => {
+        step.className = 'processing-step';
+    });
+}
+
+function updateProcessingStep(stepName, status) {
+    const step = document.getElementById(`step-${stepName}`);
+    step.className = `processing-step ${status}`;
+    
+    // Simulate processing time for better UX
+    if (status === 'active') {
+        setTimeout(() => {
+            if (step.classList.contains('active')) {
+                step.classList.remove('active');
+                step.classList.add('completed');
+            }
+        }, 1500);
+    }
+}
+
+function showResults(data) {
+    document.getElementById('processing-section').style.display = 'none';
+    document.getElementById('results-section').style.display = 'block';
+    
+    const transaction = data.transaction_data;
+    
+    // Populate form fields
+    document.getElementById('edit-amount').value = transaction.amount.toFixed(2);
+    document.getElementById('edit-category').value = transaction.category;
+    document.getElementById('edit-merchant').value = transaction.merchant_name;
+    document.getElementById('edit-payment-method').value = transaction.payment_method;
+    document.getElementById('edit-date').value = transaction.date;
+    document.getElementById('edit-location').value = transaction.location;
+    
+    // Create note from extracted data
+    let note = `Receipt from ${transaction.merchant_name}`;
+    if (transaction.location && transaction.location !== 'Unknown Location') {
+        note += `\nLocation: ${transaction.location}`;
+    }
+    document.getElementById('edit-note').value = note;
+    
+    // Handle items
+    currentItems = transaction.items || [];
+    if (currentItems.length > 0) {
+        document.getElementById('items-section').style.display = 'block';
+        renderItems();
+    }
+    
+    // Show debug info if available
+    if (data.ocr_text) {
+        document.getElementById('debug-section').style.display = 'block';
+        document.getElementById('ocr-text').textContent = data.ocr_text;
+    }
+}
+
+function renderItems() {
+    const itemsList = document.getElementById('items-list');
+    itemsList.innerHTML = '';
+    
+    currentItems.forEach((item, index) => {
+        const itemElement = document.createElement('div');
+        itemElement.className = 'item-row';
+        itemElement.innerHTML = `
+            <div class="item-details">
+                <input type="text" class="form-control item-name" value="${item.name || ''}" placeholder="Item name">
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" class="form-control item-price" value="${item.price || ''}" step="0.01" placeholder="0.00">
+                </div>
+            </div>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeItem(${index})">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+        itemsList.appendChild(itemElement);
+    });
+}
+
+function addItem() {
+    currentItems.push({ name: '', price: 0 });
+    document.getElementById('items-section').style.display = 'block';
+    renderItems();
+}
+
+function removeItem(index) {
+    currentItems.splice(index, 1);
+    renderItems();
+    
+    if (currentItems.length === 0) {
+        document.getElementById('items-section').style.display = 'none';
+    }
+}
+
+function saveTransaction() {
+    // Collect form data
+    const formData = {
+        amount: parseFloat(document.getElementById('edit-amount').value),
+        category: document.getElementById('edit-category').value,
+        merchant_name: document.getElementById('edit-merchant').value,
+        payment_method: document.getElementById('edit-payment-method').value,
+        date: document.getElementById('edit-date').value,
+        location: document.getElementById('edit-location').value,
+        note: document.getElementById('edit-note').value,
+        items: []
+    };
+    
+    // Collect items data
+    document.querySelectorAll('.item-row').forEach(row => {
+        const name = row.querySelector('.item-name').value;
+        const price = parseFloat(row.querySelector('.item-price').value) || 0;
+        if (name.trim()) {
+            formData.items.push({ name: name.trim(), price });
+        }
+    });
+    
+    // Validate required fields
+    if (!formData.amount || formData.amount <= 0) {
+        alert('Please enter a valid amount.');
+        document.getElementById('edit-amount').focus();
+        return;
+    }
+    
+    // Show loading state
+    const saveBtn = document.querySelector('[onclick="saveTransaction()"]');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
+    saveBtn.disabled = true;
+    
+    // Send to server
+    fetch('/api/receipt/save-transaction', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccess();
+        } else {
+            throw new Error(data.error || 'Failed to save transaction');
+        }
+    })
+    .catch(error => {
+        console.error('Save error:', error);
+        alert('Error saving transaction: ' + error.message);
+        
+        // Restore button
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+function showSuccess() {
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('success-section').style.display = 'block';
+}
+
+function showError(message) {
+    document.getElementById('processing-section').style.display = 'none';
+    document.getElementById('error-section').style.display = 'block';
+    document.getElementById('error-message').innerHTML = `
+        <div class="error-details">
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+function resetForm() {
+    clearUpload();
+    document.getElementById('processing-section').style.display = 'none';
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('success-section').style.display = 'none';
+    document.getElementById('error-section').style.display = 'none';
+    document.getElementById('debug-section').style.display = 'none';
+    
+    // Reset form fields
+    document.getElementById('transaction-edit-form').reset();
+    currentItems = [];
+}
+
+function uploadAnother() {
+    resetForm();
+}
+
+function goToDashboard() {
+    window.location.href = '/dashboard';
+}
+
+function toggleDebug() {
+    const debugSection = document.getElementById('debug-section');
+    const toggleBtn = debugSection.querySelector('button');
+    const debugContent = debugSection.querySelector('.debug-content');
+    
+    if (debugContent.style.display === 'none') {
+        debugContent.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="bi bi-eye-slash"></i> Hide';
+    } else {
+        debugContent.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="bi bi-eye"></i> Show';
+    }
+}
+</script>
+{% endblock %}
