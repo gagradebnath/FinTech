@@ -90,7 +90,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="chart-container" style="position:relative; width:100%; height:380px;">
+                    <div class="chart-container" style="position:relative; width:100%; height:380px; background: linear-gradient(145deg, #0f0f0f, #1a1a1a); border-radius: 12px; padding: 20px;">
                         <canvas id="transactionChart" style="width:100%;height:100%;"></canvas>
                     </div>
                 </div>
@@ -257,89 +257,139 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const width = canvas.width;
+        const height = canvas.height;
+        
+        // Set dark background
+        ctx.fillStyle = "#0f0f0f";
+        ctx.fillRect(0, 0, width, height);
+
         // Draw year at top center if monthly
         if (period === 'monthly' && year) {
-            ctx.fillStyle = "#fff";
-            ctx.font = "20px Arial";
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "18px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
             ctx.textAlign = "center";
-            ctx.fillText(year, width / 2, 30);
+            ctx.fillText(year, width / 2, 25);
         }
 
-        const height = canvas.height;
-        const barWidth = Math.floor((width - 60) / (labels.length * 3));
+        const barWidth = Math.floor((width - 100) / labels.length);
         const maxVal = Math.max(...received, ...spent, 1);
-        const yTicks = [0, Math.round(maxVal / 2), Math.round(maxVal)];
-        if (period == 'monthly' && year) {
-            ctx.fillStyle = "#fff"
-        }
-        // Draw Y axis grid lines and labels
-        ctx.strokeStyle = "#eee";
-        ctx.fillStyle = "#fff";
-        ctx.font = "12px Arial";
-        for (let i = 0; i < yTicks.length; i++) {
-            let y = height - 20 - (yTicks[i] / maxVal) * (height - 60);
+        const chartHeight = height - 80;
+        const chartBottom = height - 40;
+
+        // Draw subtle grid lines
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 5; i++) {
+            const y = chartBottom - (i / 5) * chartHeight;
             ctx.beginPath();
-            ctx.moveTo(40, y);
-            ctx.lineTo(width - 10, y);
+            ctx.moveTo(50, y);
+            ctx.lineTo(width - 20, y);
             ctx.stroke();
-            ctx.fillText(yTicks[i], 25, y + 4);
         }
 
-        // Draw X axis
-        ctx.strokeStyle = "#aaa";
-        ctx.beginPath();
-        ctx.moveTo(40, height - 20);
-        ctx.lineTo(width - 10, height - 20);
-        ctx.stroke();
-
-        // Draw bars and X labels
+        // Draw bars with gradients
         for (let i = 0; i < labels.length; i++) {
-            // Received (green)
-            let barHeight = Math.round((received[i] / maxVal) * (height - 60));
-            ctx.fillStyle = "#3ed6c2";
-            ctx.fillRect(50 + i * barWidth * 3, height - 20 - barHeight, barWidth, barHeight);
+            const x = 50 + i * barWidth + barWidth * 0.2;
+            const barWidthActual = barWidth * 0.6;
 
-            // Spent (red)
-            barHeight = Math.round((spent[i] / maxVal) * (height - 60));
-            ctx.fillStyle = "#ff6384";
-            ctx.fillRect(50 + i * barWidth * 3 + barWidth, height - 20 - barHeight, barWidth, barHeight);
+            // Calculate bar heights
+            const receivedHeight = (received[i] / maxVal) * chartHeight;
+            const spentHeight = (spent[i] / maxVal) * chartHeight;
+            const totalHeight = Math.max(receivedHeight, spentHeight);
 
-            // X label
-            ctx.save();
-            ctx.fillStyle = "#fff";
-            ctx.font = "12px Arial";
-            ctx.translate(50 + i * barWidth * 3 + barWidth / 2, height - 5);
-            ctx.rotate(-Math.PI / 8);
-            ctx.fillText(labels[i], 0, 0);
-            ctx.restore();
+            // Create gradient for received (green to cyan)
+            const receivedGradient = ctx.createLinearGradient(0, chartBottom - receivedHeight, 0, chartBottom);
+            receivedGradient.addColorStop(0, "#00d4aa");
+            receivedGradient.addColorStop(0.5, "#00ff9f");
+            receivedGradient.addColorStop(1, "#00b4d8");
+
+            // Create gradient for spent (red to orange)
+            const spentGradient = ctx.createLinearGradient(0, chartBottom - spentHeight, 0, chartBottom);
+            spentGradient.addColorStop(0, "#ef4444");
+            spentGradient.addColorStop(0.5, "#ff6b6b");
+            spentGradient.addColorStop(1, "#ff8e53");
+
+            // Function to draw rounded rectangle
+            function drawRoundedRect(ctx, x, y, width, height, radius) {
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + width - radius, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                ctx.lineTo(x + width, y + height - radius);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                ctx.lineTo(x + radius, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
+            }
+
+            // Draw received bar with rounded corners
+            if (received[i] > 0) {
+                ctx.fillStyle = receivedGradient;
+                drawRoundedRect(ctx, x, chartBottom - receivedHeight, barWidthActual * 0.45, receivedHeight, 4);
+                ctx.fill();
+                
+                // Add subtle border
+                ctx.strokeStyle = "rgba(0, 212, 170, 0.3)";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+
+            // Draw spent bar with rounded corners
+            if (spent[i] > 0) {
+                ctx.fillStyle = spentGradient;
+                drawRoundedRect(ctx, x + barWidthActual * 0.55, chartBottom - spentHeight, barWidthActual * 0.45, spentHeight, 4);
+                ctx.fill();
+                
+                // Add subtle border
+                ctx.strokeStyle = "rgba(239, 68, 68, 0.3)";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+
+            // Draw labels
+            ctx.fillStyle = "#6b7280";
+            ctx.font = "11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(labels[i], x + barWidthActual / 2, height - 15);
         }
 
-        // Y axis label
-        ctx.save();
-        ctx.translate(15, height / 2);
-        ctx.rotate(-Math.PI / 2);
-        ctx.textAlign = "center";
-        ctx.fillStyle = "#333";
-        ctx.font = "16px Arial";
-        ctx.fillText("Amount", 40, 0);
-        ctx.restore();
+        // Draw Y-axis values
+        ctx.fillStyle = "#6b7280";
+        ctx.font = "11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.textAlign = "right";
+        for (let i = 0; i <= 5; i++) {
+            const value = Math.round((i / 5) * maxVal);
+            const y = chartBottom - (i / 5) * chartHeight;
+            ctx.fillText(value.toLocaleString(), 45, y + 4);
+        }
 
-        //X axis label
-        // ctx.fillStyle = "#333";
-        // ctx.font = "16px Arial";
-        // ctx.textAlign = "center";
-        // ctx.fillText("Period", width / 2, height);
+        // Modern legend with gradient boxes
+        const legendY = 20;
+        const legendX = width - 120;
 
-        // Legend
-        ctx.fillStyle = "#3ed6c2";
-        ctx.fillRect(width - 150, 2, 12, 12);
-        ctx.fillStyle = "#fff";
-        ctx.font = "12px Arial";
-        ctx.fillText("Received", width - 100, 12);
-        ctx.fillStyle = "#ff6384";
-        ctx.fillRect(width - 150, 20, 12, 12);
-        ctx.fillStyle = "#fff";
-        ctx.fillText("Spent", width - 110, 32);
+        // Received legend with rounded corners
+        const receivedLegendGradient = ctx.createLinearGradient(legendX, legendY, legendX, legendY + 12);
+        receivedLegendGradient.addColorStop(0, "#00d4aa");
+        receivedLegendGradient.addColorStop(1, "#00b4d8");
+        ctx.fillStyle = receivedLegendGradient;
+        drawRoundedRect(ctx, legendX, legendY, 12, 12, 3);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.textAlign = "left";
+        ctx.fillText("Received", legendX + 18, legendY + 9);
+
+        // Spent legend with rounded corners
+        const spentLegendGradient = ctx.createLinearGradient(legendX, legendY + 20, legendX, legendY + 32);
+        spentLegendGradient.addColorStop(0, "#ef4444");
+        spentLegendGradient.addColorStop(1, "#ff8e53");
+        ctx.fillStyle = spentLegendGradient;
+        drawRoundedRect(ctx, legendX, legendY + 20, 12, 12, 3);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("Spent", legendX + 18, legendY + 29);
     }
 
     function loadReport(period) {
@@ -549,18 +599,28 @@
                         <tr>
                             <th>Category</th>
                             <th>Budget</th>
-                            <th>Expenditure</th>
-                            <th>Condition</th>
+                            <th>Spent</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>`;
                 data.forEach(row => {
                     // Determine color for condition
                     let condColor = row.condition.includes('remaining') ? 'text-success' : 'text-danger';
+                    let categoryIcon = getCategoryIcon(row.category);
                     html += `<tr>
-                        <td>${row.category}</td>
-                        <td>$${row.budget.toFixed(2)}</td>
-                        <td>$${row.expenditure.toFixed(2)}</td>
+                        <td>
+                            <div class="transaction-account">
+                                <div class="transaction-icon">
+                                    <i class="${categoryIcon}"></i>
+                                </div>
+                                <div>
+                                    <div class="transaction-vendor">${row.category}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><strong>$${row.budget.toFixed(2)}</strong></td>
+                        <td><strong>$${row.expenditure.toFixed(2)}</strong></td>
                         <td><span class="${condColor}">${row.condition}</span></td>
                     </tr>`;
                 });
@@ -568,6 +628,30 @@
                 document.getElementById('category-summary-table').innerHTML = html;
             });
     });
+
+    function getCategoryIcon(category) {
+        const iconMap = {
+            'Housing': 'bi bi-house-fill text-primary',
+            'Utilities': 'bi bi-lightning-fill text-warning',
+            'Groceries': 'bi bi-cart-fill text-success',
+            'Transportation': 'bi bi-car-front-fill text-info',
+            'Healthcare': 'bi bi-heart-pulse-fill text-danger',
+            'Insurance': 'bi bi-shield-fill text-secondary',
+            'Education': 'bi bi-book-fill text-primary',
+            'Savings': 'bi bi-piggy-bank-fill text-success',
+            'Debt Payments': 'bi bi-credit-card-fill text-warning',
+            'Personal Care': 'bi bi-person-fill text-info',
+            'Entertainment': 'bi bi-play-circle-fill text-purple',
+            'Dining Out': 'bi bi-cup-hot-fill text-warning',
+            'Clothing': 'bi bi-bag-fill text-secondary',
+            'Gifts & Donations': 'bi bi-gift-fill text-danger',
+            'Travel': 'bi bi-airplane-fill text-info',
+            'Childcare': 'bi bi-people-fill text-primary',
+            'Pets': 'bi bi-heart-fill text-success',
+            'Other': 'bi bi-three-dots text-secondary'
+        };
+        return iconMap[category] || 'bi bi-circle-fill text-secondary';
+    }
 
     // Fetch monthly earned and spent, then show the difference
     document.addEventListener('DOMContentLoaded', function () {
@@ -657,40 +741,65 @@
     }
 
     .category-summary-table {
-        background: transparent;
-        color: #e2e8f0;
+        width: 100%;
+        background: linear-gradient(145deg, var(--gradient-color-1), var(--dark-secondary), var(--dark-tertiary));
+        border-radius: 0;
+        overflow: hidden;
         border-collapse: separate;
         border-spacing: 0;
-        width: 100%;
-    }
-
-    .category-summary-table th,
-    .category-summary-table td {
-        background: transparent;
-        color: #e2e8f0;
-        border: 1px solid #353232;
-        z-index: 3;
+        margin: 0;
     }
 
     .category-summary-table th {
+        text-align: left;
+        padding: 16px 20px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        background: transparent;
         position: sticky;
         top: 0;
-        background: #181818;
         z-index: 2;
     }
 
-    .category-summary-table tr:hover {
+    .category-summary-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        vertical-align: middle;
         background: transparent;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+
+    .category-summary-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .category-summary-table tr:hover {
+        background-color: rgba(255, 255, 255, 0.03);
     }
 
     .text-success {
-        color: #38d39f !important;
-        font-weight: bold;
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-align: center;
+        background-color: rgba(40, 167, 69, 0.15);
+        color: var(--success-color) !important;
     }
 
     .text-danger {
-        color: #ff6384 !important;
-        font-weight: bold;
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-align: center;
+        background-color: rgba(220, 53, 69, 0.15);
+        color: var(--danger-color) !important;
     }
 
     .balance-amount {
