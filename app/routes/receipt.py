@@ -120,55 +120,132 @@ Return the information in the exact JSON format specified."""
             }
         }
 
-        # Send request to Ollama
-        response = requests.post(
-            f"{OLLAMA_BASE_URL}/api/chat",
-            json=ollama_request,
-            timeout=30
-        )
-
-        if response.status_code == 200:
-            ollama_response = response.json()
-            ai_response = ollama_response.get('message', {}).get('content', '')
+        # Send request to Ollama with increased timeout and better error handling
+        try:
+            response = requests.post(
+                f"{OLLAMA_BASE_URL}/api/chat",
+                json=ollama_request,
+                timeout=90  # Increased timeout to 90 seconds
+            )
             
-            # Try to extract JSON from the response
-            try:
-                # Find JSON in the response
-                json_start = ai_response.find('{')
-                json_end = ai_response.rfind('}') + 1
+            if response.status_code == 200:
+                ollama_response = response.json()
+                ai_response = ollama_response.get('message', {}).get('content', '')
                 
-                if json_start != -1 and json_end > json_start:
-                    json_str = ai_response[json_start:json_end]
-                    transaction_data = json.loads(json_str)
+                # Try to extract JSON from the response
+                try:
+                    # Find JSON in the response
+                    json_start = ai_response.find('{')
+                    json_end = ai_response.rfind('}') + 1
                     
-                    # Validate and clean the data
-                    cleaned_data = {
-                        'amount': float(transaction_data.get('amount', 0.0)),
-                        'payment_method': transaction_data.get('payment_method', 'Unknown'),
-                        'merchant_name': transaction_data.get('merchant_name', 'Unknown Merchant'),
-                        'location': transaction_data.get('location', 'Unknown Location'),
-                        'category': transaction_data.get('category', 'Other'),
-                        'date': transaction_data.get('date', datetime.now().strftime('%Y-%m-%d')),
-                        'time': transaction_data.get('time', datetime.now().strftime('%H:%M')),
-                        'items': transaction_data.get('items', [])
-                    }
-                    
-                    return cleaned_data
-                else:
-                    current_app.logger.error("No valid JSON found in AI response")
-                    return None
-                    
-            except json.JSONDecodeError as e:
-                current_app.logger.error(f"JSON decode error: {str(e)}")
-                current_app.logger.error(f"AI Response: {ai_response}")
-                return None
-        else:
-            current_app.logger.error(f"Ollama API error: {response.status_code}")
-            return None
+                    if json_start != -1 and json_end > json_start:
+                        json_str = ai_response[json_start:json_end]
+                        transaction_data = json.loads(json_str)
+                        
+                        # Validate and clean the data
+                        cleaned_data = {
+                            'amount': float(transaction_data.get('amount', 0.0)),
+                            'payment_method': transaction_data.get('payment_method', 'Unknown'),
+                            'merchant_name': transaction_data.get('merchant_name', 'Unknown Merchant'),
+                            'location': transaction_data.get('location', 'Unknown Location'),
+                            'category': transaction_data.get('category', 'Other'),
+                            'date': transaction_data.get('date', datetime.now().strftime('%Y-%m-%d')),
+                            'time': transaction_data.get('time', datetime.now().strftime('%H:%M')),
+                            'items': transaction_data.get('items', [])
+                        }
+                        
+                        current_app.logger.info(f"Successfully extracted transaction data: {cleaned_data}")
+                        return cleaned_data
+                    else:
+                        current_app.logger.error("No valid JSON found in AI response")
+                        return create_fallback_transaction(ocr_text, "Invalid AI response format")
+                        
+                except json.JSONDecodeError as e:
+                    current_app.logger.error(f"Failed to parse AI response as JSON: {e}")
+                    return create_fallback_transaction(ocr_text, "Failed to parse AI response")
+            else:
+                current_app.logger.error(f"Ollama API error: {response.status_code} - {response.text}")
+                return create_fallback_transaction(ocr_text, f"AI service error: {response.status_code}")
+                
+        except requests.exceptions.Timeout:
+            current_app.logger.error("Ollama request timed out after 90 seconds")
+            return create_fallback_transaction(ocr_text, "AI processing timed out")
+        except requests.exceptions.ConnectionError:
+            current_app.logger.error("Failed to connect to Ollama service at " + OLLAMA_BASE_URL)
+            return create_fallback_transaction(ocr_text, "AI service unavailable")
+        except Exception as e:
+            current_app.logger.error(f"Unexpected error during AI processing: {str(e)}")
+            return create_fallback_transaction(ocr_text, f"AI processing error: {str(e)}")
             
     except Exception as e:
         current_app.logger.error(f"NLP processing error: {str(e)}")
-        return None
+        return create_fallback_transaction(ocr_text, f"NLP processing failed: {str(e)}")
+
+
+def create_fallback_transaction(ocr_text, error_reason="AI processing failed"):
+    """
+    Create a fallback transaction when AI processing fails
+    """
+    import re
+    
+    # Try to extract basic information using simple text processing
+    amount = extract_amount_from_text(ocr_text)
+    merchant = extract_merchant_from_text(ocr_text)
+    
+    fallback_data = {
+        "amount": amount,
+        "merchant_name": merchant,
+        "category": "Other",
+        "date": datetime.now().strftime('%Y-%m-%d'),
+        "time": datetime.now().strftime('%H:%M'),
+        "location": "Unknown Location",
+        "payment_method": "Unknown",
+        "items": [],
+        "note": f"Fallback extraction used ({error_reason}). Please review and edit all fields."
+    }
+    
+    current_app.logger.info(f"Created fallback transaction: {fallback_data}")
+    return fallback_data
+
+
+def extract_amount_from_text(text):
+    """Extract amount using regex patterns"""
+    import re
+    
+    # Look for common price patterns
+    patterns = [
+        r'\$\s*(\d+\.\d{2})',  # $XX.XX
+        r'total\s*:?\s*\$?\s*(\d+\.\d{2})',  # Total: $XX.XX
+        r'amount\s*:?\s*\$?\s*(\d+\.\d{2})',  # Amount: $XX.XX
+        r'(\d+\.\d{2})\s*$',  # XX.XX at end of line
+    ]
+    
+    for pattern in patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        if matches:
+            try:
+                # Return the largest amount found (likely the total)
+                return max([float(match) for match in matches])
+            except ValueError:
+                continue
+    
+    return 0.00
+
+
+def extract_merchant_from_text(text):
+    """Extract merchant name from text"""
+    import re
+    
+    lines = text.strip().split('\n')
+    if lines:
+        # Usually the first line contains the merchant name
+        first_line = lines[0].strip()
+        # Clean up common OCR artifacts
+        merchant = re.sub(r'[^\w\s]', '', first_line).strip()
+        if len(merchant) > 3:  # Ensure it's not just noise
+            return merchant[:50]  # Limit length
+    
+    return "Unknown Merchant"
 
 @receipt_bp.route('/receipt-upload', methods=['GET'])
 def receipt_upload_page():
@@ -224,10 +301,11 @@ def upload_receipt():
             transaction_data = process_receipt_with_nlp(ocr_text, user['id'])
             
             if not transaction_data:
-                return jsonify({
-                    'error': 'Could not extract transaction information from the receipt.',
-                    'ocr_text': ocr_text  # Return OCR text for debugging
-                }), 400
+                # If AI processing completely fails, create a basic fallback
+                transaction_data = create_fallback_transaction(ocr_text, "AI processing completely failed")
+            
+            # Always return success with the extracted data (whether from AI or fallback)
+            current_app.logger.info(f"Processing complete: {transaction_data}")
             
             # Prepare transaction data for database
             transaction_id = str(uuid.uuid4())
@@ -297,6 +375,104 @@ def upload_receipt():
             'details': str(e)
         }), 500
 
+@receipt_bp.route('/api/receipt/save-transaction', methods=['POST'])
+def save_edited_transaction():
+    """Save the edited transaction data"""
+    try:
+        # Get current user
+        user = get_current_user_from_jwt()
+        if not user:
+            user = get_current_user()
+        
+        if not user:
+            return jsonify({'error': 'Authentication required'}), 401
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Transaction data is required'}), 400
+
+        # Validate required fields
+        required_fields = ['amount', 'category', 'merchant_name', 'payment_method', 'date']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({'error': f'{field.replace("_", " ").title()} is required'}), 400
+
+        # Validate amount
+        try:
+            amount = float(data['amount'])
+            if amount <= 0:
+                return jsonify({'error': 'Amount must be greater than 0'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid amount format'}), 400
+
+        # Generate transaction ID
+        transaction_id = str(uuid.uuid4())
+        
+        # Parse date and time
+        try:
+            date_str = data['date']
+            time_str = data.get('time', datetime.now().strftime('%H:%M'))
+            timestamp = datetime.strptime(f"{date_str} {time_str}", '%Y-%m-%d %H:%M')
+        except ValueError:
+            timestamp = datetime.now()
+
+        # Create comprehensive note
+        note_parts = [
+            f"Receipt from {data['merchant_name']}",
+            f"Category: {data['category']}"
+        ]
+        
+        if data.get('location'):
+            note_parts.append(f"Location: {data['location']}")
+        
+        if data.get('note'):
+            note_parts.append(f"Notes: {data['note']}")
+        
+        # Add items if any
+        items = data.get('items', [])
+        if items:
+            note_parts.append("Items purchased:")
+            for item in items[:10]:  # Limit to first 10 items
+                if item.get('name'):
+                    price = item.get('price', 0)
+                    note_parts.append(f"- {item['name']} ${price:.2f}")
+
+        note = "\n".join(note_parts)
+
+        # Add transaction to database
+        try:
+            add_transaction(
+                transaction_id=transaction_id,
+                amount=amount,
+                payment_method=data['payment_method'],
+                timestamp=timestamp,
+                sender_id=user['id'],  # User is spending money
+                receiver_id=None,  # No specific receiver for purchases
+                note=note,
+                transaction_type='Payment',  # Receipt represents a payment/purchase
+                location=data.get('location', 'Unknown Location')
+            )
+            
+            return jsonify({
+                'success': True,
+                'message': 'Transaction saved successfully!',
+                'transaction_id': transaction_id
+            })
+            
+        except Exception as db_error:
+            current_app.logger.error(f"Database error: {str(db_error)}")
+            return jsonify({
+                'error': 'Failed to save transaction to database.',
+                'details': str(db_error)
+            }), 500
+            
+    except Exception as e:
+        current_app.logger.error(f"Save transaction error: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'details': str(e)
+        }), 500
+
 @receipt_bp.route('/api/receipt/health', methods=['GET'])
 def receipt_health():
     """Check if OCR and AI services are available"""
@@ -304,6 +480,7 @@ def receipt_health():
         # Check Ollama availability
         ollama_available = False
         model_available = False
+        ollama_error = None
         
         try:
             response = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
@@ -311,8 +488,17 @@ def receipt_health():
                 ollama_available = True
                 models = response.json().get('models', [])
                 model_available = any(model.get('name', '').startswith(MODEL_NAME) for model in models)
-        except:
-            pass
+                if not model_available:
+                    available_models = [model.get('name', 'unknown') for model in models]
+                    ollama_error = f"Model '{MODEL_NAME}' not found. Available models: {', '.join(available_models) if available_models else 'none'}"
+            else:
+                ollama_error = f"Ollama API returned status {response.status_code}"
+        except requests.exceptions.ConnectionError:
+            ollama_error = f"Cannot connect to Ollama at {OLLAMA_BASE_URL}. Is Ollama running?"
+        except requests.exceptions.Timeout:
+            ollama_error = "Ollama connection timed out"
+        except Exception as e:
+            ollama_error = f"Ollama error: {str(e)}"
         
         # Check OCR availability (pytesseract)
         ocr_available = False
@@ -340,8 +526,10 @@ def receipt_health():
             'ocr_error': ocr_error,
             'tesseract_path': getattr(pytesseract.pytesseract, 'tesseract_cmd', 'default'),
             'ollama_available': ollama_available,
+            'ollama_error': ollama_error,
             'model_available': model_available,
             'model_name': MODEL_NAME,
+            'ollama_url': OLLAMA_BASE_URL,
             'status': 'healthy' if (ocr_available and ollama_available and model_available) else 'partially_available'
         })
         
