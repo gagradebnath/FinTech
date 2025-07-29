@@ -7,63 +7,128 @@
         </div>
     </div>
 
-    <!-- Balance Cards -->
-    <div class="row mb-4 align-items-stretch">
-        <div class="col-md-4 mb-3 d-flex">
-            <div class="card flex-fill" style="height:130px;">
-                <div class="card-body stats-card">
-                    <div class="stats-icon">
-                        <i class="bi bi-wallet2"></i>
-                    </div>
-                    <div class="stats-info">
-                        <h3 class="balance-amount">${{ user.balance|default('0.00') }}</h3>
-                        <p>Total Balance</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3 d-flex">
-            <div class="card flex-fill" style="height:130px;">
-                <div class="card-body stats-card stats-card-debit">
-                    <div class="stats-icon">
-                        <i class="bi bi-arrow-up-right"></i>
-                    </div>
-                    <div class="stats-info">
-                        <h3 class="md" id="monthlyDifference">$0.00</h3>
-                        <p>Net This Month</p>
-                        <small id="monthlyEarnedSpent"></small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3 d-flex">
-            <div class="card flex-fill" style="height:130px;">
-                <div class="card-body stats-card stats-card-budget">
-                    <div class="stats-icon">
-                        <i class="bi bi-wallet"></i>
-                    </div>
-                    <div class="stats-info">
-                        <div class="dropdown">
-                            <h5 class="dropdown-toggle" data-bs-toggle="dropdown" style="cursor:pointer;">
-                                <span id="budgetName">{{ budgets[0].name if budgets else 'No Budget' }}</span>
-                            </h5>
-                            <ul class="dropdown-menu">
-                                {% for budget in budgets %}
-                                <li>
-                                    <a class="dropdown-item" href="#"
-                                        onclick="selectDisplayBudget('{{ budget.id }}', '{{ budget.name }}', '{{ budget.currency if budget.currency else '$' }}', '{{ '%.2f'|format(budget.amount if budget.amount else 0) }}');return false;">
-                                        {{ budget.name }}
-                                    </a>
-                                </li>
-                                {% endfor %}
-                            </ul>
+    <!-- Balance Cards - Redesigned -->
+    <div class="row mb-4 g-4">
+        <!-- Total Balance Card -->
+        <div class="col-md-4">
+            <div class="balance-card balance-card-primary">
+                <div class="balance-card-glow"></div>
+                <div class="balance-card-content">
+                    <div class="balance-card-header">
+                        <div class="balance-card-icon-wrapper">
+                            <div class="balance-card-icon">
+                                <i class="bi bi-wallet2"></i>
+                            </div>
                         </div>
-                        <h3>
-                            <span id="budgetCurrency">{{ budgets[0].currency if budgets and budgets[0].currency else '$'
-                                }}</span>
-                            <span id="budgetAmount">{{ '%.2f'|format(budgets[0].amount if budgets and budgets[0].amount
-                                else 0) }}</span>
-                        </h3>
+                        <div class="balance-card-title">
+                            <span class="balance-card-label">Total Balance</span>
+                            <div class="balance-card-status">
+                                <div class="status-dot active"></div>
+                                <span>Available</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="balance-card-amount">
+                        <span class="currency-symbol">$</span>
+                        <span class="amount-value">${{ user.balance|default('0.00') }}</span>
+                    </div>
+                    <div class="balance-card-footer">
+                        <div class="card-pattern"></div>
+                        <div class="balance-trend">
+                            <i class="bi bi-graph-up trend-icon"></i>
+                            <span class="trend-text">+2.5% this week</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Net Card -->
+        <div class="col-md-4">
+            <div class="balance-card balance-card-secondary">
+                <div class="balance-card-glow"></div>
+                <div class="balance-card-content">
+                    <div class="balance-card-header">
+                        <div class="balance-card-icon-wrapper">
+                            <div class="balance-card-icon">
+                                <i class="bi bi-arrow-up-right"></i>
+                            </div>
+                        </div>
+                        <div class="balance-card-title">
+                            <span class="balance-card-label">Net This Month</span>
+                            <div class="balance-card-status">
+                                <div class="status-dot processing"></div>
+                                <span>Tracking</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="balance-card-amount">
+                        <span class="currency-symbol">$</span>
+                        <span class="amount-value" id="monthlyDifference">0.00</span>
+                    </div>
+                    <div class="balance-card-footer">
+                        <div class="card-pattern"></div>
+                        <div class="balance-details">
+                            <small id="monthlyEarnedSpent" class="earned-spent-text"></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Card -->
+        <div class="col-md-4">
+            <div class="balance-card balance-card-accent">
+                <div class="balance-card-glow"></div>
+                <div class="balance-card-content">
+                    <div class="balance-card-header">
+                        <div class="balance-card-icon-wrapper">
+                            <div class="balance-card-icon">
+                                <i class="bi bi-piggy-bank"></i>
+                            </div>
+                        </div>
+                        <div class="balance-card-title">
+                            <div class="budget-dropdown-wrapper">
+                                <div class="dropdown">
+                                    <button class="budget-selector" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span id="budgetName" class="budget-name">{{ budgets[0].name if budgets else 'No Budget' }}</span>
+                                        <i class="bi bi-chevron-down dropdown-arrow"></i>
+                                    </button>
+                                    <ul class="dropdown-menu budget-dropdown-menu">
+                                        {% for budget in budgets %}
+                                        <li>
+                                            <a class="dropdown-item budget-option" href="#"
+                                                onclick="selectDisplayBudget('{{ budget.id }}', '{{ budget.name }}', '{{ budget.currency if budget.currency else '$' }}', '{{ '%.2f'|format(budget.amount if budget.amount else 0) }}');return false;">
+                                                <div class="budget-option-content">
+                                                    <span class="budget-option-name">{{ budget.name }}</span>
+                                                    <span class="budget-option-amount">{{ budget.currency if budget.currency else '$' }}{{ '%.2f'|format(budget.amount if budget.amount else 0) }}</span>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="balance-card-status">
+                                <div class="status-dot budget"></div>
+                                <span>Budget</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="balance-card-amount">
+                        <span class="currency-symbol" id="budgetCurrency">{{ budgets[0].currency if budgets and budgets[0].currency else '$' }}</span>
+                        <span class="amount-value" id="budgetAmount">{{ '%.2f'|format(budgets[0].amount if budgets and budgets[0].amount else 0) }}</span>
+                    </div>
+                    <div class="balance-card-footer">
+                        <div class="card-pattern"></div>
+                        <div class="budget-progress" style="margin-top: -1vw;">
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 65%"></div>
+                                </div>
+                                <span class="progress-text">65% used</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -574,10 +639,39 @@
         document.getElementById('budgetCurrency').textContent = currency || '$';
         // Always show two decimals
         document.getElementById('budgetAmount').textContent = parseFloat(amount).toFixed(2);
+        
+        // Add animation effect
+        const amountElement = document.getElementById('budgetAmount');
+        amountElement.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+            amountElement.style.transform = 'scale(1)';
+        }, 200);
+        
+        // Update progress bar (mock data for now)
+        const progressFill = document.querySelector('.progress-fill');
+        const progressText = document.querySelector('.progress-text');
+        const usedPercentage = Math.min(Math.random() * 80 + 20, 95); // Random between 20-95%
+        
+        if (progressFill && progressText) {
+            progressFill.style.width = usedPercentage + '%';
+            progressText.textContent = Math.round(usedPercentage) + '% used';
+        }
     }
 
     // Initialize with the first budget on page load
     document.addEventListener('DOMContentLoaded', function () {
+        // Add staggered animation to balance cards
+        const balanceCards = document.querySelectorAll('.balance-card');
+        balanceCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 200 + 100);
+        });
+
         if (budgetsData && budgetsData.length > 0) {
             const firstBudget = budgetsData[0];
             selectDisplayBudget(
@@ -587,6 +681,15 @@
                 firstBudget.amount || 0
             );
         }
+        
+        // Simulate real-time updates for demo purposes
+        setTimeout(() => {
+            const trendText = document.querySelector('.trend-text');
+            if (trendText) {
+                trendText.style.color = '#00ff9f';
+                trendText.style.fontWeight = '600';
+            }
+        }, 2000);
     });
     console.log("Pie chart JS loaded");
 
@@ -814,27 +917,49 @@
 
     /* Make the budget dropdown always appear above other content */
     /* Make the budget dropdown scrollable and always above other content */
-    .stats-card-budget .dropdown-menu {
+    .budget-dropdown-menu {
         position: absolute !important;
         z-index: 1050 !important;
         /* Very high, above modals and backgrounds */
         left: 0;
         top: 100%;
         min-width: 100%;
-        max-height: 199px;
-        /* Set max height for scroll */
+        max-height: 400px !important;
+        /* Increased max height for better visibility */
         overflow-y: auto;
         /* Enable vertical scrolling */
-        background: #e2e8f0;
-        color: #e2e8f0;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-        border: 1px solid #353232;
+        background: rgba(30, 30, 30, 0.95) !important;
+        color: white !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 16px !important;
+        backdrop-filter: blur(20px);
+        padding: 8px !important;
     }
 
     /* Prevent parent from clipping dropdown */
-    .stats-card-budget {
+    .balance-card-accent {
         overflow: visible !important;
         position: relative;
+    }
+    
+    .balance-card-accent .dropdown {
+        overflow: visible !important;
+    }
+
+    /* Override any conflicting Bootstrap styles */
+    .budget-dropdown-menu .dropdown-item {
+        color: white !important;
+        padding: 12px 16px !important;
+        border-radius: 12px !important;
+        margin-bottom: 4px !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .budget-dropdown-menu .dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: white !important;
+        transform: translateX(4px);
     }
     
 </style>
