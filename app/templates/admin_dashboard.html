@@ -73,12 +73,12 @@
                         <i class="bi bi-graph-up-arrow"></i> Analytics
                     </a>
                 </li>
-                <li class="sidebar-item">
+                <!-- <li class="sidebar-item">
                     <a href="{{ url_for('analytics.test_features') }}"
                         class="sidebar-link">
                         <i class="bi bi-bar-chart"></i> Advanced Analytics
                     </a>
-                </li>
+                </li> -->
                 <li class="sidebar-item mt-auto">
                     <a href="{{ url_for('user.login') }}" class="sidebar-link text-danger">
                         <i class="bi bi-box-arrow-right"></i> Logout
@@ -168,11 +168,11 @@
                         <p class="admin-subtitle">Welcome, {{ user.first_name }} {{ user.last_name }}</p>
                         <span class="admin-badge">Admin ID: {{ user.id }}</span>
                     </div>
-                    <div class="admin-actions">
+                    <!-- <div class="admin-actions">
                         <a href="{{ url_for('analytics.test_features') }}" class="btn btn-primary btn-lg">
                             <i class="bi bi-graph-up-arrow me-2"></i>Advanced Analytics
                         </a>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
