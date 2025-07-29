@@ -1,0 +1,525 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid p-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-4">Receipt Upload</h2>
+            <p class="text-muted">Upload a receipt image and we'll automatically extract the transaction details using AI.</p>
+        </div>
+    </div>
+
+    <!-- Service Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Service Status</h5>
+                </div>
+                <div class="card-body">
+                    <div id="service-status" class="d-flex gap-3">
+                        <div class="status-item">
+                            <i class="bi bi-eye" id="ocr-status-icon"></i>
+                            <span id="ocr-status-text">Checking OCR...</span>
+                        </div>
+                        <div class="status-item">
+                            <i class="bi bi-robot" id="ai-status-icon"></i>
+                            <span id="ai-status-text">Checking AI...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Upload Receipt</h5>
+                </div>
+                <div class="card-body">
+                    <form id="receipt-upload-form" enctype="multipart/form-data">
+                        <div class="upload-area" id="upload-area">
+                            <div class="upload-content">
+                                <i class="bi bi-cloud-upload upload-icon"></i>
+                                <h4>Drop your receipt here or click to browse</h4>
+                                <p class="text-muted">Supports PNG, JPG, JPEG, GIF, BMP, TIFF</p>
+                                <input type="file" id="receipt-file" name="receipt" accept="image/*" hidden>
+                                <button type="button" class="btn btn-primary" onclick="document.getElementById('receipt-file').click()">
+                                    Choose File
+                                </button>
+                            </div>
+                            <div class="upload-preview" id="upload-preview" style="display: none;">
+                                <img id="preview-image" src="" alt="Receipt Preview">
+                                <div class="preview-info">
+                                    <p id="file-name"></p>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearUpload()">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-success" id="process-btn" disabled>
+                                <i class="bi bi-gear"></i> Process Receipt
+                            </button>
+                            <button type="button" class="btn btn-secondary ms-2" onclick="window.history.back()">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processing Status -->
+    <div class="row mb-4" id="processing-section" style="display: none;">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Processing</h5>
+                </div>
+                <div class="card-body">
+                    <div id="processing-steps">
+                        <div class="processing-step" id="step-upload">
+                            <i class="bi bi-upload"></i>
+                            <span>Uploading image...</span>
+                            <div class="step-status"></div>
+                        </div>
+                        <div class="processing-step" id="step-ocr">
+                            <i class="bi bi-eye"></i>
+                            <span>Extracting text with OCR...</span>
+                            <div class="step-status"></div>
+                        </div>
+                        <div class="processing-step" id="step-ai">
+                            <i class="bi bi-robot"></i>
+                            <span>Processing with AI...</span>
+                            <div class="step-status"></div>
+                        </div>
+                        <div class="processing-step" id="step-save">
+                            <i class="bi bi-database"></i>
+                            <span>Saving transaction...</span>
+                            <div class="step-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="row mb-4" id="results-section" style="display: none;">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Transaction Details</h5>
+                    <span class="badge bg-success">Success</span>
+                </div>
+                <div class="card-body">
+                    <div id="transaction-details"></div>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-primary" onclick="window.location.href='{{ url_for('user.dashboard') }}'">
+                            <i class="bi bi-house"></i> Back to Dashboard
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                            <i class="bi bi-plus"></i> Upload Another
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Section -->
+    <div class="row mb-4" id="error-section" style="display: none;">
+        <div class="col-md-8 mx-auto">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">Error</h5>
+                </div>
+                <div class="card-body">
+                    <div id="error-message"></div>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-primary" onclick="resetForm()">
+                            <i class="bi bi-arrow-clockwise"></i> Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OCR Text Debug (hidden by default) -->
+    <div class="row mb-4" id="debug-section" style="display: none;">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Extracted Text (Debug)</h5>
+                </div>
+                <div class="card-body">
+                    <pre id="ocr-text" class="small text-muted"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 40px 20px;
+    text-align: center;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    border-color: #0d6efd;
+    background: #e7f1ff;
+}
+
+.upload-area.dragover {
+    border-color: #0d6efd;
+    background: #e7f1ff;
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.upload-preview img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.preview-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.processing-step {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.processing-step:last-child {
+    border-bottom: none;
+}
+
+.processing-step i {
+    font-size: 1.2rem;
+    margin-right: 10px;
+    width: 20px;
+}
+
+.processing-step span {
+    flex: 1;
+}
+
+.step-status {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #dee2e6;
+}
+
+.step-status.loading {
+    background: #ffc107;
+    animation: pulse 1s infinite;
+}
+
+.step-status.success {
+    background: #198754;
+}
+
+.step-status.error {
+    background: #dc3545;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-item i.text-success {
+    color: #198754 !important;
+}
+
+.status-item i.text-danger {
+    color: #dc3545 !important;
+}
+
+.status-item i.text-warning {
+    color: #ffc107 !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    checkServiceStatus();
+    setupUpload();
+});
+
+function checkServiceStatus() {
+    fetch('/api/receipt/health')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Service status:', data); // Debug log
+            updateServiceStatus('ocr', data.ocr_available, data.ocr_error, data.tesseract_path);
+            updateServiceStatus('ai', data.ollama_available && data.model_available);
+        })
+        .catch(error => {
+            console.error('Service status check failed:', error);
+            updateServiceStatus('ocr', false, 'Failed to check OCR status');
+            updateServiceStatus('ai', false);
+        });
+}
+
+function updateServiceStatus(service, available, error = null, tesseractPath = null) {
+    const icon = document.getElementById(`${service}-status-icon`);
+    const text = document.getElementById(`${service}-status-text`);
+    
+    if (available) {
+        icon.className = `bi ${service === 'ocr' ? 'bi-eye' : 'bi-robot'} text-success`;
+        text.textContent = `${service.toUpperCase()} Ready`;
+        if (service === 'ocr' && tesseractPath) {
+            text.title = `Tesseract path: ${tesseractPath}`;
+        }
+    } else {
+        icon.className = `bi ${service === 'ocr' ? 'bi-eye-slash' : 'bi-robot'} text-danger`;
+        if (error) {
+            text.textContent = `${service.toUpperCase()} Error: ${error}`;
+            text.title = error;
+        } else {
+            text.textContent = `${service.toUpperCase()} Unavailable`;
+        }
+    }
+}
+
+function setupUpload() {
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('receipt-file');
+    const processBtn = document.getElementById('process-btn');
+
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect();
+        }
+    });
+
+    uploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', handleFileSelect);
+
+    // Form submission
+    document.getElementById('receipt-upload-form').addEventListener('submit', handleSubmit);
+}
+
+function handleFileSelect() {
+    const fileInput = document.getElementById('receipt-file');
+    const uploadContent = document.querySelector('.upload-content');
+    const uploadPreview = document.getElementById('upload-preview');
+    const processBtn = document.getElementById('process-btn');
+
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-image').src = e.target.result;
+            document.getElementById('file-name').textContent = file.name;
+            
+            uploadContent.style.display = 'none';
+            uploadPreview.style.display = 'block';
+            processBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearUpload() {
+    const fileInput = document.getElementById('receipt-file');
+    const uploadContent = document.querySelector('.upload-content');
+    const uploadPreview = document.getElementById('upload-preview');
+    const processBtn = document.getElementById('process-btn');
+
+    fileInput.value = '';
+    uploadContent.style.display = 'block';
+    uploadPreview.style.display = 'none';
+    processBtn.disabled = true;
+}
+
+function handleSubmit(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('receipt-file');
+    if (!fileInput.files.length) {
+        alert('Please select a file first.');
+        return;
+    }
+
+    showProcessing();
+    
+    const formData = new FormData();
+    formData.append('receipt', fileInput.files[0]);
+
+    updateStep('upload', 'loading');
+
+    fetch('/api/receipt/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        updateStep('upload', 'success');
+        updateStep('ocr', 'loading');
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            updateStep('ocr', 'success');
+            updateStep('ai', 'success');
+            updateStep('save', 'success');
+            showResults(data);
+        } else {
+            throw new Error(data.error || 'Unknown error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showError(error.message);
+        
+        // Mark current step as error
+        const loadingStep = document.querySelector('.step-status.loading');
+        if (loadingStep) {
+            loadingStep.className = 'step-status error';
+        }
+    });
+}
+
+function showProcessing() {
+    document.getElementById('processing-section').style.display = 'block';
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('error-section').style.display = 'none';
+    
+    // Reset all steps
+    document.querySelectorAll('.step-status').forEach(status => {
+        status.className = 'step-status';
+    });
+}
+
+function updateStep(stepName, status) {
+    const step = document.getElementById(`step-${stepName}`);
+    const statusEl = step.querySelector('.step-status');
+    statusEl.className = `step-status ${status}`;
+    
+    if (status === 'loading') {
+        // Also update the next step to show we're progressing
+        setTimeout(() => {
+            if (stepName === 'upload') updateStep('ocr', 'loading');
+            else if (stepName === 'ocr') updateStep('ai', 'loading');
+            else if (stepName === 'ai') updateStep('save', 'loading');
+        }, 1000);
+    }
+}
+
+function showResults(data) {
+    document.getElementById('processing-section').style.display = 'none';
+    document.getElementById('results-section').style.display = 'block';
+    
+    const details = document.getElementById('transaction-details');
+    const transaction = data.transaction_data;
+    
+    details.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Transaction Information</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Amount:</strong></td><td>$${transaction.amount.toFixed(2)}</td></tr>
+                    <tr><td><strong>Merchant:</strong></td><td>${transaction.merchant_name}</td></tr>
+                    <tr><td><strong>Category:</strong></td><td>${transaction.category}</td></tr>
+                    <tr><td><strong>Payment Method:</strong></td><td>${transaction.payment_method}</td></tr>
+                    <tr><td><strong>Date:</strong></td><td>${transaction.date}</td></tr>
+                    <tr><td><strong>Time:</strong></td><td>${transaction.time}</td></tr>
+                    <tr><td><strong>Location:</strong></td><td>${transaction.location}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>Items Purchased</h6>
+                ${transaction.items && transaction.items.length > 0 ? `
+                    <ul class="list-group list-group-flush">
+                        ${transaction.items.map(item => `
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>${item.name}</span>
+                                <span>$${item.price}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                ` : '<p class="text-muted">No individual items identified</p>'}
+            </div>
+        </div>
+    `;
+    
+    // Show debug info if available
+    if (data.ocr_text) {
+        document.getElementById('debug-section').style.display = 'block';
+        document.getElementById('ocr-text').textContent = data.ocr_text;
+    }
+}
+
+function showError(message) {
+    document.getElementById('processing-section').style.display = 'none';
+    document.getElementById('error-section').style.display = 'block';
+    document.getElementById('error-message').innerHTML = `
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Error:</strong> ${message}
+        </div>
+    `;
+}
+
+function resetForm() {
+    clearUpload();
+    document.getElementById('processing-section').style.display = 'none';
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('error-section').style.display = 'none';
+    document.getElementById('debug-section').style.display = 'none';
+}
+</script>
+{% endblock %}
