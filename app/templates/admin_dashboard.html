@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container-fluid p-4">
+<div class="admin-dashboard-wrapper">
     <!-- Header Section -->
     <div class="row mb-4">
         <div class="col-12">
@@ -1359,6 +1359,7 @@
         color: #dc3545 !important;
     }
 
+    /* Admin dashboard responsive design */
     @media (max-width: 768px) {
         .admin-sidebar {
             width: 70px;
@@ -1375,11 +1376,6 @@
             margin-right: 0;
             font-size: 1.5rem;
         }
-    }
-
-    /* Hide the default sidebar for admin dashboard */
-    .sidebar {
-        display: none !important;
     }
 
     /* --- Analytics Section Styling (merged with your dark theme) --- */

@@ -1,5 +1,12 @@
 /* Admin Dashboard Styles - Modern Design System */
 
+/* ===== ADMIN DASHBOARD WRAPPER ===== */
+.admin-dashboard-wrapper {
+    padding: 2rem;
+    min-height: 100vh;
+    background: transparent;
+}
+
 /* ===== ADMIN HEADER CARD ===== */
 .admin-header-card {
     background: linear-gradient(135deg, 
@@ -1171,6 +1178,10 @@
 
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
+    .admin-dashboard-wrapper {
+        padding: 1rem;
+    }
+    
     .admin-header-content {
         flex-direction: column;
         text-align: center;
@@ -1206,6 +1217,10 @@
 }
 
 @media (max-width: 576px) {
+    .admin-dashboard-wrapper {
+        padding: 0.75rem;
+    }
+    
     .admin-header-card {
         padding: 1.5rem;
     }
