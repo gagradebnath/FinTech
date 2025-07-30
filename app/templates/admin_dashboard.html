@@ -814,7 +814,7 @@
                         <select class="form-select-modern" id="perm_role_id" name="perm_role_id" required>
                             <option value="">Choose role...</option>
                             {% for role in roles %}
-                            <option value="{{ role.id }}">{{ role.name|capitalize }}</option>
+                            <option value="{{ role.id }}" style="color:#000">{{ role.name|capitalize }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -826,7 +826,7 @@
                         <select class="form-select-modern" id="perm_permission_id" name="perm_permission_id" required>
                             <option value="">Choose permission...</option>
                             {% for perm in permissions %}
-                            <option value="{{ perm.id }}">{{ perm.name }} - {{ perm.description }}</option>
+                            <option value="{{ perm.id }}" style="color:#000">{{ perm.name }} - {{ perm.description }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -1270,11 +1270,6 @@
         </div>
     </div>
 </div>
-
-<!-- Agent Money Requests Table -->
-
-{% endblock %}
-{% block extra_scripts %}
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

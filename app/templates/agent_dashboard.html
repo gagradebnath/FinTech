@@ -1,17 +1,4 @@
 
-{% extends 'base.html' %}
-{% block content %}
-<div class="container py-4">
-    <h2>Agent Dashboard</h2>
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Welcome, {{ user.first_name }} {{ user.last_name }} (Agent)!</h5>
-            <p class="card-text">User ID: <strong>{{ user.id }}</strong></p>
-            <p class="card-text" >Balance: <strong style="font-size: 1.2rem;">{{ user.balance }}</strong></p>
-        </div>
-    </div>
-    
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -45,6 +32,7 @@
                         <i class="bi bi-person-badge"></i> Agent Dashboard
                     </a>
                 </li>
+        
                 <li class="sidebar-item">
                     <a href="#cash-out-requests" onclick="document.getElementById('cash-out-requests').scrollIntoView({behavior: 'smooth'})"
                         class="sidebar-link">
@@ -55,18 +43,6 @@
                     <a href="#money-requests" onclick="document.getElementById('money-requests').scrollIntoView({behavior: 'smooth'})"
                         class="sidebar-link">
                         <i class="bi bi-plus-circle"></i> Request Money
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="{{ url_for('user.expense_habit') }}"
-                        class="sidebar-link">
-                        <i class="bi bi-graph-up"></i> Expenses
-                    </a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="{{ url_for('fraud.report_fraud') }}" 
-                        class="sidebar-link">
-                        <i class="bi bi-shield-exclamation"></i> Report Fraud
                     </a>
                 </li>
                 <li class="sidebar-item mt-auto">
@@ -147,7 +123,6 @@
             </nav>
             
             <div class="main-content">
-                <div class="container-fluid p-4">
     <div class="row mb-4">
         <div class="col-12">
             <h2 class="mb-4">Agent Dashboard</h2>
@@ -379,7 +354,7 @@
             </div>
 
             <!-- Cash Out Requests Management -->
-            <div class="card">
+            <div class="card" id="cash-out-requests">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
                         <i class="bi bi-cash-stack me-2"></i>
@@ -465,7 +440,7 @@
                                     <td>
                                         {% if req.status == 'pending' %}
                                         <div class="action-buttons">
-                                            <form method="POST" class="d-inline">
+                                            <form method="POST" action="{{ url_for('agent.agent_dashboard') }}" class="d-inline">
                                                 <input type="hidden" name="cashout_request_id" value="{{ req.id }}">
                                                 <div class="input-group input-group-sm mb-2" style="max-width: 200px;">
                                                     <input type="text" name="note" class="form-control form-control-dark" placeholder="Optional note" maxlength="100">
@@ -511,7 +486,7 @@
         <!-- Right Column: Agent Actions -->
         <div class="col-lg-4">
             <!-- Request Money from Admin -->
-            <div class="card mb-4">
+            <div class="card mb-4" id="money-requests">
                 <div class="card-header">
                     <i class="bi bi-plus-circle me-2"></i>
                     Request Money from Admin
@@ -636,95 +611,27 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
-                <div class="mb-3">
-                    <label for="note" class="form-label">Note (optional)</label>
-                    <input type="text" class="form-control" id="note" name="note" maxlength="255">
-                </div>
-                <button type="submit" class="btn btn-primary">Request Money</button>
-            </form>
-            {% if request_success %}
-            <div class="alert alert-success mt-3">{{ request_success }}</div>
-            {% endif %}
-            {% if request_error %}
-            <div class="alert alert-danger mt-3">{{ request_error }}</div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Cash Out Requests from Users Table -->
-    <div class="card mb-4" id="cashout-requests">
-        <div class="card-header">Cash Out Requests from Users</div>
-        <div class="card-body">
-            {% if cashout_success %}
-            <div class="alert alert-success">{{ cashout_success }}</div>
-            {% endif %}
-            {% if cashout_error %}
-            <div class="alert alert-danger">{{ cashout_error }}</div>
-            {% endif %}
-            <div class="table-responsive">
-                <table class="table table-bordered table-dark">
-                    <thead>
-                        <tr>
-                            <th>User Name</th>
-                            <th>User ID</th>
-                            <th>Phone</th>
-                            <th>Amount</th>
-                            <th>Note</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for req in cashout_requests %}
-                        <tr>
-                            <td>{{ req.first_name }} {{ req.last_name }}</td>
-                            <td>{{ req.user_id }}</td>
-                            <td>{{ req.phone }}</td>
-                            <td>{{ req.amount }}</td>
-                            <td>{{ req.note or '' }}</td>
-                            <td>
-                                {% if req.status == 'approved' %}
-                                    <span class="badge bg-success">Approved</span>
-                                {% elif req.status == 'rejected' %}
-                                    <span class="badge bg-danger">Rejected</span>
-                                {% else %}
-                                    <span class="badge bg-warning text-dark">Pending</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if req.status == 'pending' %}
-                                <form method="POST" style="display:inline;">
-                                    <input type="hidden" name="cashout_request_id" value="{{ req.id }}">
-                                    <input type="text" name="note" class="form-control mb-1" placeholder="Optional note" style="width:120px;display:inline-block;">
-                                    <button type="submit" name="action" value="approved" class="btn btn-success btn-sm">Approve</button>
-                                    <button type="submit" name="action" value="rejected" class="btn btn-danger btn-sm">Reject</button>
-                                </form>
-                                {% else %}
-                                    <em>No action</em>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 </div>
-<!-- Enhanced JavaScript for Agent Dashboard -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const userSearch = document.getElementById('userSearch');
-        const userDropdown = document.getElementById('userDropdown');
-        const targetIdentifier = document.getElementById('target_identifier');
-        const userButtons = Array.from(userDropdown.querySelectorAll('button'));
 
-        function filterUsers() {
-            const query = userSearch.value.toLowerCase();
+<!-- Agent Dashboard JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Admin search functionality
+    const adminSearch = document.getElementById('admin_search');
+    const adminDropdown = document.getElementById('adminDropdown');
+    const adminIdInput = document.getElementById('admin_id');
+    
+    if (adminSearch && adminDropdown && adminIdInput) {
+        const adminButtons = Array.from(adminDropdown.querySelectorAll('button'));
+
+        function filterAdmins() {
+            const query = adminSearch.value.toLowerCase();
             let anyVisible = false;
-            userButtons.forEach(btn => {
+            adminButtons.forEach(btn => {
                 const text = btn.textContent.toLowerCase();
                 if (text.includes(query)) {
                     btn.style.display = '';
@@ -733,79 +640,40 @@
                     btn.style.display = 'none';
                 }
             });
-            userDropdown.classList.toggle('d-none', !anyVisible);
+            adminDropdown.classList.toggle('d-none', !anyVisible);
         }
 
-        userSearch.addEventListener('focus', filterUsers);
-        userSearch.addEventListener('input', filterUsers);
+        adminSearch.addEventListener('focus', filterAdmins);
+        adminSearch.addEventListener('input', filterAdmins);
 
-        userButtons.forEach(btn => {
+        adminButtons.forEach(btn => {
             btn.addEventListener('click', function () {
-                targetIdentifier.value = btn.getAttribute('data-user-id');
-                userSearch.value = btn.getAttribute('data-user-name') + ' (' + btn.getAttribute('data-user-id') + ')';
-                userDropdown.classList.add('d-none');
+                adminIdInput.value = btn.getAttribute('data-admin-id');
+                adminSearch.value = btn.getAttribute('data-admin-name') + ' (ID: ' + btn.getAttribute('data-admin-id') + ')';
+                adminDropdown.classList.add('d-none');
             });
         });
 
         document.addEventListener('click', function (e) {
-            if (!userSearch.contains(e.target) && !userDropdown.contains(e.target)) {
-                userDropdown.classList.add('d-none');
+            if (!adminSearch.contains(e.target) && !adminDropdown.contains(e.target)) {
+                adminDropdown.classList.add('d-none');
             }
         });
-    });
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    // Admin search functionality
-
-    const adminSearch = document.getElementById('admin_search');
-    const adminDropdown = document.getElementById('adminDropdown');
-    const adminIdInput = document.getElementById('admin_id');
-    const adminButtons = Array.from(adminDropdown.querySelectorAll('button'));
-
-    function filterAdmins() {
-        const query = adminSearch.value.toLowerCase();
-        let anyVisible = false;
-        adminButtons.forEach(btn => {
-            const text = btn.textContent.toLowerCase();
-            if (text.includes(query)) {
-                btn.style.display = '';
-                anyVisible = true;
-            } else {
-                btn.style.display = 'none';
-            }
-        });
-        adminDropdown.classList.toggle('d-none', !anyVisible);
     }
 
-    adminSearch.addEventListener('focus', filterAdmins);
-    adminSearch.addEventListener('input', filterAdmins);
-
-    adminButtons.forEach(btn => {
-        btn.addEventListener('click', function () {
-            adminIdInput.value = btn.getAttribute('data-admin-id');
-
-            adminSearch.value = btn.getAttribute('data-admin-name') + ' (' + btn.getAttribute('data-admin-id') + ')';
-
-            adminSearch.value = btn.getAttribute('data-admin-name') + ' (ID: ' + btn.getAttribute('data-admin-id') + ')';
-
-            adminDropdown.classList.add('d-none');
-        });
-    });
-
-    document.addEventListener('click', function (e) {
-        if (!adminSearch.contains(e.target) && !adminDropdown.contains(e.target)) {
-            adminDropdown.classList.add('d-none');
-        }
-    });
-
+    
     // Auto-hide alerts after 5 seconds
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
         setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
+            if (alert) {
+                try {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                } catch (e) {
+                    console.log('Alert already closed');
+                }
+            }
         }, 5000);
     });
 
@@ -824,30 +692,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 3000);
         });
     });
-
-    // Animate balance cards on load
-    const balanceCards = document.querySelectorAll('.balance-card');
-    balanceCards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        setTimeout(() => {
-            card.style.transition = 'all 0.6s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 200);
-    });
-
-    // Real-time search for better UX
-    let searchTimeout;
-    adminSearch.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(filterAdmins, 150);
-    });
 });
 
-// Enhanced form validation
+// Form validation functions
 function validateAmount() {
     const amountSelect = document.getElementById('amount');
+    if (!amountSelect) return true;
+    
     const selectedAmount = amountSelect.value;
     
     if (!selectedAmount) {
@@ -864,6 +715,8 @@ function validateAdminSelection() {
     const adminIdInput = document.getElementById('admin_id');
     const adminSearch = document.getElementById('admin_search');
     
+    if (!adminIdInput || !adminSearch) return true;
+    
     if (!adminIdInput.value) {
         adminSearch.classList.add('is-invalid');
         return false;
@@ -875,256 +728,44 @@ function validateAdminSelection() {
 }
 
 // Form submission validation
-document.querySelector('.agent-request-form').addEventListener('submit', function(e) {
-    const isValidAmount = validateAmount();
-    const isValidAdmin = validateAdminSelection();
-    
-    if (!isValidAmount || !isValidAdmin) {
-        e.preventDefault();
+const agentRequestForm = document.querySelector('.agent-request-form');
+if (agentRequestForm) {
+    agentRequestForm.addEventListener('submit', function(e) {
+        const isValidAmount = validateAmount();
+        const isValidAdmin = validateAdminSelection();
         
-        // Show error message
-        const errorAlert = document.createElement('div');
-        errorAlert.className = 'alert alert-danger alert-dismissible fade show mt-3';
-        errorAlert.innerHTML = `
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            Please fill in all required fields correctly.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        
-        this.appendChild(errorAlert);
-        
-        // Auto-hide after 3 seconds
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(errorAlert);
-            bsAlert.close();
-        }, 3000);
-    }
-});
+        if (!isValidAmount || !isValidAdmin) {
+            e.preventDefault();
+            
+            // Show error message
+            const existingError = this.querySelector('.alert-danger');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            const errorAlert = document.createElement('div');
+            errorAlert.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            errorAlert.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Please fill in all required fields correctly.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            this.appendChild(errorAlert);
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                try {
+                    const bsAlert = new bootstrap.Alert(errorAlert);
+                    bsAlert.close();
+                } catch (e) {
+                    console.log('Alert already closed');
+                }
+            }, 3000);
+        }
+    });
+}
 </script>
-
-
-<!-- Enhanced CSS for Agent Dashboard -->
-<style>
-/* Agent-specific card styling */
-.agent-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.agent-id {
-    font-size: 0.9rem;
-    opacity: 0.8;
-}
-
-.agent-name {
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-/* Search dropdown styling */
-.search-container {
-    position: relative;
-}
-
-.search-dropdown {
-    z-index: 1000;
-    max-height: 300px;
-    overflow-y: auto;
-    border-radius: 0.5rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(10px);
-}
-
-.search-item {
-    border: none;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-}
-
-.search-item:hover {
-    background: rgba(0, 123, 255, 0.1);
-    transform: translateX(5px);
-}
-
-.admin-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #007bff, #0056b3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-/* Request form styling */
-.agent-request-form {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-    border-radius: 1rem;
-    padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* User avatar in table */
-.user-avatar {
-    color: #007bff;
-}
-
-/* Contact info styling */
-.contact-info {
-    font-size: 0.9rem;
-}
-
-/* Amount display styling */
-.amount-display .fw-bold {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Note display styling */
-.note-display .badge {
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Action buttons styling */
-.action-buttons .btn-group {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.action-buttons .btn {
-    transition: all 0.3s ease;
-}
-
-.action-buttons .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* No requests styling */
-.no-requests {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.05));
-    border-radius: 1rem;
-    border: 2px dashed rgba(255, 255, 255, 0.1);
-}
-
-/* Stats grid styling */
-.stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.stat-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-    border-radius: 0.75rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
-}
-
-.stat-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    background: linear-gradient(135deg, #007bff, #0056b3);
-    color: white;
-}
-
-.stat-value {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #007bff;
-}
-
-.stat-label {
-    font-size: 0.8rem;
-    color: #6c757d;
-}
-
-/* Table enhancements */
-.table-hover tbody tr:hover {
-    background-color: rgba(0, 123, 255, 0.05);
-    transform: scale(1.01);
-    transition: all 0.3s ease;
-}
-
-/* Form validation styles */
-.is-invalid {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-}
-
-.is-valid {
-    border-color: #28a745;
-    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .balance-card-content {
-        padding: 1rem;
-    }
-    
-    .agent-request-form {
-        padding: 1rem;
-    }
-}
-
-/* Animation for cards */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.card {
-    animation: fadeInUp 0.6s ease forwards;
-}
-
-/* Custom scrollbar for dropdown */
-.search-dropdown::-webkit-scrollbar {
-    width: 6px;
-}
-
-.search-dropdown::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-}
-
-.search-dropdown::-webkit-scrollbar-thumb {
-    background: rgba(0, 123, 255, 0.5);
-    border-radius: 3px;
-}
-
-.search-dropdown::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 123, 255, 0.7);
-}
-</style>
 
             </div>
         </div>
