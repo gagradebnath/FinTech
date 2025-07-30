@@ -1,4 +1,3 @@
-
 from flask import current_app
 
 def get_user_dashboard_data(user_id):
