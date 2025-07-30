@@ -16,7 +16,7 @@
     {% if session.get('user_id') and request.endpoint not in ['user.index', 'user.login', 'user.register'] %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
     {% endif %}
-    
+
 
     <!-- Page-specific styles -->
     {% if request.endpoint == 'user.index' %}
@@ -54,18 +54,22 @@
             <div class="sidebar-header">
                 <img src="{{ url_for('static', filename='assets/image-removebg-preview (1).png') }}" alt="FinGuard"
                     class="sidebar-logo">
+
                 {% if user and user.role_name %}
                 <div class="sidebar-role-badge {{ user.role_name }}">{{ user.role_name }}</div>
                 {% endif %}
+
             </div>
             
             {% if user and user.role_name == 'agent' %}
             <!-- Agent Sidebar -->
             <ul class="list-unstyled sidebar-menu">
                 <li class="sidebar-item">
+
                     <a href="{{ url_for('agent.agent_dashboard') }}"
                         class="sidebar-link {% if request.endpoint == 'agent.agent_dashboard' %}active{% endif %}">
                         <i class="bi bi-person-badge"></i> Agent Dashboard
+
                     </a>
                 </li>
                 <li class="sidebar-item">
@@ -77,6 +81,7 @@
                 <li class="sidebar-item">
                     <a href="{{ url_for('transaction.send_money_route') }}"
                         class="sidebar-link {% if request.endpoint == 'transaction.send_money_route' %}active{% endif %}">
+
                         <i class="bi bi-send"></i> Send Money
                     </a>
                 </li>
@@ -90,6 +95,7 @@
                     <a href="#money-requests" onclick="document.getElementById('money-requests').scrollIntoView({behavior: 'smooth'})"
                         class="sidebar-link">
                         <i class="bi bi-plus-circle"></i> Request Money
+
                     </a>
                 </li>
                 <li class="sidebar-item">
@@ -99,7 +105,9 @@
                     </a>
                 </li>
                 <li class="sidebar-item">
+
                     <a href="{{ url_for('fraud.report_fraud') }}" 
+
                         class="sidebar-link {% if request.endpoint == 'fraud.report_fraud' %}active{% endif %}">
                         <i class="bi bi-shield-exclamation"></i> Report Fraud
                     </a>

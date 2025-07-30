@@ -178,6 +178,7 @@
         </div>
     </div>
 
+
     <!-- Quick Stats Cards -->
     <div class="row mb-5 g-4">
         <!-- Total Users Card -->
@@ -239,6 +240,7 @@
                 </div>
             </div>
         </div>
+
 
         <!-- Total Transactions Card -->
         <div class="col-md-3">
@@ -324,6 +326,7 @@
                         
                         <button type="submit" class="btn-modern btn-modern-primary">
                             <i class="bi bi-plus-circle me-2"></i>Add Money
+
                         </button>
                     </form>
                 </div>
@@ -437,6 +440,7 @@
             </div>
         </div>
 
+
         <!-- Right Column - Secondary Actions -->
         <div class="col-lg-4">
             <!-- Quick Navigation -->
@@ -538,6 +542,7 @@
         <div class="section-card-body">
             <div class="table-modern-wrapper">
                 <table class="table-modern table-modern-striped">
+
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -605,6 +610,7 @@
             </div>
         </div>
         <div class="section-card-body">
+
             {% if fraud_action_success %}
             <div class="custom-alert custom-alert-success mb-3">
                 <i class="bi bi-check-circle me-2"></i>{{ fraud_action_success }}
@@ -688,6 +694,7 @@
             <div class="table-modern-wrapper">
                 <table class="table-modern table-modern-striped">
                     <thead>
+
                         <tr>
                             <th>ID</th>
                             <th>Reporter</th>
@@ -723,6 +730,7 @@
             </div>
         </div>
     </div>
+
     <!-- Admin Logs Section -->
     <div class="admin-section-card mb-4" id="admin-logs">
         <div class="section-card-header">
@@ -742,6 +750,7 @@
             <div class="table-modern-wrapper">
                 <table class="table-modern table-modern-striped">
                     <thead>
+
                         <tr>
                             <th>ID</th>
                             <th>Admin</th>
@@ -1111,7 +1120,161 @@
             </div>
         </div>
     </div>
+    <div class="card mb-4" id="agent-money-requests">
+        <div class="card-header">Agent Money Requests</div>
+        <div class="card-body">
+            <div class="table-responsive" style="max-height:400px; overflow-y:auto;">
+                <table class="table table-bordered table-dark">
+                    <thead style="z-index: 500;">
+                        <tr>
+                            <th>Agent Name</th>
+                            <th>Agent ID</th>
+                            <th>Phone</th>
+                            <th>Amount</th>
+                            <th>Note</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody style="z-index: 400;">
+                        {% for req in agent_money_requests %}
+                        <tr>
+                            <td>{{ req.first_name }} {{ req.last_name }}</td>
+                            <td>{{ req.agent_id }}</td>
+                            <td>{{ req.phone }}</td>
+                            <td>{{ req.amount }}</td>
+                            <td>{{ req.note or '' }}</td>
+                            <td>
+                                {% if req.status == 'approved' %}
+                                <span class="badge bg-success">Approved</span>
+                                {% elif req.status == 'rejected' %}
+                                <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.status == 'pending' %}
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="request_id" value="{{ req.id }}">
+                                    <input type="text" name="note" class="form-control mb-1" placeholder="Optional note"
+                                        style="width:120px;display:inline-block;">
+                                    <button type="submit" name="action" value="approved"
+                                        class="btn btn-success btn-sm">Approve</button>
+                                    <button type="submit" name="action" value="rejected"
+                                        class="btn btn-danger btn-sm">Reject</button>
+                                </form>
+                                {% else %}
+                                <em>No action</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="card mb-4" id="analytics">
+        <div class="card-header">Analytics</div>
+        <div class="card-body">
+
+
+            <!-- User Transaction Summary -->
+
+            <!-- Daily Analytics -->
+            <div class="section">
+                <h2>📈 Recent Daily Analytics</h2>
+                {% if results.daily_analytics %}
+                <div class="grid">
+                    {% for day in results.daily_analytics %}
+                    <div class="card">
+                        <h3>{{ day.transaction_date }}</h3>
+                        <p><span class="stat">{{ day.total_transactions }}</span> transactions</p>
+                        <p>Volume: ${{ "%.2f"|format(day.total_volume) }}</p>
+                        <p>Avg: ${{ "%.2f"|format(day.avg_transaction_amount) }}</p>
+                        <p>Unique Users: {{ day.unique_senders }} senders, {{ day.unique_receivers }} receivers</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="no-data">No daily analytics data available</div>
+                {% endif %}
+            </div>
+
+            <!-- Fraud Detection Insights -->
+            <div class="section">
+                <h2>🔍 Fraud Detection Insights</h2>
+                {% if results.fraud_insights %}
+                <div class="grid">
+                    <div class="card">
+                        <h3>High Velocity Users</h3>
+                        <p class="stat">{{ results.fraud_insights.high_velocity_users or 0 }}</p>
+                        <p>Users with >5 transactions/day</p>
+                    </div>
+                    <div class="card">
+                        <h3>Round Amount Transactions</h3>
+                        <p class="stat">{{ results.fraud_insights.round_amount_transactions or 0 }}</p>
+                        <p>Transactions with round amounts >$1000</p>
+                    </div>
+                    <div class="card">
+                        <h3>Off-Hours Transactions</h3>
+                        <p class="stat">{{ results.fraud_insights.off_hours_transactions or 0 }}</p>
+                        <p>High-value transactions outside business hours</p>
+                    </div>
+                    <div class="card">
+                        <h3>Rapid Sequences</h3>
+                        <p class="stat">{{ results.fraud_insights.rapid_sequence_transactions or 0 }}</p>
+                        <p>Transactions within 2 minutes of each other</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="no-data">No fraud insights data available</div>
+                {% endif %}
+            </div>
+
+            <!-- Monthly Report -->
+            <div class="section">
+                <h2>📅 Monthly Report</h2>
+                {% set month_names = {
+                '1': 'January', '2': 'February', '3': 'March', '4': 'April',
+                '5': 'May', '6': 'June', '7': 'July', '8': 'August',
+                '9': 'September', '10': 'October', '11': 'November', '12': 'December'
+                } %}
+                {% if results.monthly_report %}
+                <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+                    {% for month in results.monthly_report[:12] %}
+                    <div class="card">
+                        <h3>
+                            {{ month_names[month.month|string] if month.month|string in month_names else month.month }}
+                            {{ month.year }}
+                        </h3>
+                        <p><span class="stat">{{ month.total_transactions }}</span> transactions</p>
+                        <p>Volume: ${{ "%.2f"|format(month.total_volume) }}</p>
+                        <p>Avg: ${{ "%.2f"|format(month.avg_transaction_amount if month.avg_transaction_amount is
+                            defined else 0) }}</p>
+                        <p>Unique Senders: {{ month.unique_senders }}</p>
+                        <p>Unique Receivers: {{ month.unique_receivers }}</p>
+                        {% if month.fraud_count is defined %}
+                        <p>Fraud Cases: <span class="risk-high">{{ month.fraud_count }}</span></p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="no-data">No monthly report data available</div>
+                {% endif %}
+            </div>
+
+
+        </div>
+    </div>
 </div>
+
+<!-- Agent Money Requests Table -->
+
+{% endblock %}
+{% block extra_scripts %}
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -1531,6 +1694,141 @@
             margin-right: 0;
             font-size: 1.5rem;
         }
+    }
+
+    /* --- Analytics Section Styling (merged with your dark theme) --- */
+    #analytics .card-header {
+        background: transparent;
+        color: #e6e4e4;
+        font-size: 1.5rem;
+        border-bottom: 2px solid #ffffff6f;
+    }
+
+    #analytics .section {
+        margin-bottom: 32px;
+        padding: 18px 18px 10px 18px;
+        border: 1px solid #232323;
+        border-radius: 8px;
+        background: transparent;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    #analytics .section h2 {
+        color: #ffffff;
+        margin-top: 0;
+        border-bottom: 2px solid #ffffff6f;
+        padding-bottom: 8px;
+        font-size: 1.3rem;
+    }
+
+    #analytics .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+    }
+
+    #analytics .card {
+        background: transparent;
+        padding: 14px 16px;
+        border-radius: 6px;
+        border-left: 4px solid #ffffff6f;
+        color: #e2e8f0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.07);
+    }
+
+    #analytics .card h3 {
+        margin-top: 0;
+        color: #fcfdff;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    #analytics .stat {
+        font-size: 22px;
+        font-weight: bold;
+        color: #ffffff;
+    }
+
+    #analytics .risk-high {
+        color: #e74c3c;
+    }
+
+    #analytics .risk-medium {
+        color: #f39c12;
+    }
+
+    #analytics .risk-low {
+        color: #27ae60;
+    }
+
+    #analytics table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        background: #181818;
+        color: #e2e8f0;
+    }
+
+    #analytics th,
+    #analytics td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #232323;
+    }
+
+    #analytics th {
+        background-color: #3498db;
+        color: white;
+    }
+
+    #analytics .no-data {
+        text-align: center;
+        color: #7f8c8d;
+        font-style: italic;
+        padding: 18px;
+    }
+
+    #analytics .error,
+    #analytics .success {
+        padding: 14px;
+        border-radius: 6px;
+        margin-bottom: 18px;
+        font-weight: 500;
+    }
+
+    #analytics .error {
+        background-color: #2c0e0e;
+        color: #c62828;
+        border-left: 4px solid #c62828;
+    }
+
+    #analytics .success {
+        background-color: #163e3e;
+        color: #27ae60;
+        border-left: 4px solid #27ae60;
+    }
+
+    #analytics .api-links {
+        margin-top: 18px;
+        padding: 12px;
+        background: #232323;
+        border-radius: 6px;
+    }
+
+    #analytics .api-links a {
+        display: inline-block;
+        margin: 5px 10px 5px 0;
+        padding: 7px 14px;
+        background: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: background 0.2s;
+    }
+
+    #analytics .api-links a:hover {
+        background: #2980b9;
     }
 
     /* --- Analytics Section Styling (merged with your dark theme) --- */

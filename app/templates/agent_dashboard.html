@@ -1,3 +1,17 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+    <h2>Agent Dashboard</h2>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Welcome, {{ user.first_name }} {{ user.last_name }} (Agent)!</h5>
+            <p class="card-text">User ID: <strong>{{ user.id }}</strong></p>
+            <p class="card-text" >Balance: <strong style="font-size: 1.2rem;">{{ user.balance }}</strong></p>
+        </div>
+    </div>
+    
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -269,10 +283,12 @@
     </div>
 
     <!-- Main Content Row -->
+
     <div class="row">
         <div class="col-lg-8">
             <!-- Recent Transactions Card -->
             <div class="card mb-4">
+
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>Recent Transactions</div>
                     <div class="dropdown">
@@ -485,10 +501,12 @@
                         <h5 class="mt-3">No Cash Out Requests</h5>
                         <p class="text-muted">Cash out requests from users will appear here</p>
                     </div>
+
                     {% endif %}
                 </div>
             </div>
         </div>
+
 
         <!-- Right Column: Agent Actions -->
         <div class="col-lg-4">
@@ -618,15 +636,129 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
+                <div class="mb-3">
+                    <label for="note" class="form-label">Note (optional)</label>
+                    <input type="text" class="form-control" id="note" name="note" maxlength="255">
+                </div>
+                <button type="submit" class="btn btn-primary">Request Money</button>
+            </form>
+            {% if request_success %}
+            <div class="alert alert-success mt-3">{{ request_success }}</div>
+            {% endif %}
+            {% if request_error %}
+            <div class="alert alert-danger mt-3">{{ request_error }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Cash Out Requests from Users Table -->
+    <div class="card mb-4" id="cashout-requests">
+        <div class="card-header">Cash Out Requests from Users</div>
+        <div class="card-body">
+            {% if cashout_success %}
+            <div class="alert alert-success">{{ cashout_success }}</div>
+            {% endif %}
+            {% if cashout_error %}
+            <div class="alert alert-danger">{{ cashout_error }}</div>
+            {% endif %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-dark">
+                    <thead>
+                        <tr>
+                            <th>User Name</th>
+                            <th>User ID</th>
+                            <th>Phone</th>
+                            <th>Amount</th>
+                            <th>Note</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in cashout_requests %}
+                        <tr>
+                            <td>{{ req.first_name }} {{ req.last_name }}</td>
+                            <td>{{ req.user_id }}</td>
+                            <td>{{ req.phone }}</td>
+                            <td>{{ req.amount }}</td>
+                            <td>{{ req.note or '' }}</td>
+                            <td>
+                                {% if req.status == 'approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif req.status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.status == 'pending' %}
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="cashout_request_id" value="{{ req.id }}">
+                                    <input type="text" name="note" class="form-control mb-1" placeholder="Optional note" style="width:120px;display:inline-block;">
+                                    <button type="submit" name="action" value="approved" class="btn btn-success btn-sm">Approve</button>
+                                    <button type="submit" name="action" value="rejected" class="btn btn-danger btn-sm">Reject</button>
+                                </form>
+                                {% else %}
+                                    <em>No action</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 <!-- Enhanced JavaScript for Agent Dashboard -->
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const userSearch = document.getElementById('userSearch');
+        const userDropdown = document.getElementById('userDropdown');
+        const targetIdentifier = document.getElementById('target_identifier');
+        const userButtons = Array.from(userDropdown.querySelectorAll('button'));
+
+        function filterUsers() {
+            const query = userSearch.value.toLowerCase();
+            let anyVisible = false;
+            userButtons.forEach(btn => {
+                const text = btn.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    btn.style.display = '';
+                    anyVisible = true;
+                } else {
+                    btn.style.display = 'none';
+                }
+            });
+            userDropdown.classList.toggle('d-none', !anyVisible);
+        }
+
+        userSearch.addEventListener('focus', filterUsers);
+        userSearch.addEventListener('input', filterUsers);
+
+        userButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                targetIdentifier.value = btn.getAttribute('data-user-id');
+                userSearch.value = btn.getAttribute('data-user-name') + ' (' + btn.getAttribute('data-user-id') + ')';
+                userDropdown.classList.add('d-none');
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!userSearch.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.add('d-none');
+            }
+        });
+    });
+</script>
+<script>
 document.addEventListener('DOMContentLoaded', function () {
+
     // Admin search functionality
+
     const adminSearch = document.getElementById('admin_search');
     const adminDropdown = document.getElementById('adminDropdown');
     const adminIdInput = document.getElementById('admin_id');
@@ -653,7 +785,11 @@ document.addEventListener('DOMContentLoaded', function () {
     adminButtons.forEach(btn => {
         btn.addEventListener('click', function () {
             adminIdInput.value = btn.getAttribute('data-admin-id');
+
+            adminSearch.value = btn.getAttribute('data-admin-name') + ' (' + btn.getAttribute('data-admin-id') + ')';
+
             adminSearch.value = btn.getAttribute('data-admin-name') + ' (ID: ' + btn.getAttribute('data-admin-id') + ')';
+
             adminDropdown.classList.add('d-none');
         });
     });
@@ -765,6 +901,7 @@ document.querySelector('.agent-request-form').addEventListener('submit', functio
     }
 });
 </script>
+
 
 <!-- Enhanced CSS for Agent Dashboard -->
 <style>
@@ -1005,3 +1142,4 @@ document.querySelector('.agent-request-form').addEventListener('submit', functio
         color: #fff !important;
     }
 </style>
+

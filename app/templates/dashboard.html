@@ -7,6 +7,7 @@
         </div>
     </div>
 
+
     <!-- Balance Cards - Redesigned -->
     <div class="row mb-4 g-4">
         <!-- Total Balance Card -->
@@ -27,6 +28,7 @@
                                 <span>Available</span>
                             </div>
                         </div>
+
                     </div>
                     <div class="balance-card-amount">
                         <span class="currency-symbol">$</span>
@@ -42,6 +44,7 @@
                 </div>
             </div>
         </div>
+
 
         <!-- Monthly Net Card -->
         <div class="col-md-4">
@@ -65,6 +68,7 @@
                     <div class="balance-card-amount">
                         <span class="currency-symbol">$</span>
                         <span class="amount-value" id="monthlyDifference">0.00</span>
+
                     </div>
                     <div class="balance-card-footer">
                         <div class="card-pattern"></div>
@@ -75,6 +79,7 @@
                 </div>
             </div>
         </div>
+
 
         <!-- Budget Card -->
         <div class="col-md-4">
@@ -114,6 +119,7 @@
                                 <span>Budget</span>
                             </div>
                         </div>
+
                     </div>
                     <div class="balance-card-amount">
                         <span class="currency-symbol" id="budgetCurrency">{{ budgets[0].currency if budgets and budgets[0].currency else '$' }}</span>
@@ -924,8 +930,10 @@
         left: 0;
         top: 100%;
         min-width: 100%;
+
         max-height: 400px !important;
         /* Increased max height for better visibility */
+
         overflow-y: auto;
         /* Enable vertical scrolling */
         background: rgba(30, 30, 30, 0.95) !important;
@@ -943,6 +951,7 @@
         position: relative;
     }
     
+
     .balance-card-accent .dropdown {
         overflow: visible !important;
     }
