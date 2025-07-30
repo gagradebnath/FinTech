@@ -1,43 +1,531 @@
 /* Dashboard-specific styles */
 
-/* Stats Cards for Balance display */
-.stats-card {
+/* ===== ROLE-SPECIFIC SIDEBAR STYLING ===== */
+/* Admin Sidebar Accent */
+.sidebar[data-role="admin"] {
+    border-right: 3px solid rgba(220, 53, 69, 0.5);
+    background: linear-gradient(180deg, rgba(220, 53, 69, 0.05) 0%, rgba(108, 117, 125, 0.05) 100%);
+}
+
+.sidebar[data-role="admin"] .sidebar-header {
+    border-bottom: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.sidebar[data-role="admin"] .sidebar-link:hover,
+.sidebar[data-role="admin"] .sidebar-link.active {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.1) 100%);
+    border-left: 4px solid #dc3545;
+    transform: translateX(4px);
+}
+
+/* Agent Sidebar Accent */
+.sidebar[data-role="agent"] {
+    border-right: 3px solid rgba(40, 167, 69, 0.5);
+    background: linear-gradient(180deg, rgba(40, 167, 69, 0.05) 0%, rgba(108, 117, 125, 0.05) 100%);
+}
+
+.sidebar[data-role="agent"] .sidebar-header {
+    border-bottom: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.sidebar[data-role="agent"] .sidebar-link:hover,
+.sidebar[data-role="agent"] .sidebar-link.active {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(40, 167, 69, 0.1) 100%);
+    border-left: 4px solid #28a745;
+    transform: translateX(4px);
+}
+
+/* User Sidebar Accent */
+.sidebar[data-role="user"] {
+    border-right: 3px solid rgba(0, 123, 255, 0.5);
+    background: linear-gradient(180deg, rgba(0, 123, 255, 0.05) 0%, rgba(108, 117, 125, 0.05) 100%);
+}
+
+.sidebar[data-role="user"] .sidebar-header {
+    border-bottom: 1px solid rgba(0, 123, 255, 0.2);
+}
+
+.sidebar[data-role="user"] .sidebar-link:hover,
+.sidebar[data-role="user"] .sidebar-link.active {
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.2) 0%, rgba(0, 123, 255, 0.1) 100%);
+    border-left: 4px solid #007bff;
+    transform: translateX(4px);
+}
+
+/* Role Badge in Sidebar */
+.sidebar-role-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-role-badge.admin {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.sidebar-role-badge.agent {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.sidebar-role-badge.user {
+    background: rgba(0, 123, 255, 0.2);
+    color: #007bff;
+    border: 1px solid rgba(0, 123, 255, 0.3);
+}
+
+/* Enhanced Sidebar Link Animations */
+.sidebar-link {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.sidebar-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.sidebar-link:hover::before {
+    left: 100%;
+}
+
+/* Redesigned Balance Cards */
+.balance-card {
+    position: relative;
+    height: 200px;
+    border-radius: 24px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.balance-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.balance-card:hover .balance-card-glow {
+    opacity: 0.8;
+    transform: scale(1.1);
+}
+
+.balance-card:hover .balance-card-icon {
+    transform: scale(1.1) rotate(5deg);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.balance-card:hover .amount-value {
+    color: #ffffff;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.balance-card:hover .card-pattern {
+    opacity: 0.5;
+    transform: rotate(45deg) scale(1.2);
+}
+
+.balance-card:active {
+    transform: translateY(-4px) scale(0.98);
+    transition: transform 0.1s ease;
+}
+
+/* Card Variants */
+.balance-card-primary {
+    background: linear-gradient(135deg, 
+        rgba(0, 102, 255, 0.9) 0%, 
+        rgba(51, 133, 255, 0.8) 50%, 
+        rgba(102, 153, 255, 0.7) 100%);
+}
+
+.balance-card-secondary {
+    background: linear-gradient(135deg, 
+        rgba(239, 68, 68, 0.9) 0%, 
+        rgba(255, 107, 107, 0.8) 50%, 
+        rgba(255, 142, 83, 0.7) 100%);
+}
+
+.balance-card-accent {
+    background: linear-gradient(135deg, 
+        rgba(139, 92, 246, 0.9) 0%, 
+        rgba(168, 85, 247, 0.8) 50%, 
+        rgba(196, 131, 248, 0.7) 100%);
+    overflow: visible !important;
+}
+
+.balance-card-accent .dropdown {
+    position: static !important;
+}
+
+.balance-card-accent .balance-card-content {
+    overflow: visible !important;
+}
+
+/* Glow Effect */
+.balance-card-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: all 0.4s ease;
+    pointer-events: none;
+}
+
+/* Card Content */
+.balance-card-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 24px;
     display: flex;
-    background: linear-gradient(45deg, #0066ff, #3385ff);
+    flex-direction: column;
+    justify-content: space-between;
     color: white;
-    padding: 20px;
-    border-radius: 15px;
 }
 
-.stats-card-debit {
-    background: linear-gradient(45deg, #fc3a52, #fe5e71);
+/* Card Header */
+.balance-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
 }
 
-.stats-card-credit {
-    background: linear-gradient(45deg, #05c46b, #0be881);
+.balance-card-icon-wrapper {
+    position: relative;
 }
 
-.stats-icon {
-    width: 60px;
-    height: 60px;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
+.balance-card-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    margin-right: 15px;
+    font-size: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.stats-info h3 {
-    font-size: 24px;
-    margin-bottom: 5px;
+.balance-card-title {
+    text-align: right;
+}
+
+.balance-card-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    opacity: 0.9;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.balance-card-status {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-dot.active {
+    background-color: #00ff9f;
+    box-shadow: 0 0 8px rgba(0, 255, 159, 0.5);
+}
+
+.status-dot.processing {
+    background-color: #fbbf24;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+}
+
+.status-dot.budget {
+    background-color: #a78bfa;
+    box-shadow: 0 0 8px rgba(167, 139, 250, 0.5);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Amount Display */
+.balance-card-amount {
+    margin: 16px 0;
+    display: flex;
+    align-items: baseline;
+    font-weight: 700;
+}
+
+.currency-symbol {
+    font-size: 1.25rem;
+    margin-right: 4px;
+    opacity: 0.8;
+}
+
+.amount-value {
+    font-size: 2rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Card Footer */
+.balance-card-footer {
+    position: relative;
+    margin-top: auto;
+}
+
+.card-pattern {
+    position: absolute;
+    bottom: -12px;
+    right: -12px;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 2px, transparent 2px);
+    background-size: 12px 12px;
+    border-radius: 50%;
+    opacity: 0.3;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.balance-trend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+.trend-icon {
+    font-size: 1rem;
+    color: #00ff9f;
+}
+
+.trend-text {
+    font-weight: 500;
+}
+
+.balance-details {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.earned-spent-text {
+    font-weight: 500;
+}
+
+/* Budget-specific styles */
+.budget-dropdown-wrapper {
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1000;
+}
+
+.budget-selector {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 8px 12px;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    min-width: 160px;
+}
+
+.budget-selector:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.budget-name {
+    flex: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dropdown-arrow {
+    font-size: 0.75rem;
+    transition: transform 0.3s ease;
+}
+
+.budget-selector[aria-expanded="true"] .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.budget-dropdown-menu {
+    background: rgba(30, 30, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 8px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    margin-top: 8px;
+    max-height: 400px !important;
+    overflow-y: auto;
+    z-index: 1050 !important;
+    position: absolute !important;
+}
+
+.budget-option {
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 4px;
+    transition: all 0.3s ease;
+    border: none;
+    color: white;
+}
+
+.budget-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateX(4px);
+}
+
+.budget-option-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.budget-option-name {
+    font-weight: 500;
+    flex: 1;
+}
+
+.budget-option-amount {
+    font-size: 0.875rem;
+    opacity: 0.8;
     font-weight: 600;
 }
 
-.stats-info p {
-    margin: 0;
-    opacity: 0.8;
+/* Budget Progress */
+.budget-progress {
+    margin-top: 12px;
+}
+
+.progress-bar-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff9f, #00d4aa);
+    border-radius: 6px;
+    transition: width 0.6s ease;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.progress-text {
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.9;
+    white-space: nowrap;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .balance-card {
+        height: 180px;
+        margin-bottom: 16px;
+    }
+    
+    .balance-card-content {
+        padding: 20px;
+    }
+    
+    .amount-value {
+        font-size: 1.75rem;
+    }
+    
+    .balance-card-header {
+        margin-bottom: 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .balance-card {
+        height: 160px;
+    }
+    
+    .balance-card-content {
+        padding: 16px;
+    }
+    
+    .amount-value {
+        font-size: 1.5rem;
+    }
+    
+    .balance-card-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
 }
 
 /* Transaction charts */

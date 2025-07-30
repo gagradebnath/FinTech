@@ -7,3 +7,6 @@ scikit-learn
 pandas
 numpy
 joblib
+requests
+Pillow
+pytesseract

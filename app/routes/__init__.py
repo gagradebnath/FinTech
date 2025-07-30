@@ -9,6 +9,7 @@ from .analytics import analytics_bp
 from .rollback import rollback_bp
 from .blockchain import blockchain_bp
 from .ml_budget import ml_budget_bp
+from .receipt import receipt_bp
 
 def register_blueprints(app):
     app.register_blueprint(user_bp)
@@ -22,3 +23,4 @@ def register_blueprints(app):
     app.register_blueprint(rollback_bp)
     app.register_blueprint(blockchain_bp)
     app.register_blueprint(ml_budget_bp, url_prefix='/ml-budget')
+    app.register_blueprint(receipt_bp)

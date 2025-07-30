@@ -327,6 +327,64 @@ def profile():
     
     return render_template('profile.html', user=user, contact=contact)
 
+@user_bp.route('/upload-profile-picture', methods=['POST'])
+def upload_profile_picture():
+    import os
+    from werkzeug.utils import secure_filename
+    
+    # Support both session-based and JWT-based authentication
+    user = get_current_user_from_jwt()
+    
+    if not user:
+        return jsonify({'success': False, 'message': 'Authentication required'}), 401
+    
+    # Check if the post request has the file part
+    if 'profile_picture' not in request.files:
+        return jsonify({'success': False, 'message': 'No file selected'}), 400
+    
+    file = request.files['profile_picture']
+    
+    # If user does not select file, browser also submits an empty part without filename
+    if file.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected'}), 400
+    
+    # Check file type
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
+    
+    if not allowed_file(file.filename):
+        return jsonify({'success': False, 'message': 'Invalid file type. Please upload PNG, JPG, JPEG, GIF, or WebP files only.'}), 400
+    
+    # Get file extension
+    file_extension = file.filename.rsplit('.', 1)[1].lower()
+    
+    # Generate filename based on username
+    username = user.get('login_id', str(user['id']))  # Use login_id or fallback to user id
+    filename = f"{secure_filename(username)}.{file_extension}"
+    
+    # Ensure uploads/profile directory exists
+    upload_folder = os.path.join(current_app.root_path, 'static', 'uploads', 'profile')
+    os.makedirs(upload_folder, exist_ok=True)
+    
+    file_path = os.path.join(upload_folder, filename)
+    
+    try:
+        # Save the file
+        file.save(file_path)
+        
+        # Return success response with the file path for frontend to use
+        return jsonify({
+            'success': True, 
+            'message': 'Profile picture uploaded successfully',
+            'filename': filename,
+            'file_path': f'/static/uploads/profile/{filename}'
+        }), 200
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Failed to save file: {str(e)}'}), 500
+
 @user_bp.route('/log', methods=['POST'])
 def log_js_message():
     data = request.get_json()

@@ -638,3 +638,36 @@ def get_system_audit_log(limit=50, operation_type=None):
         return []
     finally:
         conn.close()
+
+def add_transaction(transaction_id, amount, payment_method, timestamp, sender_id, receiver_id, note, transaction_type, location):
+    """Add a transaction to the database (for receipt processing or other direct insertions)"""
+    conn = current_app.get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Insert the transaction
+            cursor.execute('''
+                INSERT INTO transactions (id, amount, payment_method, timestamp, sender_id, receiver_id, note, type, location) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (transaction_id, amount, payment_method, timestamp, sender_id, receiver_id, note, transaction_type, location))
+            
+            # If this is a payment/withdrawal, update sender's balance
+            if sender_id and transaction_type in ['Payment', 'Withdrawal']:
+                cursor.execute('''
+                    UPDATE users SET balance = balance - %s WHERE id = %s
+                ''', (amount, sender_id))
+            
+            # If this is a deposit/refund, update receiver's balance
+            if receiver_id and transaction_type in ['Deposit', 'Refund']:
+                cursor.execute('''
+                    UPDATE users SET balance = balance + %s WHERE id = %s
+                ''', (amount, receiver_id))
+            
+            conn.commit()
+            return True
+            
+    except Exception as e:
+        conn.rollback()
+        current_app.logger.error(f"Transaction insert error: {str(e)}")
+        raise e
+    finally:
+        conn.close()

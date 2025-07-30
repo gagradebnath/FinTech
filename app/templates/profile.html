@@ -1,77 +1,1265 @@
 {% extends 'base.html' %}
 {% block content %}
-<style>
-    /* Make the placeholder (first option) gray, others black */
-    select.form-select option[value=""] {
-        color: #e6e1e1d7 !important;
-    }
+<div class="container-fluid p-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="profile-header">
+                <div class="profile-header-content">
+                    <div class="profile-breadcrumb">
+                        <i class="bi bi-house-door"></i>
+                        <span>Dashboard</span>
+                        <i class="bi bi-chevron-right"></i>
+                        <span class="current">Profile Settings</span>
+                    </div>
+                    <h1 class="profile-title">Profile Settings</h1>
+                    <p class="profile-subtitle">Manage your personal information and account settings</p>
+                </div>
+                <div class="profile-header-actions">
+                    <a href="{{ get_dashboard_url_for_user(user) }}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i>
+                        <span>Back to Dashboard</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    select.form-select option:not([value=""]) {
-        color: #000 !important;
-    }
-</style>
-<div class="container py-4">
-    <h2>User Profile</h2>
-    <form method="POST" action="/profile">
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="first_name" class="form-label">First Name</label>
-                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+    <form method="POST" action="/profile" class="profile-form" enctype="multipart/form-data">
+        <div class="row g-4">
+            <!-- Profile Avatar Section -->
+            <div class="col-lg-4">
+                <div class="profile-card profile-avatar-card">
+                    <div class="profile-card-header">
+                        <h3>Profile Picture</h3>
+                        <p>Update your profile photo</p>
+                    </div>
+                    <div class="profile-card-content">
+                        <div class="avatar-wrapper">
+                            <div class="avatar-container">
+                                <div class="avatar-image" id="avatarImage">
+                                    <!-- Profile picture will be loaded by JavaScript -->
+                                    <img id="profileImg" 
+                                         src="/static/uploads/profile/user.png" 
+                                         alt="Profile Picture" 
+                                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: none;">
+                                    <i class="bi bi-person-fill" id="defaultAvatar"></i>
+                                </div>
+                                <div class="avatar-overlay">
+                                    <i class="bi bi-camera"></i>
+                                </div>
+                            </div>
+                            <div class="avatar-info">
+                                <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+                                <p>{{ contact.email if contact else 'No email provided' }}</p>
+                                <div class="account-status">
+                                    <div class="status-dot active"></div>
+                                    <span>Active Account</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="file" 
+                               id="profilePictureInput" 
+                               name="profile_picture" 
+                               accept="image/*" 
+                               style="display: none;">
+                        <button type="button" class="btn-upload-photo" onclick="document.getElementById('profilePictureInput').click();">
+                            <i class="bi bi-upload"></i>
+                            Change Photo
+                        </button>
+                        <div class="upload-status" id="uploadStatus" style="display: none; margin-top: 1rem;">
+                            <div class="upload-progress">
+                                <div class="progress-bar-upload">
+                                    <div class="progress-fill-upload" id="uploadProgress"></div>
+                                </div>
+                                <span class="upload-text" id="uploadText">Uploading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6 mb-3">
-                <label for="last_name" class="form-label">Last Name</label>
-                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+
+            <!-- Profile Information Section -->
+            <div class="col-lg-8">
+                <div class="profile-card">
+                    <div class="profile-card-header">
+                        <h3>Personal Information</h3>
+                        <p>Keep your information up to date</p>
+                    </div>
+                    <div class="profile-card-content">
+                        <div class="row g-4">
+                            <!-- Name Fields -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="first_name" class="form-label">
+                                        <i class="bi bi-person"></i>
+                                        First Name
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control modern-input" 
+                                           id="first_name" 
+                                           name="first_name" 
+                                           value="{{ user.first_name }}" 
+                                           required
+                                           placeholder="Enter your first name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="last_name" class="form-label">
+                                        <i class="bi bi-person"></i>
+                                        Last Name
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control modern-input" 
+                                           id="last_name" 
+                                           name="last_name" 
+                                           value="{{ user.last_name }}" 
+                                           required
+                                           placeholder="Enter your last name">
+                                </div>
+                            </div>
+
+                            <!-- Date of Birth and Gender -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="dob" class="form-label">
+                                        <i class="bi bi-calendar"></i>
+                                        Date of Birth
+                                    </label>
+                                    <input type="date" 
+                                           class="form-control modern-input" 
+                                           id="dob" 
+                                           name="dob" 
+                                           value="{{ user.dob }}" 
+                                           required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="gender" class="form-label">
+                                        <i class="bi bi-people"></i>
+                                        Gender
+                                    </label>
+                                    <div class="modern-select-wrapper">
+                                        <select class="form-control modern-select" id="gender" name="gender" required>
+                                            <option value="M" {% if user.gender == 'M' %}selected{% endif %}>Male</option>
+                                            <option value="F" {% if user.gender == 'F' %}selected{% endif %}>Female</option>
+                                            <option value="O" {% if user.gender == 'O' %}selected{% endif %}>Other</option>
+                                        </select>
+                                        <i class="bi bi-chevron-down select-arrow"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Marital Status and Blood Group -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="marital_status" class="form-label">
+                                        <i class="bi bi-heart"></i>
+                                        Marital Status
+                                    </label>
+                                    <div class="modern-select-wrapper">
+                                        <select class="form-control modern-select" id="marital_status" name="marital_status" required>
+                                            <option value="Single" {% if user.marital_status == 'Single' %}selected{% endif %}>Single</option>
+                                            <option value="Married" {% if user.marital_status == 'Married' %}selected{% endif %}>Married</option>
+                                            <option value="Other" {% if user.marital_status == 'Other' %}selected{% endif %}>Other</option>
+                                        </select>
+                                        <i class="bi bi-chevron-down select-arrow"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="blood_group" class="form-label">
+                                        <i class="bi bi-droplet"></i>
+                                        Blood Group
+                                    </label>
+                                    <div class="modern-select-wrapper">
+                                        <select class="form-control modern-select" id="blood_group" name="blood_group" required>
+                                            <option value="A+" {% if user.blood_group == 'A+' %}selected{% endif %}>A+</option>
+                                            <option value="A-" {% if user.blood_group == 'A-' %}selected{% endif %}>A-</option>
+                                            <option value="B+" {% if user.blood_group == 'B+' %}selected{% endif %}>B+</option>
+                                            <option value="B-" {% if user.blood_group == 'B-' %}selected{% endif %}>B-</option>
+                                            <option value="O+" {% if user.blood_group == 'O+' %}selected{% endif %}>O+</option>
+                                            <option value="O-" {% if user.blood_group == 'O-' %}selected{% endif %}>O-</option>
+                                            <option value="AB+" {% if user.blood_group == 'AB+' %}selected{% endif %}>AB+</option>
+                                            <option value="AB-" {% if user.blood_group == 'AB-' %}selected{% endif %}>AB-</option>
+                                        </select>
+                                        <i class="bi bi-chevron-down select-arrow"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information Section -->
+                <div class="profile-card mt-4">
+                    <div class="profile-card-header">
+                        <h3>Contact Information</h3>
+                        <p>How we can reach you</p>
+                    </div>
+                    <div class="profile-card-content">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="email" class="form-label">
+                                        <i class="bi bi-envelope"></i>
+                                        Email Address
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control modern-input" 
+                                           id="email" 
+                                           name="email" 
+                                           value="{{ contact.email if contact else '' }}" 
+                                           required
+                                           placeholder="your.email@example.com">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="phone" class="form-label">
+                                        <i class="bi bi-telephone"></i>
+                                        Phone Number
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control modern-input" 
+                                           id="phone" 
+                                           name="phone" 
+                                           value="{{ contact.phone if contact else '' }}" 
+                                           required
+                                           placeholder="+1 (555) 123-4567">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="profile-actions mt-4">
+                    <button type="submit" class="btn-primary-action">
+                        <i class="bi bi-check-circle"></i>
+                        Update Profile
+                    </button>
+                    <button type="button" class="btn-secondary-action">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        Reset Changes
+                    </button>
+                </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="dob" class="form-label">Date of Birth</label>
-                <input type="date" class="form-control" id="dob" name="dob" value="{{ user.dob }}" required>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label for="gender" class="form-label">Gender</label>
-                <select class="form-select" id="gender" name="gender" required>
-                    <option value="M" {% if user.gender == 'M' %}selected{% endif %}>Male</option>
-                    <option value="F" {% if user.gender == 'F' %}selected{% endif %}>Female</option>
-                    <option value="O" {% if user.gender == 'O' %}selected{% endif %}>Other</option>
-                </select>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="marital_status" class="form-label">Marital Status</label>
-                <select class="form-select" id="marital_status" name="marital_status" required>
-                    <option value="Single" {% if user.marital_status == 'Single' %}selected{% endif %}>Single</option>
-                    <option value="Married" {% if user.marital_status == 'Married' %}selected{% endif %}>Married</option>
-                    <option value="Other" {% if user.marital_status == 'Other' %}selected{% endif %}>Other</option>
-                </select>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label for="blood_group" class="form-label">Blood Group</label>
-                <select class="form-select" id="blood_group" name="blood_group" required>
-                    <option value="A+" {% if user.blood_group == 'A+' %}selected{% endif %}>A+</option>
-                    <option value="A-" {% if user.blood_group == 'A-' %}selected{% endif %}>A-</option>
-                    <option value="B+" {% if user.blood_group == 'B+' %}selected{% endif %}>B+</option>
-                    <option value="B-" {% if user.blood_group == 'B-' %}selected{% endif %}>B-</option>
-                    <option value="O+" {% if user.blood_group == 'O+' %}selected{% endif %}>O+</option>
-                    <option value="O-" {% if user.blood_group == 'O-' %}selected{% endif %}>O-</option>
-                    <option value="AB+" {% if user.blood_group == 'AB+' %}selected{% endif %}>AB+</option>
-                    <option value="AB-" {% if user.blood_group == 'AB-' %}selected{% endif %}>AB-</option>
-                </select>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email" value="{{ contact.email if contact else '' }}" required>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label for="phone" class="form-label">Phone</label>
-                <input type="text" class="form-control" id="phone" name="phone" value="{{ contact.phone if contact else '' }}" required>
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary">Update Profile</button>
-        <a href="{{ get_dashboard_url_for_user(user) }}" class="btn btn-secondary ms-2">Back to Dashboard</a>
     </form>
+    
+    <!-- Image Crop Modal -->
+    <div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content crop-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title">Crop Profile Picture</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="crop-container">
+                        <img id="cropImage" style="max-width: 100%; display: block;">
+                    </div>
+                    <div class="crop-preview">
+                        <h6>Preview</h6>
+                        <div class="preview-circle">
+                            <img id="previewImage" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="cropAndUpload">Crop & Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Add Cropper.js for image cropping -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+<script>
+// Try different file extensions for profile pictures
+function tryNextProfilePicture(img) {
+    const extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    const possibleFilenames = [
+        '{{ user.login_id or user.id }}',
+        'user',
+        '{{ user.first_name|lower }}{{ user.last_name|lower }}',
+        '{{ user.first_name|lower }}'
+    ];
+    
+    let currentFilenameIndex = 0;
+    let currentExtIndex = 0;
+    
+    // Parse current source to find where we are
+    const currentSrc = img.src;
+    const basePath = '/static/uploads/profile/';
+    
+    // Find current position in our attempt sequence
+    possibleFilenames.forEach((filename, fIndex) => {
+        extensions.forEach((ext, eIndex) => {
+            if (currentSrc.includes(basePath + filename + '.' + ext)) {
+                currentFilenameIndex = fIndex;
+                currentExtIndex = eIndex;
+            }
+        });
+    });
+    
+    // Try next extension for current filename
+    if (currentExtIndex < extensions.length - 1) {
+        currentExtIndex++;
+    } else {
+        // Move to next filename, reset extension
+        currentFilenameIndex++;
+        currentExtIndex = 0;
+    }
+    
+    // If we've tried all combinations, show default
+    if (currentFilenameIndex >= possibleFilenames.length) {
+        img.style.display = 'none';
+        document.getElementById('defaultAvatar').style.display = 'flex';
+        return;
+    }
+    
+    // Try next combination
+    const nextFilename = possibleFilenames[currentFilenameIndex];
+    const nextExt = extensions[currentExtIndex];
+    img.src = basePath + nextFilename + '.' + nextExt;
+}
+
+// Load profile picture on page load
+function loadProfilePicture() {
+    const profileImg = document.getElementById('profileImg');
+    const defaultAvatar = document.getElementById('defaultAvatar');
+    
+    // Start with the first possible filename and extension
+    profileImg.src = '/static/uploads/profile/{{ user.login_id or user.id }}.jpg';
+    
+    // Set up load/error handlers
+    profileImg.onload = function() {
+        this.style.display = 'block';
+        defaultAvatar.style.display = 'none';
+    };
+    
+    profileImg.onerror = function() {
+        tryNextProfilePicture(this);
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Load profile picture on page load
+    loadProfilePicture();
+    
+    // Form validation and enhancement
+    const form = document.querySelector('.profile-form');
+    const inputs = document.querySelectorAll('.modern-input, .modern-select');
+    const submitBtn = document.querySelector('.btn-primary-action');
+    const resetBtn = document.querySelector('.btn-secondary-action');
+    
+    // Store original values for reset functionality
+    const originalValues = {};
+    inputs.forEach(input => {
+        originalValues[input.name || input.id] = input.value;
+    });
+    
+    // Enhanced form submission
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Add loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Updating...';
+            
+            // Validate all fields
+            let isValid = true;
+            inputs.forEach(input => {
+                if (input.required && !input.value.trim()) {
+                    isValid = false;
+                    input.style.borderColor = 'var(--danger-color)';
+                    input.focus();
+                } else {
+                    input.style.borderColor = '';
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Update Profile';
+                return;
+            }
+        });
+    }
+    
+    // Reset functionality
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Reset all form fields to original values
+            inputs.forEach(input => {
+                const originalValue = originalValues[input.name || input.id];
+                if (originalValue !== undefined) {
+                    input.value = originalValue;
+                }
+                input.style.borderColor = '';
+            });
+            
+            // Add visual feedback
+            resetBtn.innerHTML = '<i class="bi bi-check"></i> Reset Complete';
+            setTimeout(() => {
+                resetBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Reset Changes';
+            }, 2000);
+        });
+    }
+    
+    // Connect avatar overlay to file input
+    const avatarOverlay = document.querySelector('.avatar-overlay');
+    if (avatarOverlay) {
+        avatarOverlay.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
+        // Add hover effect
+        avatarOverlay.style.cursor = 'pointer';
+    }
+    
+    // Avatar upload functionality with cropping
+    const uploadBtn = document.querySelector('.btn-upload-photo');
+    const fileInput = document.getElementById('profilePictureInput');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const uploadText = document.getElementById('uploadText');
+    const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+    const cropImage = document.getElementById('cropImage');
+    const previewImage = document.getElementById('previewImage');
+    const cropAndUploadBtn = document.getElementById('cropAndUpload');
+    let cropper;
+    let selectedFile;
+    
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            selectedFile = e.target.files[0];
+            if (selectedFile) {
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!allowedTypes.includes(selectedFile.type)) {
+                    alert('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+                    return;
+                }
+                
+                // Validate file size (max 10MB)
+                if (selectedFile.size > 10 * 1024 * 1024) {
+                    alert('Please select an image smaller than 10MB');
+                    return;
+                }
+                
+                // Load image into cropper
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    cropImage.src = e.target.result;
+                    
+                    // Show crop modal
+                    cropModal.show();
+                    
+                    // Initialize cropper after modal is shown
+                    document.getElementById('cropModal').addEventListener('shown.bs.modal', function() {
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+                        
+                        cropper = new Cropper(cropImage, {
+                            aspectRatio: 1, // Square crop
+                            viewMode: 2,
+                            dragMode: 'move',
+                            autoCropArea: 1,
+                            restore: false,
+                            guides: false,
+                            center: false,
+                            highlight: false,
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
+                            background: false,
+                            ready: function() {
+                                // Update preview on crop
+                                updatePreview();
+                            },
+                            crop: function() {
+                                updatePreview();
+                            }
+                        });
+                    }, { once: true });
+                };
+                reader.readAsDataURL(selectedFile);
+            }
+        });
+        
+        // Update preview function
+        function updatePreview() {
+            if (cropper) {
+                const canvas = cropper.getCroppedCanvas({
+                    width: 200,
+                    height: 200,
+                    fillColor: '#fff'
+                });
+                previewImage.src = canvas.toDataURL();
+            }
+        }
+        
+        // Crop and upload functionality
+        cropAndUploadBtn.addEventListener('click', function() {
+            if (cropper) {
+                // Get cropped canvas
+                const canvas = cropper.getCroppedCanvas({
+                    width: 400,
+                    height: 400,
+                    fillColor: '#fff'
+                });
+                
+                // Convert to blob
+                canvas.toBlob(function(blob) {
+                    // Close modal
+                    cropModal.hide();
+                    
+                    // Show upload status
+                    uploadStatus.style.display = 'block';
+                    uploadBtn.disabled = true;
+                    uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading...';
+                    
+                    // Create FormData for upload
+                    const formData = new FormData();
+                    
+                    // Get file extension from original file
+                    const fileExtension = selectedFile.name.split('.').pop().toLowerCase();
+                    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                    const finalExtension = allowedExtensions.includes(fileExtension) ? fileExtension : 'png';
+                    
+                    // Create a new file with cropped data
+                    const croppedFile = new File([blob], `profile.${finalExtension}`, {
+                        type: `image/${finalExtension === 'jpg' ? 'jpeg' : finalExtension}`
+                    });
+                    
+                    formData.append('profile_picture', croppedFile);
+                    
+                    // Preview the cropped image immediately
+                    const profileImg = document.getElementById('profileImg');
+                    const defaultAvatar = document.getElementById('defaultAvatar');
+                    
+                    profileImg.src = canvas.toDataURL();
+                    profileImg.style.display = 'block';
+                    defaultAvatar.style.display = 'none';
+                    
+                    // Upload to server
+                    fetch('/upload-profile-picture', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        uploadProgress.style.width = '100%';
+                        uploadText.textContent = 'Upload Complete!';
+                        
+                        if (data.success) {
+                            uploadBtn.innerHTML = '<i class="bi bi-check"></i> Photo Updated';
+                            
+                            // Update the profile image src to the server path
+                            profileImg.src = data.file_path + '?t=' + new Date().getTime(); // Add timestamp to prevent caching
+                            
+                            setTimeout(() => {
+                                uploadStatus.style.display = 'none';
+                                uploadBtn.disabled = false;
+                                uploadBtn.innerHTML = '<i class="bi bi-upload"></i> Change Photo';
+                                uploadProgress.style.width = '0%';
+                            }, 2000);
+                        } else {
+                            throw new Error(data.message || 'Upload failed');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Upload error:', error);
+                        uploadText.textContent = 'Upload Failed!';
+                        uploadBtn.innerHTML = '<i class="bi bi-x-circle"></i> Upload Failed';
+                        
+                        // Reset preview to what was there before
+                        loadProfilePicture();
+                        
+                        setTimeout(() => {
+                            uploadStatus.style.display = 'none';
+                            uploadBtn.disabled = false;
+                            uploadBtn.innerHTML = '<i class="bi bi-upload"></i> Change Photo';
+                            uploadProgress.style.width = '0%';
+                        }, 3000);
+                        
+                        alert('Error uploading image: ' + error.message);
+                    });
+                    
+                    // Simulate progress for better UX
+                    let progress = 0;
+                    const progressInterval = setInterval(() => {
+                        progress += Math.random() * 30;
+                        if (progress > 90) progress = 90;
+                        uploadProgress.style.width = progress + '%';
+                    }, 200);
+                    
+                    setTimeout(() => clearInterval(progressInterval), 2000);
+                    
+                }, 'image/png', 0.9);
+            }
+        });
+        
+        // Clean up cropper when modal is hidden
+        document.getElementById('cropModal').addEventListener('hidden.bs.modal', function() {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        });
+    }
+    
+    // Phone number formatting
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 6) {
+                value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+            } else if (value.length >= 3) {
+                value = value.replace(/(\d{3})(\d{3})/, '($1) $2');
+            }
+            e.target.value = value;
+        });
+    }
+    
+    // Real-time validation feedback
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.required && !this.value.trim()) {
+                this.style.borderColor = 'var(--danger-color)';
+            } else if (this.type === 'email' && this.value && !isValidEmail(this.value)) {
+                this.style.borderColor = 'var(--danger-color)';
+            } else {
+                this.style.borderColor = 'rgba(40, 167, 69, 0.5)';
+            }
+        });
+        
+        input.addEventListener('focus', function() {
+            this.style.borderColor = 'var(--primary-color)';
+        });
+    });
+    
+    // Email validation helper
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+    
+    // Add entrance animations
+    const cards = document.querySelectorAll('.profile-card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 150 + 200);
+    });
+    
+    // Header animation
+    const header = document.querySelector('.profile-header');
+    if (header) {
+        header.style.opacity = '0';
+        header.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            header.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            header.style.opacity = '1';
+            header.style.transform = 'translateY(0)';
+        }, 100);
+    }
+    
+    // Auto-save draft functionality (optional)
+    let autoSaveTimer;
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                // Save to localStorage as draft
+                const formData = {};
+                inputs.forEach(inp => {
+                    formData[inp.name || inp.id] = inp.value;
+                });
+                localStorage.setItem('profileDraft', JSON.stringify(formData));
+            }, 1000);
+        });
+    });
+    
+    // Load draft on page load
+    const savedDraft = localStorage.getItem('profileDraft');
+    if (savedDraft && confirm('Would you like to restore your unsaved changes?')) {
+        const draftData = JSON.parse(savedDraft);
+        inputs.forEach(input => {
+            const savedValue = draftData[input.name || input.id];
+            if (savedValue !== undefined && savedValue !== input.value) {
+                input.value = savedValue;
+                input.style.borderColor = 'var(--warning-color)';
+            }
+        });
+    }
+    
+    // Clear draft on successful submission
+    form.addEventListener('submit', function() {
+        localStorage.removeItem('profileDraft');
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+/* Profile Page Modern Styling */
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-header-content {
+    flex: 1;
+}
+
+.profile-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.profile-breadcrumb .current {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.profile-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.profile-subtitle {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.profile-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-back {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.btn-back:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    color: var(--text-primary);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Profile Cards */
+.profile-card {
+    background: linear-gradient(145deg, rgba(18, 18, 18, 0.95), rgba(30, 30, 30, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 0;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.profile-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.profile-card-header {
+    padding: 2rem 2rem 1rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.profile-card-header h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.profile-card-header p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.profile-card-content {
+    padding: 2rem;
+}
+
+/* Avatar Section */
+.profile-avatar-card .profile-card-content {
+    text-align: center;
+}
+
+.avatar-wrapper {
+    margin-bottom: 2rem;
+}
+
+.avatar-container {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+}
+
+.avatar-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+}
+
+.avatar-container:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.avatar-overlay i {
+    font-size: 1.5rem;
+    color: white;
+}
+
+.avatar-info h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.avatar-info p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.account-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00ff9f;
+    box-shadow: 0 0 8px rgba(0, 255, 159, 0.5);
+    animation: pulse 2s infinite;
+}
+
+.btn-upload-photo {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.btn-upload-photo:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Form Styling */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.form-label i {
+    font-size: 1rem;
+    color: var(--primary-color);
+}
+
+.modern-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.modern-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.modern-input::placeholder {
+    color: var(--text-secondary);
+}
+
+/* Modern Select Styling */
+.modern-select-wrapper {
+    position: relative;
+}
+
+.modern-select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1rem 3rem 1rem 1.25rem;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    appearance: none;
+    width: 100%;
+    cursor: pointer;
+}
+
+.modern-select:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.modern-select option {
+    background: #1a1a1a;
+    color: var(--text-primary);
+    padding: 0.75rem;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    pointer-events: none;
+    transition: transform 0.3s ease;
+}
+
+.modern-select:focus + .select-arrow {
+    transform: translateY(-50%) rotate(180deg);
+    color: var(--primary-color);
+}
+
+/* Action Buttons */
+.profile-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary-action {
+    background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3);
+}
+
+.btn-primary-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 102, 255, 0.4);
+}
+
+.btn-secondary-action {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.btn-secondary-action:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Animation */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: flex-start;
+    }
+    
+    .profile-title {
+        font-size: 2rem;
+    }
+    
+    .profile-card-content {
+        padding: 1.5rem;
+    }
+    
+    .profile-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-primary-action,
+    .btn-secondary-action {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .profile-card-header {
+        padding: 1.5rem 1.5rem 1rem 1.5rem;
+    }
+    
+    .profile-card-content {
+        padding: 1rem;
+    }
+    
+    .avatar-image {
+        width: 100px;
+        height: 100px;
+        font-size: 2.5rem;
+    }
+}
+
+/* Form validation states */
+.modern-input:invalid {
+    border-color: var(--danger-color);
+}
+
+.modern-input:valid {
+    border-color: rgba(40, 167, 69, 0.5);
+}
+
+/* Loading states */
+.btn-primary-action:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-primary-action:disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3);
+}
+
+/* Crop Modal Styling */
+.crop-modal .modal-content {
+    background: linear-gradient(145deg, rgba(18, 18, 18, 0.95), rgba(30, 30, 30, 0.9));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    color: var(--text-primary);
+}
+
+.crop-modal .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+}
+
+.crop-modal .modal-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.crop-modal .btn-close {
+    filter: invert(1);
+    opacity: 0.7;
+}
+
+.crop-modal .modal-body {
+    padding: 1.5rem;
+}
+
+.crop-container {
+    max-height: 400px;
+    margin-bottom: 1.5rem;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.crop-preview {
+    text-align: center;
+}
+
+.crop-preview h6 {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.preview-circle {
+    display: inline-block;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.crop-modal .modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+}
+
+.crop-modal .btn {
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+}
+
+.crop-modal .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
+
+.crop-modal .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+    border: none;
+    color: white;
+}
+
+/* Upload Progress Styling */
+.upload-status {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.upload-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.progress-bar-upload {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill-upload {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), #00ff9f);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.upload-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+</style>
 {% endblock %}
